@@ -1,0 +1,244 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import {
+  tournaments,
+  groups,
+  players,
+  templateMatches,
+  matches,
+  matchGames,
+  refereeRecords,
+} from "@/db/schema";
+import { requireAdmin } from "@/lib/auth";
+import { generateMatches, scheduleMatches, generateTimeSlots } from "@/lib/engine";
+import type { SimulationParams } from "@/lib/engine";
+import { eq } from "drizzle-orm";
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const tournamentId = parseInt(id, 10);
+    if (isNaN(tournamentId)) {
+      return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
+    }
+
+    const tournament = db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, tournamentId))
+      .get();
+
+    if (!tournament) {
+      return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
+    }
+
+    const allMatches = db
+      .select()
+      .from(matches)
+      .where(eq(matches.tournamentId, tournamentId))
+      .all();
+
+    // Fetch game scores only for this tournament's matches
+    const matchIds = allMatches.map((m) => m.id);
+    const allGames = matchIds.length > 0
+      ? db.select().from(matchGames).all().filter((g) => matchIds.includes(g.matchId))
+      : [];
+
+    const gamesByMatch = new Map<number, typeof allGames>();
+    for (const g of allGames) {
+      const existing = gamesByMatch.get(g.matchId) || [];
+      existing.push(g);
+      gamesByMatch.set(g.matchId, existing);
+    }
+
+    const matchesWithGames = allMatches.map((m) => ({
+      ...m,
+      games: (gamesByMatch.get(m.id) || []).sort((a, b) => a.gameNumber - b.gameNumber),
+    }));
+
+    const totalRounds = allMatches.length > 0
+      ? Math.max(...allMatches.map((m) => m.roundNumber))
+      : 0;
+
+    const timeSlots = totalRounds > 0
+      ? generateTimeSlots(totalRounds, tournament.startTime || "09:00", tournament.roundDurationMinutes)
+      : [];
+
+    return NextResponse.json({
+      matches: matchesWithGames,
+      totalRounds,
+      timeSlots,
+    });
+  } catch (error) {
+    console.error("Get schedule error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function POST(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json(
+      { error: "Unauthorized: Admin access required" },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const { id } = await params;
+    const tournamentId = parseInt(id, 10);
+    if (isNaN(tournamentId)) {
+      return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
+    }
+
+    const tournament = db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, tournamentId))
+      .get();
+
+    if (!tournament) {
+      return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
+    }
+
+    const tournamentGroups = db
+      .select()
+      .from(groups)
+      .where(eq(groups.tournamentId, tournamentId))
+      .all()
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const tournamentPlayers = db
+      .select()
+      .from(players)
+      .where(eq(players.tournamentId, tournamentId))
+      .all();
+
+    const templates = db
+      .select()
+      .from(templateMatches)
+      .where(eq(templateMatches.tournamentId, tournamentId))
+      .all();
+
+    if (tournamentGroups.length < 2) {
+      return NextResponse.json(
+        { error: "Need at least 2 groups to generate schedule" },
+        { status: 400 }
+      );
+    }
+
+    if (templates.length === 0) {
+      return NextResponse.json(
+        { error: "No template matches defined" },
+        { status: 400 }
+      );
+    }
+
+    // Delete existing matches and dependent records for this tournament
+    const existingMatches = db
+      .select()
+      .from(matches)
+      .where(eq(matches.tournamentId, tournamentId))
+      .all();
+
+    for (const m of existingMatches) {
+      db.delete(matchGames).where(eq(matchGames.matchId, m.id)).run();
+      db.delete(refereeRecords).where(eq(refereeRecords.matchId, m.id)).run();
+    }
+
+    db.delete(matches)
+      .where(eq(matches.tournamentId, tournamentId))
+      .run();
+
+    // Generate and schedule matches
+    const simParams: SimulationParams = {
+      groupCount: tournamentGroups.length,
+      malesPerGroup: tournament.malesPerGroup,
+      femalesPerGroup: tournament.femalesPerGroup,
+      courtsCount: tournament.courtsCount,
+      roundDurationMinutes: tournament.roundDurationMinutes,
+      startTime: tournament.startTime || "09:00",
+      endTime: tournament.endTime || "19:00",
+      templateMatches: templates.map((t) => ({
+        matchType: t.matchType,
+        homePos1: t.homePos1,
+        homePos2: t.homePos2,
+        awayPos1: t.awayPos1,
+        awayPos2: t.awayPos2,
+      })),
+    };
+
+    const generatedMatches = generateMatches(simParams);
+    const scheduled = scheduleMatches(generatedMatches, tournament.courtsCount);
+
+    // Helper: find player by groupIndex + positionNumber
+    const findPlayer = (groupIndex: number, positionNumber: number) => {
+      const group = tournamentGroups[groupIndex];
+      if (!group) return null;
+      return tournamentPlayers.find(
+        (p) => p.groupId === group.id && p.positionNumber === positionNumber
+      ) || null;
+    };
+
+    // Insert matches with actual player references
+    const insertedMatches = [];
+    for (const sm of scheduled) {
+      const homeGroup = tournamentGroups[sm.homeGroupIndex];
+      const awayGroup = tournamentGroups[sm.awayGroupIndex];
+
+      const homePlayer1 = findPlayer(sm.homeGroupIndex, sm.homePos1);
+      const homePlayer2 = findPlayer(sm.homeGroupIndex, sm.homePos2);
+      const awayPlayer1 = findPlayer(sm.awayGroupIndex, sm.awayPos1);
+      const awayPlayer2 = findPlayer(sm.awayGroupIndex, sm.awayPos2);
+
+      const templateMatch = templates[sm.templateIndex] || null;
+
+      const inserted = db
+        .insert(matches)
+        .values({
+          tournamentId,
+          roundNumber: sm.roundNumber,
+          courtNumber: sm.courtNumber,
+          homeGroupId: homeGroup.id,
+          awayGroupId: awayGroup.id,
+          templateMatchId: templateMatch?.id || null,
+          matchType: sm.matchType,
+          homePlayer1Id: homePlayer1?.id || null,
+          homePlayer2Id: homePlayer2?.id || null,
+          awayPlayer1Id: awayPlayer1?.id || null,
+          awayPlayer2Id: awayPlayer2?.id || null,
+        })
+        .returning()
+        .get();
+
+      insertedMatches.push(inserted);
+    }
+
+    const totalRounds = scheduled.length > 0
+      ? Math.max(...scheduled.map((s) => s.roundNumber))
+      : 0;
+
+    const timeSlots = generateTimeSlots(
+      totalRounds,
+      tournament.startTime || "09:00",
+      tournament.roundDurationMinutes
+    );
+
+    return NextResponse.json({
+      matches: insertedMatches,
+      totalMatches: insertedMatches.length,
+      totalRounds,
+      timeSlots,
+    });
+  } catch (error) {
+    console.error("Generate schedule error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
