@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { templatePositions, templateMatches, tournaments } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -8,23 +8,24 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const positions = db
+    const positions = await db
       .select()
       .from(templatePositions)
       .where(eq(templatePositions.tournamentId, tournamentId))
       .all();
 
-    const matches = db
+    const matches = (await db
       .select()
       .from(templateMatches)
       .where(eq(templateMatches.tournamentId, tournamentId))
-      .all()
+      .all())
       .sort((a, b) => a.sortOrder - b.sortOrder);
 
     return NextResponse.json({ positions, matches });
@@ -39,13 +40,14 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const tournament = db
+    const tournament = await db
       .select()
       .from(tournaments)
       .where(eq(tournaments.id, tournamentId))
@@ -93,17 +95,17 @@ export async function PUT(
     }
 
     // Delete existing template
-    db.delete(templateMatches)
+    await db.delete(templateMatches)
       .where(eq(templateMatches.tournamentId, tournamentId))
       .run();
-    db.delete(templatePositions)
+    await db.delete(templatePositions)
       .where(eq(templatePositions.tournamentId, tournamentId))
       .run();
 
     // Insert new positions
     const insertedPositions = [];
     for (const pos of positions) {
-      const inserted = db
+      const inserted = await db
         .insert(templatePositions)
         .values({
           tournamentId,
@@ -119,7 +121,7 @@ export async function PUT(
     const insertedMatches = [];
     for (let i = 0; i < matches.length; i++) {
       const m = matches[i];
-      const inserted = db
+      const inserted = await db
         .insert(templateMatches)
         .values({
           tournamentId,

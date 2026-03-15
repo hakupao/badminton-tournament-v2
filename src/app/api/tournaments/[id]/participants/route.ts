@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { tournamentParticipants, tournaments, users, players, groups } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
@@ -10,13 +10,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const tournament = db
+    const tournament = await db
       .select()
       .from(tournaments)
       .where(eq(tournaments.id, tournamentId))
@@ -27,13 +28,13 @@ export async function GET(
     }
 
     // Get all participants with user info
-    const allParticipants = db
+    const allParticipants = await db
       .select()
       .from(tournamentParticipants)
       .where(eq(tournamentParticipants.tournamentId, tournamentId))
       .all();
 
-    const allUsers = db
+    const allUsers = await db
       .select({ id: users.id, username: users.username, role: users.role })
       .from(users)
       .all();
@@ -46,7 +47,7 @@ export async function GET(
     }));
 
     // Calculate position limits: each position can have at most groupCount people
-    const tournamentGroups = db
+    const tournamentGroups = await db
       .select()
       .from(groups)
       .where(eq(groups.tournamentId, tournamentId))
@@ -76,6 +77,7 @@ export async function POST(
   }
 
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
@@ -92,7 +94,7 @@ export async function POST(
       );
     }
 
-    const tournament = db
+    const tournament = await db
       .select()
       .from(tournaments)
       .where(eq(tournaments.id, tournamentId))
@@ -102,7 +104,7 @@ export async function POST(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const tournamentGroups = db
+    const tournamentGroups = await db
       .select()
       .from(groups)
       .where(eq(groups.tournamentId, tournamentId))
@@ -127,7 +129,7 @@ export async function POST(
       }
 
       // Check position capacity (max = groupCount)
-      const existingInPosition = db
+      const existingInPosition = (await db
         .select()
         .from(tournamentParticipants)
         .where(
@@ -136,7 +138,7 @@ export async function POST(
             eq(tournamentParticipants.assignedPosition, assignedPosition)
           )
         )
-        .all()
+        .all())
         .filter((p) => p.userId !== userId);
 
       if (existingInPosition.length >= groupCount) {
@@ -147,7 +149,7 @@ export async function POST(
       }
 
       // Upsert: delete existing then insert
-      db.delete(tournamentParticipants)
+      await db.delete(tournamentParticipants)
         .where(
           and(
             eq(tournamentParticipants.tournamentId, tournamentId),
@@ -156,7 +158,7 @@ export async function POST(
         )
         .run();
 
-      db.insert(tournamentParticipants)
+      await db.insert(tournamentParticipants)
         .values({
           tournamentId,
           userId,
@@ -185,6 +187,7 @@ export async function DELETE(
   }
 
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
@@ -197,7 +200,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid userId" }, { status: 400 });
     }
 
-    db.delete(tournamentParticipants)
+    await db.delete(tournamentParticipants)
       .where(
         and(
           eq(tournamentParticipants.tournamentId, tournamentId),

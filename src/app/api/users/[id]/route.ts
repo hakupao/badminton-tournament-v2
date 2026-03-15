@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { requireAdmin, hashPassword } from "@/lib/auth";
 import { eq } from "drizzle-orm";
@@ -21,18 +21,19 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
+    const db = getDb();
     const { password } = await request.json();
     if (!password || typeof password !== "string") {
       return NextResponse.json({ error: "密码不能为空" }, { status: 400 });
     }
 
-    const existing = db.select().from(users).where(eq(users.id, userId)).get();
+    const existing = await db.select().from(users).where(eq(users.id, userId)).get();
     if (!existing) {
       return NextResponse.json({ error: "用户不存在" }, { status: 404 });
     }
 
     const passwordHash = await hashPassword(password);
-    db.update(users)
+    await db.update(users)
       .set({ passwordHash })
       .where(eq(users.id, userId))
       .run();
@@ -49,6 +50,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const db = getDb();
     const admin = await requireAdmin();
     const { id } = await params;
     const userId = parseInt(id, 10);
@@ -61,12 +63,12 @@ export async function DELETE(
       return NextResponse.json({ error: "不能删除自己的账号" }, { status: 400 });
     }
 
-    const existing = db.select().from(users).where(eq(users.id, userId)).get();
+    const existing = await db.select().from(users).where(eq(users.id, userId)).get();
     if (!existing) {
       return NextResponse.json({ error: "用户不存在" }, { status: 404 });
     }
 
-    db.delete(users).where(eq(users.id, userId)).run();
+    await db.delete(users).where(eq(users.id, userId)).run();
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof Error && error.message.includes("Unauthorized")) {

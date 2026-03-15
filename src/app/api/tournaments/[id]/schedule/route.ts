@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import {
   tournaments,
   groups,
@@ -19,13 +19,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const tournament = db
+    const tournament = await db
       .select()
       .from(tournaments)
       .where(eq(tournaments.id, tournamentId))
@@ -35,7 +36,7 @@ export async function GET(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const allMatches = db
+    const allMatches = await db
       .select()
       .from(matches)
       .where(eq(matches.tournamentId, tournamentId))
@@ -44,7 +45,7 @@ export async function GET(
     // Fetch game scores only for this tournament's matches
     const matchIds = allMatches.map((m) => m.id);
     const allGames = matchIds.length > 0
-      ? db.select().from(matchGames).all().filter((g) => matchIds.includes(g.matchId))
+      ? (await db.select().from(matchGames).all()).filter((g) => matchIds.includes(g.matchId))
       : [];
 
     const gamesByMatch = new Map<number, typeof allGames>();
@@ -98,7 +99,8 @@ export async function POST(
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const tournament = db
+    const db = getDb();
+    const tournament = await db
       .select()
       .from(tournaments)
       .where(eq(tournaments.id, tournamentId))
@@ -108,20 +110,20 @@ export async function POST(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const tournamentGroups = db
+    const tournamentGroups = (await db
       .select()
       .from(groups)
       .where(eq(groups.tournamentId, tournamentId))
-      .all()
+      .all())
       .sort((a, b) => a.sortOrder - b.sortOrder);
 
-    const tournamentPlayers = db
+    const tournamentPlayers = await db
       .select()
       .from(players)
       .where(eq(players.tournamentId, tournamentId))
       .all();
 
-    const templates = db
+    const templates = await db
       .select()
       .from(templateMatches)
       .where(eq(templateMatches.tournamentId, tournamentId))
@@ -142,18 +144,18 @@ export async function POST(
     }
 
     // Delete existing matches and dependent records for this tournament
-    const existingMatches = db
+    const existingMatches = await db
       .select()
       .from(matches)
       .where(eq(matches.tournamentId, tournamentId))
       .all();
 
     for (const m of existingMatches) {
-      db.delete(matchGames).where(eq(matchGames.matchId, m.id)).run();
-      db.delete(refereeRecords).where(eq(refereeRecords.matchId, m.id)).run();
+      await db.delete(matchGames).where(eq(matchGames.matchId, m.id)).run();
+      await db.delete(refereeRecords).where(eq(refereeRecords.matchId, m.id)).run();
     }
 
-    db.delete(matches)
+    await db.delete(matches)
       .where(eq(matches.tournamentId, tournamentId))
       .run();
 
@@ -200,7 +202,7 @@ export async function POST(
 
       const templateMatch = templates[sm.templateIndex] || null;
 
-      const inserted = db
+      const inserted = await db
         .insert(matches)
         .values({
           tournamentId,

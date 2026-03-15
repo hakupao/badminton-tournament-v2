@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { matches, matchGames, refereeRecords, scoreEvents } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
@@ -18,6 +18,7 @@ export async function POST(
   }
 
   try {
+    const db = getDb();
     const { id, matchId: matchIdStr } = await params;
     const tournamentId = parseInt(id, 10);
     const matchId = parseInt(matchIdStr, 10);
@@ -26,7 +27,7 @@ export async function POST(
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
-    const match = db
+    const match = await db
       .select()
       .from(matches)
       .where(eq(matches.id, matchId))
@@ -64,12 +65,12 @@ export async function POST(
     }
 
     // Delete existing games for this match
-    db.delete(matchGames)
+    await db.delete(matchGames)
       .where(eq(matchGames.matchId, matchId))
       .run();
 
     // Delete existing referee records for this match
-    db.delete(refereeRecords)
+    await db.delete(refereeRecords)
       .where(eq(refereeRecords.matchId, matchId))
       .run();
 
@@ -90,7 +91,7 @@ export async function POST(
         awayWins++;
       }
 
-      const inserted = db
+      const inserted = await db
         .insert(matchGames)
         .values({
           matchId,
@@ -116,7 +117,7 @@ export async function POST(
     // For single-game modes, the game winner is the match winner
 
     // Update match status and winner
-    db.update(matches)
+    await db.update(matches)
       .set({
         status: "finished",
         winner: matchWinner,
@@ -127,7 +128,7 @@ export async function POST(
 
     // Insert referee records
     if (refereePlayerId && typeof refereePlayerId === "number") {
-      db.insert(refereeRecords)
+      await db.insert(refereeRecords)
         .values({
           matchId,
           playerId: refereePlayerId,
@@ -137,7 +138,7 @@ export async function POST(
     }
 
     if (lineJudgePlayerId && typeof lineJudgePlayerId === "number") {
-      db.insert(refereeRecords)
+      await db.insert(refereeRecords)
         .values({
           matchId,
           playerId: lineJudgePlayerId,
@@ -149,7 +150,7 @@ export async function POST(
     // Store score events (point-by-point tracking) if provided
     if (Array.isArray(scoreEventLog) && scoreEventLog.length > 0) {
       // Delete existing events for this match
-      db.delete(scoreEvents)
+      await db.delete(scoreEvents)
         .where(eq(scoreEvents.matchId, matchId))
         .run();
 
@@ -161,7 +162,7 @@ export async function POST(
           typeof evt.homeScore === "number" &&
           typeof evt.awayScore === "number"
         ) {
-          db.insert(scoreEvents)
+          await db.insert(scoreEvents)
             .values({
               matchId,
               gameNumber: evt.gameNumber,

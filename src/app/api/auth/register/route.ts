@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { hashPassword, createToken } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
+    const db = getDb();
     const body = await request.json();
     const { username, password, role } = body;
 
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     const userRole = validRoles.includes(role) ? role : "athlete";
 
     // Check if username already exists
-    const existing = db
+    const existing = await db
       .select()
       .from(users)
       .where(eq(users.username, username.trim()))
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await hashPassword(password);
 
-    const result = db
+    const result = await db
       .insert(users)
       .values({
         username: username.trim(),

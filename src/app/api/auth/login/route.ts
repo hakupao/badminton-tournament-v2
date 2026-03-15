@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { verifyPassword, createToken } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
+    const db = getDb();
     const body = await request.json();
     const { username, password } = body;
 
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = db
+    const user = await db
       .select()
       .from(users)
       .where(eq(users.username, username.trim()))

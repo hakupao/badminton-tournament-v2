@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { tournaments, templatePositions, templateMatches, groups, players } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { getDefaultTeam, DEFAULT_TEMPLATE } from "@/lib/constants";
 
 export async function GET() {
   try {
-    const allTournaments = db.select().from(tournaments).all();
+    const db = getDb();
+    const allTournaments = await db.select().from(tournaments).all();
     return NextResponse.json({ tournaments: allTournaments });
   } catch (error) {
     console.error("List tournaments error:", error);
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const db = getDb();
     const body = await request.json();
     const {
       name,
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create tournament
-    const tournament = db
+    const tournament = await db
       .insert(tournaments)
       .values({
         name: name.trim(),
@@ -75,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Create default template positions
     for (const pos of DEFAULT_TEMPLATE.positions) {
-      db.insert(templatePositions)
+      await db.insert(templatePositions)
         .values({
           tournamentId: tournament.id,
           positionNumber: pos.positionNumber,
@@ -86,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     // Create default template matches
     for (const tm of DEFAULT_TEMPLATE.matches) {
-      db.insert(templateMatches)
+      await db.insert(templateMatches)
         .values({
           tournamentId: tournament.id,
           matchType: tm.matchType,
@@ -102,7 +104,7 @@ export async function POST(request: NextRequest) {
     // Create groups using ANIMAL_TEAMS
     for (let i = 0; i < groupCount; i++) {
       const team = getDefaultTeam(i);
-      const group = db
+      const group = await db
         .insert(groups)
         .values({
           tournamentId: tournament.id,
@@ -116,7 +118,7 @@ export async function POST(request: NextRequest) {
       // Create player slots for each group
       const totalPerGroup = malesPerGroup + femalesPerGroup;
       for (let p = 1; p <= totalPerGroup; p++) {
-        db.insert(players)
+        await db.insert(players)
           .values({
             tournamentId: tournament.id,
             groupId: group.id,

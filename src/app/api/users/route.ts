@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { requireAdmin, hashPassword } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const allUsers = db
+    const db = getDb();
+    const allUsers = await db
       .select({
         id: users.id,
         username: users.username,
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const db = getDb();
     const { username, password, role } = await request.json();
 
     if (!username || !password) {
@@ -42,13 +44,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check duplicate
-    const existing = db.select().from(users).where(eq(users.username, username)).get();
+    const existing = await db.select().from(users).where(eq(users.username, username)).get();
     if (existing) {
       return NextResponse.json({ error: "用户名已存在" }, { status: 409 });
     }
 
     const passwordHash = await hashPassword(password);
-    const newUser = db
+    const newUser = await db
       .insert(users)
       .values({
         username,

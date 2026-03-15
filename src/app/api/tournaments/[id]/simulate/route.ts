@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { tournaments, groups, templateMatches } from "@/db/schema";
 import { runSimulation } from "@/lib/engine";
 import type { SimulationParams } from "@/lib/engine";
@@ -23,7 +23,8 @@ export async function POST(
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const tournament = db
+    const db = getDb();
+    const tournament = await db
       .select()
       .from(tournaments)
       .where(eq(tournaments.id, tournamentId))
@@ -33,13 +34,13 @@ export async function POST(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const tournamentGroups = db
+    const tournamentGroups = await db
       .select()
       .from(groups)
       .where(eq(groups.tournamentId, tournamentId))
       .all();
 
-    const templates = db
+    const templates = await db
       .select()
       .from(templateMatches)
       .where(eq(templateMatches.tournamentId, tournamentId))

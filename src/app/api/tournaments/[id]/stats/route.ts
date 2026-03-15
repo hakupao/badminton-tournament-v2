@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import {
   tournaments,
   groups,
@@ -80,13 +80,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const tournament = db
+    const tournament = await db
       .select()
       .from(tournaments)
       .where(eq(tournaments.id, tournamentId))
@@ -96,19 +97,19 @@ export async function GET(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const allGroups = db
+    const allGroups = await db
       .select()
       .from(groups)
       .where(eq(groups.tournamentId, tournamentId))
       .all();
 
-    const allPlayers = db
+    const allPlayers = await db
       .select()
       .from(players)
       .where(eq(players.tournamentId, tournamentId))
       .all();
 
-    const allMatches = db
+    const allMatches = await db
       .select()
       .from(matches)
       .where(eq(matches.tournamentId, tournamentId))
@@ -119,7 +120,7 @@ export async function GET(
     // Fetch all games for finished matches
     const allGames: Array<{ matchId: number; gameNumber: number; homeScore: number; awayScore: number; winner: string | null }> = [];
     for (const m of finishedMatches) {
-      const games = db
+      const games = await db
         .select()
         .from(matchGames)
         .where(eq(matchGames.matchId, m.id))
@@ -127,7 +128,7 @@ export async function GET(
       allGames.push(...games);
     }
 
-    const allRefereeRecords = db
+    const allRefereeRecords = await db
       .select()
       .from(refereeRecords)
       .all();

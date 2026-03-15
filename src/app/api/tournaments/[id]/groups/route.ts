@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { groups, players, users } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
@@ -9,26 +9,27 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const tournamentGroups = db
+    const tournamentGroups = await db
       .select()
       .from(groups)
       .where(eq(groups.tournamentId, tournamentId))
       .all();
 
-    const tournamentPlayers = db
+    const tournamentPlayers = await db
       .select()
       .from(players)
       .where(eq(players.tournamentId, tournamentId))
       .all();
 
     // Get all users with playerId set to find bindings
-    const allUsers = db
+    const allUsers = await db
       .select({
         id: users.id,
         username: users.username,
@@ -73,6 +74,7 @@ export async function PUT(
   }
 
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
@@ -95,7 +97,7 @@ export async function PUT(
       }
 
       // Verify group belongs to this tournament
-      const group = db
+      const group = await db
         .select()
         .from(groups)
         .where(eq(groups.id, groupId))
@@ -114,7 +116,7 @@ export async function PUT(
       }
 
       if (Object.keys(updateData).length > 0) {
-        db.update(groups)
+        await db.update(groups)
           .set(updateData)
           .where(eq(groups.id, groupId))
           .run();
@@ -122,7 +124,7 @@ export async function PUT(
     }
 
     // Return updated groups
-    const updatedGroups = db
+    const updatedGroups = await db
       .select()
       .from(groups)
       .where(eq(groups.tournamentId, tournamentId))
@@ -150,6 +152,7 @@ export async function POST(
   }
 
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
@@ -175,7 +178,7 @@ export async function POST(
       }
 
       // Verify player belongs to this tournament
-      const player = db
+      const player = await db
         .select()
         .from(players)
         .where(eq(players.id, playerId))
@@ -190,7 +193,7 @@ export async function POST(
 
       // Update player name if provided
       if (name !== undefined) {
-        db.update(players)
+        await db.update(players)
           .set({ name: name || null })
           .where(eq(players.id, playerId))
           .run();
@@ -199,13 +202,13 @@ export async function POST(
       // Bind/unbind user to this player position
       if (userId !== undefined) {
         // First, unbind any user currently bound to this player
-        const currentlyBound = db
+        const currentlyBound = await db
           .select()
           .from(users)
           .where(eq(users.playerId, playerId))
           .all();
         for (const u of currentlyBound) {
-          db.update(users)
+          await db.update(users)
             .set({ playerId: null })
             .where(eq(users.id, u.id))
             .run();
@@ -213,7 +216,7 @@ export async function POST(
 
         // Bind the new user (if userId is not null/0)
         if (userId && typeof userId === "number") {
-          db.update(users)
+          await db.update(users)
             .set({ playerId: playerId })
             .where(eq(users.id, userId))
             .run();
@@ -222,7 +225,7 @@ export async function POST(
     }
 
     // Return updated players
-    const updatedPlayers = db
+    const updatedPlayers = await db
       .select()
       .from(players)
       .where(eq(players.tournamentId, tournamentId))

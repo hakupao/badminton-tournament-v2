@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import {
   matches,
   matchGames,
@@ -19,13 +19,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const db = getDb();
     const { id } = await params;
     const matchId = parseInt(id, 10);
     if (isNaN(matchId)) {
       return NextResponse.json({ error: "Invalid match ID" }, { status: 400 });
     }
 
-    const match = db
+    const match = await db
       .select()
       .from(matches)
       .where(eq(matches.id, matchId))
@@ -36,18 +37,18 @@ export async function GET(
     }
 
     // Get tournament for scoring mode
-    const tournament = db
+    const tournament = await db
       .select()
       .from(tournaments)
       .where(eq(tournaments.id, match.tournamentId))
       .get();
 
     // Get groups
-    const homeGroup = db.select().from(groups).where(eq(groups.id, match.homeGroupId)).get();
-    const awayGroup = db.select().from(groups).where(eq(groups.id, match.awayGroupId)).get();
+    const homeGroup = await db.select().from(groups).where(eq(groups.id, match.homeGroupId)).get();
+    const awayGroup = await db.select().from(groups).where(eq(groups.id, match.awayGroupId)).get();
 
     // Get players
-    const allTournamentPlayers = db
+    const allTournamentPlayers = await db
       .select()
       .from(players)
       .where(eq(players.tournamentId, match.tournamentId))
@@ -56,7 +57,7 @@ export async function GET(
     const playerMap = new Map(allTournamentPlayers.map((p) => [p.id, p]));
 
     // Get bound usernames
-    const allUsers = db
+    const allUsers = await db
       .select({ id: users.id, username: users.username, playerId: users.playerId })
       .from(users)
       .all();
@@ -84,54 +85,56 @@ export async function GET(
     const awayPlayers = [buildPlayer(match.awayPlayer1Id), buildPlayer(match.awayPlayer2Id)].filter(Boolean);
 
     // Get games
-    const games = db
+    const games = (await db
       .select()
       .from(matchGames)
       .where(eq(matchGames.matchId, matchId))
-      .all()
+      .all())
       .sort((a, b) => a.gameNumber - b.gameNumber);
 
     // Get referee records
-    const refs = db
+    const refs = await db
       .select()
       .from(refereeRecords)
       .where(eq(refereeRecords.matchId, matchId))
       .all();
 
-    const referees = refs.map((r) => {
+    const referees = [];
+    for (const r of refs) {
       const p = playerMap.get(r.playerId);
-      const g = p ? db.select().from(groups).where(eq(groups.id, p.groupId)).get() : null;
-      return {
+      const g = p ? await db.select().from(groups).where(eq(groups.id, p.groupId)).get() : null;
+      referees.push({
         playerName: p?.name || null,
         role: r.role,
         groupIcon: g?.icon || "",
         position: p?.positionNumber || 0,
-      };
-    });
+      });
+    }
 
     // Scoring info
     const scoringMode = (tournament?.scoringMode || "single_21") as ScoringMode;
     const scoringInfo = SCORING_MODES[scoringMode];
 
     // All players for referee selection
-    const allPlayersForSelect = allTournamentPlayers.map((p) => {
-      const g = db.select().from(groups).where(eq(groups.id, p.groupId)).get();
+    const allPlayersForSelect = [];
+    for (const p of allTournamentPlayers) {
+      const g = await db.select().from(groups).where(eq(groups.id, p.groupId)).get();
       const boundUser = userByPlayerId.get(p.id);
-      return {
+      allPlayersForSelect.push({
         id: p.id,
         name: p.name,
         groupIcon: g?.icon || "",
         position: p.positionNumber,
         boundUsername: boundUser?.username || null,
-      };
-    });
+      });
+    }
 
     // Get score events (point-by-point log)
-    const matchScoreEvents = db
+    const matchScoreEvents = (await db
       .select()
       .from(scoreEvents)
       .where(eq(scoreEvents.matchId, matchId))
-      .all()
+      .all())
       .sort((a, b) => a.gameNumber - b.gameNumber || a.eventOrder - b.eventOrder);
 
     return NextResponse.json({

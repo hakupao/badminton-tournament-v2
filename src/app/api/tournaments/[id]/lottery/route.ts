@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { tournamentParticipants, tournaments, groups, players, users } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
@@ -16,13 +16,14 @@ export async function POST(
   }
 
   try {
+    const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const tournament = db
+    const tournament = await db
       .select()
       .from(tournaments)
       .where(eq(tournaments.id, tournamentId))
@@ -32,20 +33,20 @@ export async function POST(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const tournamentGroups = db
+    const tournamentGroups = (await db
       .select()
       .from(groups)
       .where(eq(groups.tournamentId, tournamentId))
-      .all()
+      .all())
       .sort((a, b) => a.sortOrder - b.sortOrder);
 
-    const tournamentPlayers = db
+    const tournamentPlayers = await db
       .select()
       .from(players)
       .where(eq(players.tournamentId, tournamentId))
       .all();
 
-    const participants = db
+    const participants = await db
       .select()
       .from(tournamentParticipants)
       .where(eq(tournamentParticipants.tournamentId, tournamentId))
@@ -80,7 +81,7 @@ export async function POST(
     }
 
     // Get user info for name assignment
-    const allUsers = db
+    const allUsers = await db
       .select({ id: users.id, username: users.username })
       .from(users)
       .all();
@@ -114,27 +115,27 @@ export async function POST(
         const username = user?.username || "未知";
 
         // Update player name
-        db.update(players)
+        await db.update(players)
           .set({ name: username })
           .where(eq(players.id, playerSlot.id))
           .run();
 
         // Bind user to player
         // First unbind any existing binding
-        const currentlyBound = db
+        const currentlyBound = await db
           .select()
           .from(users)
           .where(eq(users.playerId, playerSlot.id))
           .all();
         for (const u of currentlyBound) {
-          db.update(users)
+          await db.update(users)
             .set({ playerId: null })
             .where(eq(users.id, u.id))
             .run();
         }
 
         // Bind new user
-        db.update(users)
+        await db.update(users)
           .set({ playerId: playerSlot.id })
           .where(eq(users.id, participant.userId))
           .run();

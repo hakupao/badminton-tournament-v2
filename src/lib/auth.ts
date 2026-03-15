@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -41,7 +41,8 @@ export async function getCurrentUser() {
   const payload = await verifyToken(token);
   if (!payload) return null;
 
-  const user = db
+  const db = getDb();
+  const user = await db
     .select()
     .from(users)
     .where(eq(users.id, payload.userId))
