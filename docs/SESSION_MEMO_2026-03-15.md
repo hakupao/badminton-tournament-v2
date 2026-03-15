@@ -1,0 +1,214 @@
+# Session 工作备忘录 — 2026-03-15
+
+## 本次 Session 完成的工作
+
+### 1. 管理员账号管理页面（全新功能）
+
+**新增文件：**
+- `src/app/admin/users/page.tsx` — 管理员账号管理页面
+- `src/app/api/users/[id]/route.ts` — 用户管理 API（重置密码、删除用户）
+
+**修改文件：**
+- `src/app/api/users/route.ts` — 新增 POST 端点（创建用户）
+- `src/app/admin/page.tsx` — 管理后台新增「账号管理」入口卡片
+
+**功能：**
+- 管理员可以查看所有已注册账号（运动员 / 管理员分类显示）
+- 创建新用户（选择角色）
+- 重置密码（内联操作）
+- 删除用户（带确认，不能删除自己）
+- 显示运动员的绑定状态
+
+### 2. 裁判 UI 改版
+
+**修改文件：**
+- `src/app/match/[id]/scoring/page.tsx`
+
+**变更：**
+- 原来：下拉选择器（Select），从所有选手中选裁判/边裁
+- 现在：两个按钮「我是主裁」「我是边裁」，点击即绑定当前登录用户
+- 逻辑：谁记分谁就是裁判，不需要选择别人
+
+### 3. 比分提交 API 修复
+
+**修改文件：**
+- `src/app/api/tournaments/[id]/matches/[matchId]/score/route.ts`
+
+**变更：**
+- 移除了「检查提交者是否是本场比赛参与者」的逻辑
+- 现在任何已登录用户都可以提交比分（谁在场边谁就是裁判）
+
+### 4. BWF 标准得分路径显示
+
+**修改文件：**
+- `src/app/match/[id]/page.tsx`
+
+**变更：**
+- 原来：横向 badge 显示得分
+- 现在：竖向两列表格（A 列主队 / B 列客队），BWF 国际标准记分表格式
+- 只有得分方显示当前累计分数
+- 发球权切换时有分隔线
+- 底部显示最终比分
+
+### 5. 得分事件去重
+
+**修改文件：**
+- `src/app/match/[id]/scoring/page.tsx` — 提交前去重
+- `src/app/match/[id]/page.tsx` — 显示时去重
+
+**原因：**
+- React strict mode 在开发模式下会双重触发 state updater
+- `scoreEventLogRef.current.push()` 在 `setGames()` 回调中导致每个事件记录两次
+- 去重逻辑：过滤连续相同分数的事件
+
+### 6. 安全加固
+
+**修改文件：**
+- `src/app/api/tournaments/[id]/groups/route.ts` — PUT handler 添加 `requireAdmin()`
+- `src/app/api/tournaments/[id]/simulate/route.ts` — 添加 `requireAdmin()` + import
+
+### 7. Cloudflare D1 数据库迁移（核心改动）
+
+**新增文件：**
+- `src/db/local.ts` — Plan B 本地数据库独立模块（保留原始代码）
+- `schema.sql` — D1 数据库初始化 SQL
+- `wrangler.toml` — Cloudflare Workers 配置
+
+**重写文件：**
+- `src/db/index.ts` — 数据库切换层
+
+**修改文件（全部 16 个 API route + auth.ts）：**
+- `src/lib/auth.ts`
+- `src/app/api/auth/login/route.ts`
+- `src/app/api/auth/register/route.ts`
+- `src/app/api/users/route.ts`
+- `src/app/api/users/[id]/route.ts`
+- `src/app/api/tournaments/route.ts`
+- `src/app/api/tournaments/[id]/route.ts`
+- `src/app/api/tournaments/[id]/groups/route.ts`
+- `src/app/api/tournaments/[id]/template/route.ts`
+- `src/app/api/tournaments/[id]/schedule/route.ts`
+- `src/app/api/tournaments/[id]/stats/route.ts`
+- `src/app/api/tournaments/[id]/simulate/route.ts`
+- `src/app/api/tournaments/[id]/lottery/route.ts`
+- `src/app/api/tournaments/[id]/participants/route.ts`
+- `src/app/api/matches/[id]/route.ts`
+- `src/app/api/tournaments/[id]/matches/[matchId]/score/route.ts`
+
+**改动内容：**
+1. `import { db } from "@/db"` → `import { getDb } from "@/db"`
+2. 每个 handler 函数内部 `const db = getDb()`（不在模块顶层，因为 D1 需要 per-request）
+3. 所有 `.get()`、`.all()`、`.run()` 前加 `await`（D1 是异步的）
+4. `getDb()` 返回类型从 `any` 改为 `BetterSQLite3Database<typeof schema>`（修复 TS 错误）
+5. D1 模块用 `eval('require(...)')` 隐藏模块名，避免 Turbopack 静态分析报错
+
+**数据库切换逻辑：**
+```typescript
+// src/db/index.ts
+export function getDb(): DbInstance {
+  if (process.env.USE_D1 === "true") {
+    return createD1Db();  // Cloudflare D1
+  }
+  return createLocalDb();  // better-sqlite3
+}
+```
+
+### 8. 依赖更新
+
+**package.json 新增：**
+- `@cloudflare/next-on-pages` — Next.js → Cloudflare Pages 编译器
+- `wrangler` — Cloudflare CLI
+- `@cloudflare/workers-types` — TypeScript 类型
+
+**新增 npm scripts：**
+- `build:cf` — Cloudflare 构建
+- `deploy` — 构建 + 部署
+- `d1:init` — 初始化 D1 表结构
+- `d1:init:local` — 初始化本地 D1 模拟
+
+---
+
+## 未完成 / 已知问题
+
+### 高优先级
+
+- [ ] **Cloudflare D1 部署验证** — 代码已准备好，但尚未实际部署到 Cloudflare。`@cloudflare/next-on-pages` 对 Next.js 16 的兼容性未验证，可能需要降级到 Next.js 15。
+- [ ] **生产环境 JWT_SECRET** — 当前硬编码了默认密钥 `shuttle-arena-secret-key-change-in-production`，部署时必须通过环境变量覆盖。
+- [ ] **admin 账号初始化** — D1 中 `schema.sql` 的 admin 插入语句用的是占位 bcrypt hash，需要手动生成真实 hash 或通过注册页面创建。
+- [ ] **Windows 上 build:cf 脚本** — `USE_D1=true npx ...` 语法在 Windows 不生效，需要用 cross-env 或 PowerShell 语法。
+
+### 中优先级
+
+- [ ] 运动员自助绑定代号流程
+- [ ] 移动端 UI 优化
+- [ ] 比赛中途换人功能
+
+### 低优先级
+
+- [ ] Drizzle migrations（当前用 seed.ts / schema.sql 手动建表）
+- [ ] 更细粒度的权限控制
+- [ ] WebSocket 实时比分推送
+
+### 已知 Bug
+
+- Next.js 16 Turbopack 在 Windows 上偶尔 panic（globals.css 相关），生产 build 正常
+- React strict mode 导致记分事件重复记录 — 已在提交和显示层做去重处理
+
+---
+
+## 明天（下一次 Session）的工作计划
+
+### 优先级 1：完成部署
+
+1. 在新电脑上 clone 项目：
+   ```bash
+   git clone https://github.com/hakupao/badminton-tournament-v2.git
+   cd badminton-tournament-v2/shuttle-arena
+   npm install --legacy-peer-deps
+   ```
+
+2. 按照 `docs/DEPLOY_GUIDE.md` 执行部署步骤
+
+3. 如果 `@cloudflare/next-on-pages` 不兼容 Next.js 16，降级到 15：
+   ```bash
+   npm install next@15 --legacy-peer-deps
+   ```
+   降级后需要检查：
+   - `params` 在 Next.js 15 中是否需要 `await`（Next.js 16 的 `params` 是 Promise）
+   - 是否有其他 API 差异
+
+4. 部署成功后，创建 admin 账号，完整测试所有功能
+
+### 优先级 2：功能继续开发
+
+- 运动员自助绑定代号
+- 移动端响应式优化
+- 其他待定需求
+
+---
+
+## 技术要点速查
+
+| 项目 | 详情 |
+|------|------|
+| 框架 | Next.js 16.1.6 + React 19 + Tailwind CSS 4 |
+| 数据库 | SQLite（本地 better-sqlite3 / 生产 Cloudflare D1） |
+| ORM | Drizzle ORM |
+| 认证 | JWT (jose) + httpOnly cookie，7 天过期 |
+| 状态管理 | SWR + React Context |
+| 切换数据库 | `USE_D1=true` 环境变量 → `getDb()` in `src/db/index.ts` |
+| 本地数据库文件 | 项目根目录 `shuttle-arena.db` |
+| 赛程引擎 | `src/lib/engine.ts` |
+| 认证中间件 | `requireAdmin()` in `src/lib/auth.ts` |
+| CSRF 防护 | `src/middleware.ts` Origin header 校验 |
+
+---
+
+## Git 提交历史
+
+```
+29e582a feat: add Cloudflare D1 support with dual-track database layer
+b898bf7 feat: complete tournament management system with all core features
+55f1296 feat: initial commit
+78d7b57 Initial commit from Create Next App
+```
