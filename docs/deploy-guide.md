@@ -259,6 +259,30 @@ npx wrangler d1 execute shuttle-arena-db --remote --file=schema.sql
 
 > `.vercel/` 对“本地构建后的部署命令”是临时必需的，但它不是需要入库的长期文件。
 
+### Q: Cloudflare 构建时报 `@cloudflare/next-on-page` 404？
+
+这通常是 **Build command 少写了最后的 `s`**。
+
+正确写法：
+
+```bash
+npx @cloudflare/next-on-pages
+```
+
+错误写法：
+
+```bash
+npx @cloudflare/next-on-page
+```
+
+如果日志里出现类似下面的报错：
+
+```text
+npm error 404 '@cloudflare/next-on-page@*' is not in this registry
+```
+
+就去 Cloudflare Pages 项目的 **Build configuration** 里，把 Build command 改回 `npx @cloudflare/next-on-pages`，然后重新部署。
+
 ### Q: 本地开发如何切换回 SQLite？
 
 不设置 `USE_D1` 环境变量即可，默认使用 better-sqlite3：

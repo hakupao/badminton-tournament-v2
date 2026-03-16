@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ interface AuthErrorResponse {
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const loginFormRef = useRef<HTMLFormElement>(null);
   const [tab, setTab] = useState<"login" | "register">("login");
 
   // Login state
@@ -45,6 +46,17 @@ export default function LoginPage() {
       router.push("/");
     } else {
       setLoginError(result.error || "登录失败");
+    }
+  };
+
+  const handleLoginKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter" || e.nativeEvent.isComposing) {
+      return;
+    }
+
+    e.preventDefault();
+    if (!loginLoading) {
+      loginFormRef.current?.requestSubmit();
     }
   };
 
@@ -126,13 +138,14 @@ export default function LoginPage() {
 
               {/* Login Tab */}
               <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
+                <form ref={loginFormRef} onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-username" className="text-gray-600 text-sm font-medium">用户名</Label>
                     <Input
                       id="login-username"
                       value={loginUsername}
                       onChange={(e) => setLoginUsername(e.target.value)}
+                      onKeyDown={handleLoginKeyDown}
                       placeholder="请输入用户名"
                       className="h-11 border-gray-200 focus:border-green-400 focus:ring-green-400/30 transition-colors"
                       autoFocus
@@ -146,6 +159,7 @@ export default function LoginPage() {
                       type="password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
+                      onKeyDown={handleLoginKeyDown}
                       placeholder="请输入密码"
                       className="h-11 border-gray-200 focus:border-green-400 focus:ring-green-400/30 transition-colors"
                       required
