@@ -32,8 +32,9 @@ function createLocalDb(): DbInstance {
   const Database = eval('require("better-sqlite3")');
   const path = eval('require("path")');
   const { drizzle } = eval('require("drizzle-orm/better-sqlite3")');
+  const cwd = eval("process.cwd()");
 
-  const DB_PATH = path.join(process.cwd(), "shuttle-arena.db");
+  const DB_PATH = path.join(cwd, "shuttle-arena.db");
   const sqlite = new Database(DB_PATH);
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");

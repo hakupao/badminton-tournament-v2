@@ -283,12 +283,23 @@ npm error 404 '@cloudflare/next-on-page@*' is not in this registry
 
 就去 Cloudflare Pages 项目的 **Build configuration** 里，把 Build command 改回 `npx @cloudflare/next-on-pages`，然后重新部署。
 
-### Q: 本地开发如何切换回 SQLite？
+### Q: 本地开发为什么也走 D1？
 
-不设置 `USE_D1` 环境变量即可，默认使用 better-sqlite3：
+当前项目的 API route 都跑在 Edge Runtime，和 Cloudflare Pages 的实际运行方式一致。为了让本地调试和线上部署共存，`npm run dev` 现在默认带上 `USE_D1=true`，并通过 `@cloudflare/next-on-pages/next-dev` 注入本地 Cloudflare 绑定。
+
+推荐本地流程：
 
 ```bash
+npm run d1:init:local
+npm run d1:seed:local
 npm run dev
+```
+
+如果想在推送前再用 Cloudflare 的本地 Worker 运行时验一次：
+
+```bash
+npm run build:cf
+npm run preview:cf
 ```
 
 ### Q: 如何查看 D1 数据库内容？
@@ -341,28 +352,30 @@ $env:USE_D1="true"; npx @cloudflare/next-on-pages
 | `wrangler.toml` | Cloudflare Workers/Pages 配置，含 D1 database_id |
 | `.npmrc` | 配置 `legacy-peer-deps=true`，解决 peer dep 冲突 |
 | `schema.sql` | D1 数据库表结构（仅建表，无初始数据） |
-| `src/db/seed.ts` | 本地开发用种子脚本（创建 admin 账号） |
+| `scripts/seed-local-d1.sql` | 本地 D1 管理员初始化脚本（admin/admin123） |
 | `src/db/index.ts` | 数据库切换层（D1 / better-sqlite3 双轨） |
 | `src/db/schema.ts` | Drizzle ORM schema 定义 |
 | `src/lib/auth.ts` | JWT 认证逻辑 |
-| `next.config.ts` | Next.js 配置（含 `typescript.ignoreBuildErrors`，解决 Webpack 模式类型严格问题） |
+| `next.config.ts` | Next.js 配置（开发模式下注入 Cloudflare 本地绑定） |
 
 ---
 
 ## 本地开发模式
 
-不需要 Cloudflare 账号，直接本地运行：
+本地开发默认走本地 D1，尽量贴近 Cloudflare 线上运行时：
 
 ```bash
 npm install --legacy-peer-deps
+npm run d1:init:local
+npm run d1:seed:local
 npm run dev
 ```
 
-数据存储在项目根目录的 `shuttle-arena.db`（SQLite 文件，自动创建）。
+本地 D1 数据存储在 `.wrangler/state/v3/d1/` 下，由 Wrangler 管理。
 
-初始化本地数据库：
+如需用 Cloudflare Worker 运行时做本地验收：
 
 ```bash
-npm run d1:init:local   # 创建表结构
-npx tsx src/db/seed.ts  # 创建 admin 账号（admin/admin123）
+npm run build:cf
+npm run preview:cf
 ```

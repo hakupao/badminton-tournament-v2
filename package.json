@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "USE_D1=true next dev",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "build:cf": "USE_D1=true npx @cloudflare/next-on-pages",
+    "preview:cf": "npx wrangler pages dev .vercel/output/static -b USE_D1=true",
     "deploy": "npm run build:cf && npx wrangler pages deploy .vercel/output/static",
     "d1:init": "npx wrangler d1 execute shuttle-arena-db --remote --file=schema.sql",
-    "d1:init:local": "npx wrangler d1 execute shuttle-arena-db --local --file=schema.sql"
+    "d1:init:local": "npx wrangler d1 execute shuttle-arena-db --local --file=schema.sql",
+    "d1:seed:local": "npx wrangler d1 execute shuttle-arena-db --local --file=scripts/seed-local-d1.sql"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

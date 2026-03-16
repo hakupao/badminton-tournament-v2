@@ -39,11 +39,11 @@ cd badminton-tournament-v2
 npm install --legacy-peer-deps
 ```
 
-初始化本地数据库并创建 admin 账号：
+初始化本地 D1 数据库并创建 admin 账号：
 
 ```bash
 npm run d1:init:local
-npx tsx src/db/seed.ts
+npm run d1:seed:local
 ```
 
 启动开发服务器：
@@ -53,6 +53,13 @@ npm run dev
 ```
 
 访问 http://localhost:3000，使用 `admin` / `admin123` 登录。
+
+如需在推送前按 Cloudflare 运行时做一次本地验收：
+
+```bash
+npm run build:cf
+npm run preview:cf
+```
 
 ---
 

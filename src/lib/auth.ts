@@ -10,11 +10,11 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+  return bcrypt.hashSync(password, 10);
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
+  return bcrypt.compareSync(password, hash);
 }
 
 export async function createToken(userId: number, role: string): Promise<string> {
