@@ -8,6 +8,7 @@ import {
   matches,
   matchGames,
   refereeRecords,
+  scoreEvents,
 } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { generateMatches, scheduleMatches, generateTimeSlots } from "@/lib/engine";
@@ -153,6 +154,7 @@ export async function POST(
       .all();
 
     for (const m of existingMatches) {
+      await db.delete(scoreEvents).where(eq(scoreEvents.matchId, m.id)).run();
       await db.delete(matchGames).where(eq(matchGames.matchId, m.id)).run();
       await db.delete(refereeRecords).where(eq(refereeRecords.matchId, m.id)).run();
     }

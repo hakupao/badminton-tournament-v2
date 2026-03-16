@@ -1,6 +1,10 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT,
+  DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT,
+} from "@/lib/constants";
 import { FileText, AlertTriangle } from "lucide-react";
 
 interface PlayerStat {
@@ -18,11 +22,21 @@ interface QualityReportProps {
   playerStats: PlayerStat[];
   groups: Array<{ icon: string; name: string }>;
   roundDurationMinutes?: number;
+  maxConsecutivePlayingLimit?: number;
+  maxConsecutiveRestingLimit?: number;
 }
 
-export function QualityReport({ playerStats, groups, roundDurationMinutes = 20 }: QualityReportProps) {
+export function QualityReport({
+  playerStats,
+  groups,
+  roundDurationMinutes = 20,
+  maxConsecutivePlayingLimit = DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT,
+  maxConsecutiveRestingLimit = DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT,
+}: QualityReportProps) {
   const hasWarnings = playerStats.some(
-    (p) => p.maxConsecutivePlaying >= 3 || p.maxConsecutiveResting >= 3
+    (p) =>
+      p.maxConsecutivePlaying > maxConsecutivePlayingLimit ||
+      p.maxConsecutiveResting > maxConsecutiveRestingLimit
   );
 
   return (
@@ -39,28 +53,32 @@ export function QualityReport({ playerStats, groups, roundDurationMinutes = 20 }
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[680px] text-sm">
             <thead>
               <tr className="border-b border-green-100 bg-green-50/50">
-                <th className="p-3 text-left font-semibold text-gray-600">代号</th>
-                <th className="p-3 text-center font-semibold text-gray-600">性别</th>
-                <th className="p-3 text-center font-semibold text-gray-600">总上场</th>
-                <th className="p-3 text-center font-semibold text-gray-600">
-                  <span className="hidden sm:inline">最大</span>连续上场
+                <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">代号</th>
+                <th className="p-3 text-center font-semibold text-gray-600 whitespace-nowrap">性别</th>
+                <th className="p-3 text-center font-semibold text-gray-600 whitespace-nowrap">总上场</th>
+                <th className="p-3 text-center font-semibold text-gray-600 whitespace-nowrap">
+                  <span className="sm:hidden">连上</span>
+                  <span className="hidden sm:inline">最大连续上场</span>
                 </th>
-                <th className="p-3 text-center font-semibold text-gray-600">
-                  <span className="hidden sm:inline">最大</span>连续轮空
+                <th className="p-3 text-center font-semibold text-gray-600 whitespace-nowrap">
+                  <span className="sm:hidden">连空</span>
+                  <span className="hidden sm:inline">最大连续轮空</span>
                 </th>
-                <th className="p-3 text-center font-semibold text-gray-600">
-                  最大休息
+                <th className="p-3 text-center font-semibold text-gray-600 whitespace-nowrap">
+                  最长休息
                 </th>
               </tr>
             </thead>
             <tbody>
               {playerStats.map((stat, idx) => {
                 const group = groups[stat.groupIndex];
-                const isPlayingWarning = stat.maxConsecutivePlaying >= 3;
-                const isRestingWarning = stat.maxConsecutiveResting >= 3;
+                const isPlayingWarning =
+                  stat.maxConsecutivePlaying > maxConsecutivePlayingLimit;
+                const isRestingWarning =
+                  stat.maxConsecutiveResting > maxConsecutiveRestingLimit;
                 const hasAnyWarning = isPlayingWarning || isRestingWarning;
                 const restMinutes = stat.maxRestMinutes ?? stat.maxConsecutiveResting * roundDurationMinutes;
 

@@ -1,20 +1,23 @@
 /**
- * Database layer - supports both local (better-sqlite3) and Cloudflare D1.
+ * Database layer - prefers Cloudflare D1 when a `DB` binding is available
+ * and falls back to local better-sqlite3 only in non-Edge Node.js contexts.
  *
- * Switch via environment variable USE_D1:
- *   - USE_D1=true  → Cloudflare D1 (via @cloudflare/next-on-pages)
- *   - otherwise    → Local better-sqlite3 (Plan B)
+ * In local development, `next.config.ts` enables Cloudflare-style bindings
+ * when `npm run dev` sets `USE_D1=true`, so API routes use the local D1
+ * instance managed by Wrangler. Cloudflare Pages/Workers use the real D1
+ * binding at runtime.
  *
  * All consumers use getDb() and `await` all DB operations,
  * since D1 is async. `await` on sync better-sqlite3 calls is a no-op.
  *
  * NOTE on module loading strategy:
  * - D1 modules use static import — the packages exist in node_modules and
- *   Webpack resolves them at build time. @cloudflare/next-on-pages CLI
- *   replaces the reference at post-build time with its runtime implementation.
+ *   Webpack resolves them at build time. Cloudflare runtime wiring provides
+ *   the actual `DB` binding when available.
  * - Local SQLite modules use eval('require(...)') to hide native Node.js
  *   dependencies (fs, path, better-sqlite3) from the Edge Runtime bundler.
- *   This code path is never reached in production (USE_D1=true).
+ *   This code path is only reached outside Edge runtimes when no D1 binding
+ *   is available.
  */
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { getRequestContext } from "@cloudflare/next-on-pages";
@@ -47,14 +50,32 @@ function createD1Db(): DbInstance {
   return drizzleD1(cloudflareEnv.DB, { schema }) as unknown as DbInstance;
 }
 
+function hasCloudflareD1Binding() {
+  try {
+    const { env } = getRequestContext();
+    return Boolean((env as Partial<CloudflareEnvWithDb>)?.DB);
+  } catch {
+    return false;
+  }
+}
+
+function isEdgeRuntimeWithoutD1() {
+  return typeof globalThis !== "undefined" && "EdgeRuntime" in globalThis;
+}
+
 /**
  * Get a database instance.
  * - Cloudflare D1: fresh instance per request
  * - Local dev: cached better-sqlite3 singleton
  */
 export function getDb(): DbInstance {
-  if (process.env.USE_D1 === "true") {
+  if (hasCloudflareD1Binding()) {
     return createD1Db();
+  }
+  if (isEdgeRuntimeWithoutD1()) {
+    throw new Error(
+      "Cloudflare D1 binding not found in Edge runtime. Run `npm run dev` for local D1 dev, or `npm run preview:cf` for Cloudflare preview."
+    );
   }
   if (!_localDb) {
     _localDb = createLocalDb();

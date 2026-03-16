@@ -4,6 +4,10 @@
  */
 
 import type { TemplateMatch } from "@/db/schema";
+import {
+  DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT,
+  DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT,
+} from "@/lib/constants";
 
 // ========== 类型定义 ==========
 
@@ -15,6 +19,8 @@ export interface SimulationParams {
   roundDurationMinutes: number;
   startTime: string; // "09:00"
   endTime: string;   // "19:00"
+  maxConsecutivePlayingLimit?: number;
+  maxConsecutiveRestingLimit?: number;
   templateMatches: Pick<TemplateMatch, "matchType" | "homePos1" | "homePos2" | "awayPos1" | "awayPos2">[];
 }
 
@@ -126,11 +132,25 @@ function shuffleArray<T>(arr: T[], rng: () => number): T[] {
   return arr;
 }
 
-/**
- * Evaluate a schedule's quality: lower is better.
- * Penalizes consecutive playing (heavily) and consecutive resting.
- */
-function evaluateScheduleQuality(schedule: ScheduledMatch[]): number {
+function getPlayingLimit(params?: Pick<SimulationParams, "maxConsecutivePlayingLimit">) {
+  return Math.max(
+    1,
+    params?.maxConsecutivePlayingLimit ?? DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT
+  );
+}
+
+function getRestingLimit(params?: Pick<SimulationParams, "maxConsecutiveRestingLimit">) {
+  return Math.max(
+    1,
+    params?.maxConsecutiveRestingLimit ?? DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT
+  );
+}
+
+function evaluateScheduleQuality(
+  schedule: ScheduledMatch[],
+  maxConsecutivePlayingLimit: number,
+  maxConsecutiveRestingLimit: number
+): number {
   const totalRounds = Math.max(...schedule.map((s) => s.roundNumber), 0);
   if (totalRounds === 0) return 0;
 
@@ -152,14 +172,18 @@ function evaluateScheduleQuality(schedule: ScheduledMatch[]): number {
     const maxPlay = maxConsecutive(rounds);
     const maxRest = maxConsecutive(rounds.map((r) => !r));
 
-    // Heavy penalty for consecutive playing > 2
-    if (maxPlay > 2) penalty += (maxPlay - 2) * 100;
-    // Moderate penalty for consecutive playing == 2
-    if (maxPlay === 2) penalty += 5;
-    // Penalty for consecutive resting > 3
-    if (maxRest > 3) penalty += (maxRest - 3) * 50;
-    // Mild penalty for resting 3
-    if (maxRest === 3) penalty += 10;
+    if (maxPlay > maxConsecutivePlayingLimit) {
+      penalty += (maxPlay - maxConsecutivePlayingLimit) * 100;
+    }
+    if (maxPlay === maxConsecutivePlayingLimit) {
+      penalty += 5;
+    }
+    if (maxRest > maxConsecutiveRestingLimit) {
+      penalty += (maxRest - maxConsecutiveRestingLimit) * 50;
+    }
+    if (maxRest === maxConsecutiveRestingLimit) {
+      penalty += 10;
+    }
   }
 
   return penalty;
@@ -170,7 +194,9 @@ function evaluateScheduleQuality(schedule: ScheduledMatch[]): number {
  */
 function greedySchedule(
   allMatches: GeneratedMatch[],
-  courtsCount: number
+  courtsCount: number,
+  maxConsecutivePlayingLimit: number,
+  maxConsecutiveRestingLimit: number
 ): ScheduledMatch[] {
   const scheduled: ScheduledMatch[] = [];
   const remaining = [...allMatches];
@@ -179,8 +205,6 @@ function greedySchedule(
   const lastPlayedRound: Map<string, number> = new Map();
   // 记录每个选手连续上场的次数（到当前为止）
   const consecutivePlaying: Map<string, number> = new Map();
-  // 记录每个选手上场的轮次列表
-  const playerRounds: Map<string, number[]> = new Map();
 
   let roundNumber = 1;
 
@@ -202,20 +226,21 @@ function greedySchedule(
         const lastRound = lastPlayedRound.get(p) ?? 0;
         const restGap = roundNumber - lastRound;
 
-        // Bonus for players who have been resting too long (3+ rounds)
-        if (restGap >= 4) score += 30;
-        else if (restGap >= 3) score += 15;
+        if (restGap >= maxConsecutiveRestingLimit + 1) score += 30;
+        else if (restGap >= maxConsecutiveRestingLimit) score += 15;
         else score += restGap;
 
         // 惩罚：上一轮刚打过的选手（连续上场）
         if (restGap === 1) {
           score -= 20;
-          // Heavy penalty: if player played in round N-1 AND N-2, heavily penalize round N
           const consec = consecutivePlaying.get(p) ?? 0;
-          if (consec >= 2) {
-            score -= 200; // Very heavy penalty to prevent 3+ consecutive
-          } else if (consec >= 1) {
-            score -= 50; // Strong penalty for potential 3rd consecutive
+          if (consec >= maxConsecutivePlayingLimit) {
+            score -= 200;
+          } else if (
+            maxConsecutivePlayingLimit > 1 &&
+            consec === maxConsecutivePlayingLimit - 1
+          ) {
+            score -= 50;
           }
         }
       }
@@ -269,8 +294,6 @@ function greedySchedule(
           consecutivePlaying.set(p, 1);
         }
         lastPlayedRound.set(p, roundNumber);
-        if (!playerRounds.has(p)) playerRounds.set(p, []);
-        playerRounds.get(p)!.push(roundNumber);
       }
     }
 
@@ -286,11 +309,16 @@ function greedySchedule(
  */
 function localSearchOptimize(
   schedule: ScheduledMatch[],
-  courtsCount: number,
+  maxConsecutivePlayingLimit: number,
+  maxConsecutiveRestingLimit: number,
   maxIterations: number = 500
 ): ScheduledMatch[] {
   let best = [...schedule];
-  let bestScore = evaluateScheduleQuality(best);
+  let bestScore = evaluateScheduleQuality(
+    best,
+    maxConsecutivePlayingLimit,
+    maxConsecutiveRestingLimit
+  );
 
   if (bestScore === 0) return best;
 
@@ -311,7 +339,7 @@ function localSearchOptimize(
 
     // Pick two random rounds to try swapping a match between them
     const r1 = Math.floor(Math.random() * totalRounds) + 1;
-    let r2 = Math.floor(Math.random() * totalRounds) + 1;
+    const r2 = Math.floor(Math.random() * totalRounds) + 1;
     if (r1 === r2) continue;
 
     const roundMap = groupByRound(best);
@@ -362,7 +390,11 @@ function localSearchOptimize(
       return m;
     });
 
-    const candidateScore = evaluateScheduleQuality(candidate);
+    const candidateScore = evaluateScheduleQuality(
+      candidate,
+      maxConsecutivePlayingLimit,
+      maxConsecutiveRestingLimit
+    );
     if (candidateScore < bestScore) {
       best = candidate;
       bestScore = candidateScore;
@@ -378,7 +410,9 @@ function localSearchOptimize(
  */
 export function scheduleMatches(
   allMatches: GeneratedMatch[],
-  courtsCount: number
+  courtsCount: number,
+  maxConsecutivePlayingLimit: number = DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT,
+  maxConsecutiveRestingLimit: number = DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT
 ): ScheduledMatch[] {
   const NUM_ATTEMPTS = 8;
 
@@ -394,12 +428,26 @@ export function scheduleMatches(
     }
 
     // Greedy pass
-    let candidate = greedySchedule(shuffled, courtsCount);
+    let candidate = greedySchedule(
+      shuffled,
+      courtsCount,
+      maxConsecutivePlayingLimit,
+      maxConsecutiveRestingLimit
+    );
 
     // Local search optimization pass
-    candidate = localSearchOptimize(candidate, courtsCount, 500);
+    candidate = localSearchOptimize(
+      candidate,
+      maxConsecutivePlayingLimit,
+      maxConsecutiveRestingLimit,
+      500
+    );
 
-    const score = evaluateScheduleQuality(candidate);
+    const score = evaluateScheduleQuality(
+      candidate,
+      maxConsecutivePlayingLimit,
+      maxConsecutiveRestingLimit
+    );
     if (score < bestScore) {
       bestScore = score;
       bestSchedule = candidate;
@@ -490,12 +538,19 @@ export function analyzeSchedule(
  */
 export function runSimulation(params: SimulationParams): SimulationResult {
   const warnings: string[] = [];
+  const maxConsecutivePlayingLimit = getPlayingLimit(params);
+  const maxConsecutiveRestingLimit = getRestingLimit(params);
 
   // 1. 生成所有比赛
   const allMatches = generateMatches(params);
 
   // 2. 赛程编排
-  const schedule = scheduleMatches(allMatches, params.courtsCount);
+  const schedule = scheduleMatches(
+    allMatches,
+    params.courtsCount,
+    maxConsecutivePlayingLimit,
+    maxConsecutiveRestingLimit
+  );
 
   // 3. 质量评估
   const playerStats = analyzeSchedule(schedule, params, params.roundDurationMinutes);
@@ -517,10 +572,10 @@ export function runSimulation(params: SimulationParams): SimulationResult {
 
   // 检查连续上场/轮空异常
   for (const ps of playerStats) {
-    if (ps.maxConsecutivePlaying >= 3) {
+    if (ps.maxConsecutivePlaying > maxConsecutivePlayingLimit) {
       warnings.push(`选手 组${ps.groupIndex + 1}-${ps.position}号位 连续上场 ${ps.maxConsecutivePlaying} 轮`);
     }
-    if (ps.maxConsecutiveResting >= 4) {
+    if (ps.maxConsecutiveResting > maxConsecutiveRestingLimit) {
       warnings.push(`选手 组${ps.groupIndex + 1}-${ps.position}号位 连续轮空 ${ps.maxConsecutiveResting} 轮（休息 ${ps.maxRestMinutes} 分钟）`);
     }
   }

@@ -125,7 +125,6 @@ npx wrangler d1 execute shuttle-arena-db --remote --command="UPDATE users SET ro
 
 | 变量名 | 值 | 说明 |
 |--------|------|------|
-| `USE_D1` | `true` | 生产环境启用 D1；Cloudflare Pages 部署必须设置 |
 | `JWT_SECRET` | `你的随机密钥` | JWT 签名密钥，生产环境**必须**修改 |
 
 > 如果你走的是“本机命令行首次部署”，Pages 项目要等第六步首次 `npm run deploy` 后才会在 Dashboard 中出现。也就是说，第一次命令行部署主要是为了创建项目；随后再回来补环境变量和 D1 绑定，并重新部署一次。
@@ -147,7 +146,7 @@ npm run deploy
 ```
 
 这会执行：
-1. `USE_D1=true npx @cloudflare/next-on-pages` — 使用 Webpack 模式编译 Next.js 为 CF Workers 格式
+1. `npx @cloudflare/next-on-pages` — 使用 Webpack 模式编译 Next.js 为 CF Workers 格式
 2. `npx wrangler pages deploy .vercel/output/static` — 上传到 Cloudflare Pages
 
 首次运行会提示输入 Pages 项目名称（建议使用 `shuttle-arena`）。
@@ -203,14 +202,13 @@ n p m
 | 设置项 | 值 |
 |--------|------|
 | Framework preset | `None`（不选 Next.js，使用自定义命令） |
-| Build command | `npx @cloudflare/next-on-pages` |
+| Build command | `npm run build:cf` |
 | Build output directory | `.vercel/output/static` |
 | Root directory | `/` |
 
-> **重要**：Build command 不能写 `npm run build:cf`（里面有 `USE_D1=true` 前缀在 CI 环境有兼容问题），直接写 `npx @cloudflare/next-on-pages` 即可——`USE_D1` 已通过 Environment variables 设置。
+> Cloudflare 的 Git 构建环境是 Linux。即使本机原生 Windows 上 `npm run build:cf` 会因为 `@cloudflare/next-on-pages` 的上游兼容性问题而失败，也不影响 GitHub -> Cloudflare 的自动部署。
 
 5. 在 **Environment variables** 中添加（Production + Preview 都要勾选）：
-   - `USE_D1` = `true`
    - `JWT_SECRET` = 你的随机密钥
    - `NODE_VERSION` = `20`
 
@@ -285,7 +283,7 @@ npm error 404 '@cloudflare/next-on-page@*' is not in this registry
 
 ### Q: 本地开发为什么也走 D1？
 
-当前项目的 API route 都跑在 Edge Runtime，和 Cloudflare Pages 的实际运行方式一致。为了让本地调试和线上部署共存，`npm run dev` 现在默认带上 `USE_D1=true`，并通过 `@cloudflare/next-on-pages/next-dev` 注入本地 Cloudflare 绑定。
+当前项目的 API route 都跑在 Edge Runtime，和 Cloudflare Pages 的实际运行方式一致。为了让本地调试和线上部署一致，`npm run dev` 会先初始化本地 D1，然后通过 `@cloudflare/next-on-pages/next-dev` 注入本地 Cloudflare 绑定。
 
 推荐本地流程：
 
@@ -293,6 +291,12 @@ npm error 404 '@cloudflare/next-on-page@*' is not in this registry
 npm run d1:init:local
 npm run d1:seed:local
 npm run dev
+```
+
+如果你已经初始化过本地 D1，只想快速启动：
+
+```bash
+npm run dev:fast
 ```
 
 如果想在推送前再用 Cloudflare 的本地 Worker 运行时验一次：
@@ -319,8 +323,8 @@ npx wrangler d1 export shuttle-arena-db --remote --output=backup.sql
 
 检查：
 1. D1 绑定是否已配置（变量名必须是 `DB`）
-2. `USE_D1=true` 环境变量是否已设置
-3. 数据库表是否已初始化
+2. 数据库表是否已初始化
+3. `JWT_SECRET` 是否已配置
 
 查看 Worker 实时日志：
 
@@ -328,20 +332,19 @@ npx wrangler d1 export shuttle-arena-db --remote --output=backup.sql
 npx wrangler pages deployment tail
 ```
 
-### Q: build:cf 命令在 Windows 上 USE_D1=true 不生效？
+### Q: Windows / macOS / Cloudflare 分别连接哪个数据库？
 
-Windows 不支持 `KEY=VALUE command` 语法。使用：
+- `npm run dev` / `npm run dev:fast`：连接本地 D1（`.wrangler/state/v3/d1/`）
+- `npm run preview:cf`：连接 Wrangler 提供的本地 Cloudflare D1 绑定
+- Cloudflare Pages 正式/预览环境：连接 Dashboard 里绑定的真实 D1（变量名 `DB`）
 
-```powershell
-# PowerShell
-$env:USE_D1="true"; npx @cloudflare/next-on-pages
-```
+项目在运行时会优先检测 Cloudflare 的 `DB` 绑定；只有在非 Edge 的 Node 场景下，才会退回到本地 `better-sqlite3` 兜底。
 
-或安装 `cross-env` 并修改 `package.json` 的 `build:cf` 脚本：
+补充说明：
 
-```json
-"build:cf": "cross-env USE_D1=true npx @cloudflare/next-on-pages"
-```
+- Windows / macOS 的日常本地开发都建议直接用 `npm run dev`
+- 如果你要本地跑 Cloudflare 风格预览，优先使用 macOS / Linux / WSL
+- GitHub 推送触发的 Cloudflare 自动部署不受原生 Windows 本地构建限制影响
 
 ---
 

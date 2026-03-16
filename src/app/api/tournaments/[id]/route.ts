@@ -5,14 +5,17 @@ import {
   groups,
   players,
   users,
+  tournamentParticipants,
   templatePositions,
   templateMatches,
   matches,
   matchGames,
   refereeRecords,
+  scoreEvents,
 } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
-import { getDefaultTeam } from "@/lib/constants";
+import { buildDefaultTemplate, getDefaultTeam } from "@/lib/constants";
+import type { ScoringMode } from "@/lib/constants";
 import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
@@ -21,7 +24,7 @@ interface UpdateTournamentRequestBody {
   name?: string;
   courtsCount?: number;
   roundDurationMinutes?: number;
-  scoringMode?: string;
+  scoringMode?: ScoringMode;
   eventDate?: string | null;
   startTime?: string;
   endTime?: string;
@@ -151,6 +154,16 @@ export async function PUT(
       status,
     } = body;
 
+    if (
+      scoringMode !== undefined &&
+      scoringMode !== "single_21" &&
+      scoringMode !== "single_30" &&
+      scoringMode !== "best_of_3_15" &&
+      scoringMode !== "best_of_3_21"
+    ) {
+      return NextResponse.json({ error: "Invalid scoring mode" }, { status: 400 });
+    }
+
     // Build update object with only provided fields
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
@@ -181,76 +194,125 @@ export async function PUT(
       throw new Error("Updated tournament not found");
     }
 
-    // If groupCount changed, recreate groups and players
-    if (groupCount !== undefined) {
-      const currentGroups = await db
+    const currentGroups = (await db
+      .select()
+      .from(groups)
+      .where(eq(groups.tournamentId, tournamentId))
+      .all())
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const nextGroupCount = groupCount ?? currentGroups.length;
+    const nextMalesPerGroup = malesPerGroup ?? updated.malesPerGroup;
+    const nextFemalesPerGroup = femalesPerGroup ?? updated.femalesPerGroup;
+    const groupCountChanged = currentGroups.length !== nextGroupCount;
+    const rosterShapeChanged =
+      existing.malesPerGroup !== nextMalesPerGroup ||
+      existing.femalesPerGroup !== nextFemalesPerGroup;
+
+    if (groupCountChanged || rosterShapeChanged) {
+      const tournamentMatches = await db
         .select()
-        .from(groups)
-        .where(eq(groups.tournamentId, tournamentId))
+        .from(matches)
+        .where(eq(matches.tournamentId, tournamentId))
         .all();
 
-      if (currentGroups.length !== groupCount) {
-        // Unbind users from players in this tournament
-        const tournamentPlayers = await db.select().from(players).where(eq(players.tournamentId, tournamentId)).all();
-        const playerIds = tournamentPlayers.map(p => p.id);
-        for (const pid of playerIds) {
-          await db.update(users).set({ playerId: null }).where(eq(users.playerId, pid)).run();
-        }
+      for (const match of tournamentMatches) {
+        await db.delete(scoreEvents).where(eq(scoreEvents.matchId, match.id)).run();
+        await db.delete(refereeRecords).where(eq(refereeRecords.matchId, match.id)).run();
+        await db.delete(matchGames).where(eq(matchGames.matchId, match.id)).run();
+      }
+      await db.delete(matches).where(eq(matches.tournamentId, tournamentId)).run();
 
-        // Delete matches and related data
-        const tournamentMatches = await db.select().from(matches).where(eq(matches.tournamentId, tournamentId)).all();
-        for (const m of tournamentMatches) {
-          await db.delete(refereeRecords).where(eq(refereeRecords.matchId, m.id)).run();
-          await db.delete(matchGames).where(eq(matchGames.matchId, m.id)).run();
-        }
-        await db.delete(matches).where(eq(matches.tournamentId, tournamentId)).run();
-
-        // Delete existing players for this tournament
-        await db.delete(players)
-          .where(eq(players.tournamentId, tournamentId))
+      if (rosterShapeChanged) {
+        await db
+          .delete(tournamentParticipants)
+          .where(eq(tournamentParticipants.tournamentId, tournamentId))
           .run();
+      }
 
-        // Delete existing groups
-        await db.delete(groups)
-          .where(eq(groups.tournamentId, tournamentId))
-          .run();
+      const tournamentPlayers = await db
+        .select()
+        .from(players)
+        .where(eq(players.tournamentId, tournamentId))
+        .all();
+      for (const player of tournamentPlayers) {
+        await db.update(users).set({ playerId: null }).where(eq(users.playerId, player.id)).run();
+      }
 
-        // Recreate groups and players
-        const males = malesPerGroup ?? updated.malesPerGroup;
-        const females = femalesPerGroup ?? updated.femalesPerGroup;
-        const totalPerGroup = males + females;
+      await db.delete(players).where(eq(players.tournamentId, tournamentId)).run();
 
-        for (let i = 0; i < groupCount; i++) {
-          const team = getDefaultTeam(i);
+      let groupsForPlayers = currentGroups;
+      if (groupCountChanged) {
+        await db.delete(groups).where(eq(groups.tournamentId, tournamentId)).run();
+
+        for (let i = 0; i < nextGroupCount; i++) {
+          const existingGroup = currentGroups[i];
+          const fallbackTeam = getDefaultTeam(i);
+
           await db
             .insert(groups)
             .values({
               tournamentId,
-              name: team.name,
-              icon: team.icon,
+              name: existingGroup?.name || fallbackTeam.name,
+              icon: existingGroup?.icon || fallbackTeam.icon,
               sortOrder: i,
             })
             .run();
         }
 
-        // Query back created groups to get their real IDs
-        const createdGroups = await db
+        groupsForPlayers = (await db
           .select()
           .from(groups)
           .where(eq(groups.tournamentId, tournamentId))
-          .all();
+          .all())
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+      }
 
-        for (const group of createdGroups) {
-          for (let p = 1; p <= totalPerGroup; p++) {
-            await db.insert(players)
-              .values({
-                tournamentId,
-                groupId: group.id,
-                positionNumber: p,
-                gender: p <= males ? "M" : "F",
-              })
-              .run();
-          }
+      const totalPerGroup = nextMalesPerGroup + nextFemalesPerGroup;
+      for (const group of groupsForPlayers) {
+        for (let position = 1; position <= totalPerGroup; position++) {
+          await db
+            .insert(players)
+            .values({
+              tournamentId,
+              groupId: group.id,
+              positionNumber: position,
+              gender: position <= nextMalesPerGroup ? "M" : "F",
+            })
+            .run();
+        }
+      }
+
+      if (rosterShapeChanged) {
+        const defaultTemplate = buildDefaultTemplate(nextMalesPerGroup, nextFemalesPerGroup);
+
+        await db.delete(templateMatches).where(eq(templateMatches.tournamentId, tournamentId)).run();
+        await db.delete(templatePositions).where(eq(templatePositions.tournamentId, tournamentId)).run();
+
+        for (const position of defaultTemplate.positions) {
+          await db
+            .insert(templatePositions)
+            .values({
+              tournamentId,
+              positionNumber: position.positionNumber,
+              gender: position.gender,
+            })
+            .run();
+        }
+
+        for (const match of defaultTemplate.matches) {
+          await db
+            .insert(templateMatches)
+            .values({
+              tournamentId,
+              matchType: match.matchType,
+              homePos1: match.homePos1,
+              homePos2: match.homePos2,
+              awayPos1: match.awayPos1,
+              awayPos2: match.awayPos2,
+              sortOrder: match.sortOrder,
+            })
+            .run();
         }
       }
     }
@@ -299,6 +361,7 @@ export async function DELETE(
 
     if (matchIds.length > 0) {
       for (const mid of matchIds) {
+        await db.delete(scoreEvents).where(eq(scoreEvents.matchId, mid)).run();
         await db.delete(refereeRecords).where(eq(refereeRecords.matchId, mid)).run();
         await db.delete(matchGames).where(eq(matchGames.matchId, mid)).run();
       }

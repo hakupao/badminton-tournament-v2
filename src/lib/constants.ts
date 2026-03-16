@@ -38,6 +38,11 @@ export const MATCH_TYPE_LABELS = {
   XD: "混双",
 } as const;
 
+export type MatchType = keyof typeof MATCH_TYPE_LABELS;
+
+export const DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT = 2;
+export const DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT = 3;
+
 // 计分方式
 export const SCORING_MODES = {
   single_21: { label: "一局 21 分", games: 1, points: 21 },
@@ -48,20 +53,89 @@ export const SCORING_MODES = {
 
 export type ScoringMode = keyof typeof SCORING_MODES;
 
+export interface TemplatePositionConfig {
+  positionNumber: number;
+  gender: "M" | "F";
+}
+
+export interface MirroredTemplateMatchConfig {
+  matchType: MatchType;
+  homePos1: number;
+  homePos2: number;
+  awayPos1: number;
+  awayPos2: number;
+  sortOrder: number;
+}
+
+export function buildTemplatePositions(
+  malesPerGroup: number,
+  femalesPerGroup: number
+) {
+  const total = malesPerGroup + femalesPerGroup;
+  const positions: TemplatePositionConfig[] = [];
+
+  for (let i = 1; i <= total; i++) {
+    positions.push({
+      positionNumber: i,
+      gender: i <= malesPerGroup ? "M" : "F",
+    });
+  }
+
+  return positions;
+}
+
+function createMirroredTemplateMatch(
+  matchType: MatchType,
+  pos1: number,
+  pos2: number,
+  sortOrder: number
+): MirroredTemplateMatchConfig {
+  return {
+    matchType,
+    homePos1: pos1,
+    homePos2: pos2,
+    awayPos1: pos1,
+    awayPos2: pos2,
+    sortOrder,
+  };
+}
+
+export function buildDefaultTemplate(
+  malesPerGroup: number,
+  femalesPerGroup: number
+) {
+  const positions = buildTemplatePositions(malesPerGroup, femalesPerGroup);
+  const malePositions = positions
+    .filter((position) => position.gender === "M")
+    .map((position) => position.positionNumber);
+  const femalePositions = positions
+    .filter((position) => position.gender === "F")
+    .map((position) => position.positionNumber);
+
+  const matches: MirroredTemplateMatchConfig[] = [];
+  const seen = new Set<string>();
+
+  const pushMatch = (matchType: MatchType, pos1?: number, pos2?: number) => {
+    if (!pos1 || !pos2) return;
+
+    const key = `${matchType}:${pos1}-${pos2}`;
+    if (seen.has(key)) return;
+
+    matches.push(createMirroredTemplateMatch(matchType, pos1, pos2, matches.length + 1));
+    seen.add(key);
+  };
+
+  pushMatch("MD", malePositions[0], malePositions[1]);
+  pushMatch("MD", malePositions[1], malePositions[2]);
+  pushMatch("WD", femalePositions[0], femalePositions[1]);
+  pushMatch("XD", malePositions[0], femalePositions[0]);
+  pushMatch("XD", malePositions[malePositions.length - 1], femalePositions[femalePositions.length - 1]);
+
+  return {
+    positions,
+    matches,
+  };
+}
+
 // 默认比赛模板 (3男2女 = 5人组)
-export const DEFAULT_TEMPLATE = {
-  positions: [
-    { positionNumber: 1, gender: "M" as const },
-    { positionNumber: 2, gender: "M" as const },
-    { positionNumber: 3, gender: "M" as const },
-    { positionNumber: 4, gender: "F" as const },
-    { positionNumber: 5, gender: "F" as const },
-  ],
-  matches: [
-    { matchType: "MD" as const, homePos1: 1, homePos2: 2, awayPos1: 1, awayPos2: 2, sortOrder: 1 },
-    { matchType: "MD" as const, homePos1: 2, homePos2: 3, awayPos1: 2, awayPos2: 3, sortOrder: 2 },
-    { matchType: "WD" as const, homePos1: 4, homePos2: 5, awayPos1: 4, awayPos2: 5, sortOrder: 3 },
-    { matchType: "XD" as const, homePos1: 1, homePos2: 4, awayPos1: 1, awayPos2: 4, sortOrder: 4 },
-    { matchType: "XD" as const, homePos1: 3, homePos2: 5, awayPos1: 3, awayPos2: 5, sortOrder: 5 },
-  ],
-};
+export const DEFAULT_TEMPLATE = buildDefaultTemplate(3, 2);

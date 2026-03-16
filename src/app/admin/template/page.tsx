@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { FileText, Plus, RotateCcw, Save, Trash2, Info, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { buildDefaultTemplate, buildTemplatePositions } from "@/lib/constants";
 
 interface Position {
   positionNumber: number;
@@ -37,6 +38,24 @@ function getMatchTypeLabel(type: string) {
   return MATCH_TYPE_OPTIONS.find((o) => o.value === type)?.label || type;
 }
 
+function syncMirroredMatch(match: TemplateMatch): TemplateMatch {
+  return {
+    ...match,
+    awayPos1: match.homePos1,
+    awayPos2: match.homePos2,
+  };
+}
+
+function buildMirroredDefaults(males: number, females: number): TemplateMatch[] {
+  return buildDefaultTemplate(males, females).matches.map((match) => ({
+    matchType: match.matchType,
+    homePos1: match.homePos1,
+    homePos2: match.homePos2,
+    awayPos1: match.homePos1,
+    awayPos2: match.homePos2,
+  }));
+}
+
 function TemplateContent() {
   const { currentId } = useTournament();
   const tournamentId = currentId ? String(currentId) : "1";
@@ -52,39 +71,28 @@ function TemplateContent() {
         fetch(`/api/tournaments/${tournamentId}`),
         fetch(`/api/tournaments/${tournamentId}/template`),
       ]);
-      const tournData: any = await tournRes.json();
-      const data: any = await tmplRes.json();
+      const tournData = await tournRes.json() as {
+        tournament?: { malesPerGroup?: number; femalesPerGroup?: number };
+      };
+      const data = await tmplRes.json() as { matches?: TemplateMatch[] };
 
       // Build positions from tournament settings (always in sync)
       const males = tournData.tournament?.malesPerGroup || 3;
       const females = tournData.tournament?.femalesPerGroup || 2;
-      const total = males + females;
-      const derivedPositions: Position[] = [];
-      for (let i = 1; i <= total; i++) {
-        derivedPositions.push({
-          positionNumber: i,
-          gender: i <= males ? "M" : "F",
-        });
-      }
+      const derivedPositions = buildTemplatePositions(males, females);
       setPositions(derivedPositions);
 
-      if (data.matches?.length > 0) {
-        setMatches(data.matches.map((m: TemplateMatch) => ({
+      const templateMatches = data.matches ?? [];
+      if (templateMatches.length > 0) {
+        setMatches(templateMatches.map((m) => ({
           matchType: m.matchType,
           homePos1: m.homePos1,
           homePos2: m.homePos2,
-          awayPos1: m.awayPos1,
-          awayPos2: m.awayPos2,
+          awayPos1: m.homePos1,
+          awayPos2: m.homePos2,
         })));
       } else {
-        // Default 5 matches
-        setMatches([
-          { matchType: "MD", homePos1: 1, homePos2: 2, awayPos1: 1, awayPos2: 2 },
-          { matchType: "MD", homePos1: 2, homePos2: 3, awayPos1: 2, awayPos2: 3 },
-          { matchType: "WD", homePos1: males + 1, homePos2: males + 2, awayPos1: males + 1, awayPos2: males + 2 },
-          { matchType: "XD", homePos1: 1, homePos2: males + 1, awayPos1: 1, awayPos2: males + 1 },
-          { matchType: "XD", homePos1: 3, homePos2: males + females, awayPos1: 3, awayPos2: males + females },
-        ]);
+        setMatches(buildMirroredDefaults(males, females));
       }
     } catch {
       toast.error("加载模板失败");
@@ -108,7 +116,6 @@ function TemplateContent() {
 
   const addMatch = () => {
     const defaultM = malePositions[0]?.positionNumber || 1;
-    const defaultF = femalePositions[0]?.positionNumber || 4;
     setMatches([...matches, {
       matchType: "MD",
       homePos1: defaultM,
@@ -149,7 +156,7 @@ function TemplateContent() {
       (m as Record<string, unknown>)[field] = Number(value);
     }
 
-    updated[index] = m;
+    updated[index] = syncMirroredMatch(m);
     setMatches(updated);
   };
 
@@ -159,12 +166,12 @@ function TemplateContent() {
       const res = await fetch(`/api/tournaments/${tournamentId}/template`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ positions, matches }),
+        body: JSON.stringify({ positions, matches: matches.map(syncMirroredMatch) }),
       });
       if (res.ok) {
         toast.success("模板已保存");
       } else {
-        const data: any = await res.json();
+        const data = await res.json() as { error?: string };
         toast.error(data.error || "保存失败");
       }
     } catch {
@@ -175,20 +182,10 @@ function TemplateContent() {
   };
 
   const handleReset = () => {
-    setPositions([
-      { positionNumber: 1, gender: "M" },
-      { positionNumber: 2, gender: "M" },
-      { positionNumber: 3, gender: "M" },
-      { positionNumber: 4, gender: "F" },
-      { positionNumber: 5, gender: "F" },
-    ]);
-    setMatches([
-      { matchType: "MD", homePos1: 1, homePos2: 2, awayPos1: 1, awayPos2: 2 },
-      { matchType: "MD", homePos1: 2, homePos2: 3, awayPos1: 2, awayPos2: 3 },
-      { matchType: "WD", homePos1: 4, homePos2: 5, awayPos1: 4, awayPos2: 5 },
-      { matchType: "XD", homePos1: 1, homePos2: 4, awayPos1: 1, awayPos2: 4 },
-      { matchType: "XD", homePos1: 3, homePos2: 5, awayPos1: 3, awayPos2: 5 },
-    ]);
+    const males = malePositions.length;
+    const females = femalePositions.length;
+    setPositions(buildTemplatePositions(males, females));
+    setMatches(buildMirroredDefaults(males, females));
     toast.info("已重置为默认模板");
   };
 
@@ -248,7 +245,7 @@ function TemplateContent() {
               <Badge
                 key={pos.positionNumber}
                 variant="outline"
-                className={`text-sm px-3 py-1 ${
+                className={`h-8 px-3 text-sm leading-none ${
                   pos.gender === "M"
                     ? "border-blue-200 text-blue-700 bg-blue-50"
                     : "border-pink-200 text-pink-700 bg-pink-50"
@@ -267,7 +264,7 @@ function TemplateContent() {
       </Card>
 
       {/* Match Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card className="border-gray-100 shadow-sm text-center">
           <CardContent className="py-4">
             <div className="text-2xl font-bold text-gray-800">{matches.length}</div>
@@ -353,83 +350,42 @@ function TemplateContent() {
                   </Select>
                 </div>
 
-                {/* Home vs Away - stacked on mobile, side by side on desktop */}
-                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-                  {/* Home positions */}
-                  <div className="w-full sm:flex-1 space-y-1.5">
-                    <div className="text-xs text-gray-400 font-medium text-center">主队 (A组)</div>
-                    <div className="flex gap-2 justify-center">
-                      <Select
-                        value={String(match.homePos1)}
-                        onValueChange={(v) => v && updateMatch(idx, "homePos1", v)}
-                      >
-                        <SelectTrigger className="h-8 w-16 sm:w-20 text-sm border-gray-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(match.matchType === "XD" ? positions : validPositions).map((p) => (
-                            <SelectItem key={p.positionNumber} value={String(p.positionNumber)}>
-                              {p.gender === "M" ? "♂" : "♀"}{p.positionNumber}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={String(match.homePos2)}
-                        onValueChange={(v) => v && updateMatch(idx, "homePos2", v)}
-                      >
-                        <SelectTrigger className="h-8 w-16 sm:w-20 text-sm border-gray-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(match.matchType === "XD" ? positions : validPositions).map((p) => (
-                            <SelectItem key={p.positionNumber} value={String(p.positionNumber)}>
-                              {p.gender === "M" ? "♂" : "♀"}{p.positionNumber}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-400 font-medium">出场组合</div>
+                  <div className="flex gap-2">
+                    <Select
+                      value={String(match.homePos1)}
+                      onValueChange={(v) => v && updateMatch(idx, "homePos1", v)}
+                    >
+                      <SelectTrigger className="h-8 flex-1 text-sm border-gray-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(match.matchType === "XD" ? positions : validPositions).map((p) => (
+                          <SelectItem key={p.positionNumber} value={String(p.positionNumber)}>
+                            {p.gender === "M" ? "♂" : "♀"}{p.positionNumber}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={String(match.homePos2)}
+                      onValueChange={(v) => v && updateMatch(idx, "homePos2", v)}
+                    >
+                      <SelectTrigger className="h-8 flex-1 text-sm border-gray-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(match.matchType === "XD" ? positions : validPositions).map((p) => (
+                          <SelectItem key={p.positionNumber} value={String(p.positionNumber)}>
+                            {p.gender === "M" ? "♂" : "♀"}{p.positionNumber}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  {/* VS */}
-                  <div className="text-center text-gray-400 font-bold text-sm shrink-0">VS</div>
-
-                  {/* Away positions */}
-                  <div className="w-full sm:flex-1 space-y-1.5">
-                    <div className="text-xs text-gray-400 font-medium text-center">客队 (B组)</div>
-                    <div className="flex gap-2 justify-center">
-                      <Select
-                        value={String(match.awayPos1)}
-                        onValueChange={(v) => v && updateMatch(idx, "awayPos1", v)}
-                      >
-                        <SelectTrigger className="h-8 w-16 sm:w-20 text-sm border-gray-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(match.matchType === "XD" ? positions : validPositions).map((p) => (
-                            <SelectItem key={p.positionNumber} value={String(p.positionNumber)}>
-                              {p.gender === "M" ? "♂" : "♀"}{p.positionNumber}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={String(match.awayPos2)}
-                        onValueChange={(v) => v && updateMatch(idx, "awayPos2", v)}
-                      >
-                        <SelectTrigger className="h-8 w-16 sm:w-20 text-sm border-gray-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(match.matchType === "XD" ? positions : validPositions).map((p) => (
-                            <SelectItem key={p.positionNumber} value={String(p.positionNumber)}>
-                              {p.gender === "M" ? "♂" : "♀"}{p.positionNumber}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                    主客队自动镜像：A组 {match.homePos1} + {match.homePos2} vs B组 {match.homePos1} + {match.homePos2}
                   </div>
                 </div>
               </div>
@@ -438,7 +394,7 @@ function TemplateContent() {
 
           {matches.length === 0 && (
             <div className="text-center py-8 text-gray-400">
-              暂无比赛，点击"添加比赛"开始配置
+              暂无比赛，点击“添加比赛”开始配置
             </div>
           )}
         </CardContent>

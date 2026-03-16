@@ -13,9 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScheduleMatrix } from "@/components/tournament/schedule-matrix";
 import { QualityReport } from "@/components/tournament/quality-report";
+import {
+  DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT,
+  DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT,
+} from "@/lib/constants";
 import { FlaskConical, Save, Play, Users, Landmark, BarChart3, CalendarDays, FileText, AlertTriangle, Palette, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useTournament } from "@/lib/tournament-context";
+import { parseIntegerInput, sanitizeIntegerInput } from "@/lib/utils";
 
 interface Tournament {
   id: number;
@@ -74,6 +79,33 @@ interface GroupEdit {
   name: string;
 }
 
+interface FormState {
+  name: string;
+  courtsCount: string;
+  roundDurationMinutes: string;
+  scoringMode: string;
+  eventDate: string;
+  startTime: string;
+  endTime: string;
+  malesPerGroup: string;
+  femalesPerGroup: string;
+  maxConsecutivePlayingLimit: string;
+  maxConsecutiveRestingLimit: string;
+}
+
+type NumericFormField =
+  | "courtsCount"
+  | "roundDurationMinutes"
+  | "malesPerGroup"
+  | "femalesPerGroup"
+  | "maxConsecutivePlayingLimit"
+  | "maxConsecutiveRestingLimit";
+
+interface TournamentResponse {
+  tournament: Tournament;
+  groups: GroupInfo[];
+}
+
 const SCORING_OPTIONS = [
   { value: "single_21", label: "一局 21 分" },
   { value: "single_30", label: "一局 30 分" },
@@ -92,42 +124,78 @@ export default function TournamentConfigPage() {
   const [loading, setLoading] = useState(true);
   const [simulating, setSimulating] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [groupCount, setGroupCount] = useState(5);
+  const [groupCount, setGroupCount] = useState("5");
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [groupEdits, setGroupEdits] = useState<GroupEdit[]>([]);
   const [savingGroups, setSavingGroups] = useState(false);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     name: "",
-    courtsCount: 3,
-    roundDurationMinutes: 20,
+    courtsCount: "3",
+    roundDurationMinutes: "20",
     scoringMode: "single_21",
     eventDate: "",
     startTime: "09:00",
     endTime: "19:00",
-    malesPerGroup: 3,
-    femalesPerGroup: 2,
+    malesPerGroup: "3",
+    femalesPerGroup: "2",
+    maxConsecutivePlayingLimit: String(DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT),
+    maxConsecutiveRestingLimit: String(DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT),
   });
+
+  const updateNumericField = (field: NumericFormField, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: sanitizeIntegerInput(value),
+    }));
+  };
+
+  const parseSetting = (
+    value: string,
+    fallback: number,
+    min: number,
+    max: number
+  ) => parseIntegerInput(value, fallback, { min, max });
+
+  const parsedGroupCount = parseSetting(groupCount, 5, 2, 20);
+  const parsedCourtsCount = parseSetting(form.courtsCount, 3, 1, 10);
+  const parsedRoundDurationMinutes = parseSetting(form.roundDurationMinutes, 20, 5, 60);
+  const parsedMalesPerGroup = parseSetting(form.malesPerGroup, 3, 1, 10);
+  const parsedFemalesPerGroup = parseSetting(form.femalesPerGroup, 2, 1, 10);
+  const parsedMaxConsecutivePlayingLimit = parseSetting(
+    form.maxConsecutivePlayingLimit,
+    DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT,
+    1,
+    10
+  );
+  const parsedMaxConsecutiveRestingLimit = parseSetting(
+    form.maxConsecutiveRestingLimit,
+    DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT,
+    1,
+    10
+  );
 
   const fetchTournament = useCallback(async () => {
     const res = await fetch(`/api/tournaments/${id}`);
     if (res.ok) {
-      const data: any = await res.json();
+      const data = await res.json() as TournamentResponse;
       setTournament(data.tournament);
-      const fetchedGroups: GroupInfo[] = (data.groups || []).sort((a: GroupInfo, b: GroupInfo) => a.sortOrder - b.sortOrder);
+      const fetchedGroups = (data.groups || []).sort((a, b) => a.sortOrder - b.sortOrder);
       setGroups(fetchedGroups);
-      setGroupCount(fetchedGroups.length || 5);
+      setGroupCount(String(fetchedGroups.length || 5));
       setGroupEdits(fetchedGroups.map((g: GroupInfo) => ({ icon: g.icon, name: g.name })));
       setForm({
         name: data.tournament.name,
-        courtsCount: data.tournament.courtsCount,
-        roundDurationMinutes: data.tournament.roundDurationMinutes,
+        courtsCount: String(data.tournament.courtsCount),
+        roundDurationMinutes: String(data.tournament.roundDurationMinutes),
         scoringMode: data.tournament.scoringMode,
         eventDate: data.tournament.eventDate || "",
         startTime: data.tournament.startTime || "09:00",
         endTime: data.tournament.endTime || "19:00",
-        malesPerGroup: data.tournament.malesPerGroup,
-        femalesPerGroup: data.tournament.femalesPerGroup,
+        malesPerGroup: String(data.tournament.malesPerGroup),
+        femalesPerGroup: String(data.tournament.femalesPerGroup),
+        maxConsecutivePlayingLimit: String(DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT),
+        maxConsecutiveRestingLimit: String(DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT),
       });
     }
     setLoading(false);
@@ -137,13 +205,26 @@ export default function TournamentConfigPage() {
     fetchTournament();
   }, [fetchTournament]);
 
+  const buildSettingsPayload = () => ({
+    name: form.name.trim(),
+    courtsCount: parsedCourtsCount,
+    roundDurationMinutes: parsedRoundDurationMinutes,
+    scoringMode: form.scoringMode,
+    eventDate: form.eventDate || null,
+    startTime: form.startTime || "09:00",
+    endTime: form.endTime || "19:00",
+    malesPerGroup: parsedMalesPerGroup,
+    femalesPerGroup: parsedFemalesPerGroup,
+    groupCount: parsedGroupCount,
+  });
+
   const saveSettings = async () => {
     setSaving(true);
     try {
       await fetch(`/api/tournaments/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, groupCount }),
+        body: JSON.stringify(buildSettingsPayload()),
       });
       await fetchTournament();
     } finally {
@@ -157,11 +238,18 @@ export default function TournamentConfigPage() {
       await fetch(`/api/tournaments/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, groupCount }),
+        body: JSON.stringify(buildSettingsPayload()),
       });
-      const res = await fetch(`/api/tournaments/${id}/simulate`, { method: "POST" });
+      const res = await fetch(`/api/tournaments/${id}/simulate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          maxConsecutivePlayingLimit: parsedMaxConsecutivePlayingLimit,
+          maxConsecutiveRestingLimit: parsedMaxConsecutiveRestingLimit,
+        }),
+      });
       if (res.ok) {
-        const data: any = await res.json();
+        const data = await res.json() as SimulationResult;
         setSimulation(data);
       }
     } finally {
@@ -196,7 +284,8 @@ export default function TournamentConfigPage() {
   if (loading) return <div className="text-center py-12 text-gray-400">加载中...</div>;
   if (!tournament) return <div className="text-center py-12 text-gray-400">赛事不存在</div>;
 
-  const totalPlayers = groupCount * (form.malesPerGroup + form.femalesPerGroup);
+  const playersPerGroup = parsedMalesPerGroup + parsedFemalesPerGroup;
+  const totalPlayers = parsedGroupCount * playersPerGroup;
 
   return (
     <div className="space-y-6">
@@ -238,16 +327,31 @@ export default function TournamentConfigPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-600 font-medium">比赛日期</Label>
-                <Input type="date" value={form.eventDate} onChange={(e) => setForm({ ...form, eventDate: e.target.value })} className="border-green-200" />
+                <Input
+                  type="date"
+                  value={form.eventDate}
+                  onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
+                  className="w-full min-w-0 border-green-200 text-sm"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="text-gray-600 font-medium">开始时间</Label>
-                  <Input type="time" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} className="border-green-200" />
+                  <Input
+                    type="time"
+                    value={form.startTime}
+                    onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+                    className="w-full min-w-0 border-green-200 text-sm"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-gray-600 font-medium">结束时间</Label>
-                  <Input type="time" value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} className="border-green-200" />
+                  <Input
+                    type="time"
+                    value={form.endTime}
+                    onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+                    className="w-full min-w-0 border-green-200 text-sm"
+                  />
                 </div>
               </div>
             </CardContent>
@@ -260,22 +364,43 @@ export default function TournamentConfigPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-gray-600 font-medium">小组数</Label>
-                <Input type="number" min={2} max={20} value={groupCount} onChange={(e) => setGroupCount(Number(e.target.value))} className="border-blue-200" />
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={groupCount}
+                  onChange={(e) => setGroupCount(sanitizeIntegerInput(e.target.value))}
+                  className="border-blue-200"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label className="text-gray-600 font-medium">每组男生</Label>
-                  <Input type="number" min={1} max={10} value={form.malesPerGroup} onChange={(e) => setForm({ ...form, malesPerGroup: Number(e.target.value) })} className="border-blue-200" />
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={form.malesPerGroup}
+                    onChange={(e) => updateNumericField("malesPerGroup", e.target.value)}
+                    className="border-blue-200"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-gray-600 font-medium">每组女生</Label>
-                  <Input type="number" min={1} max={10} value={form.femalesPerGroup} onChange={(e) => setForm({ ...form, femalesPerGroup: Number(e.target.value) })} className="border-blue-200" />
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={form.femalesPerGroup}
+                    onChange={(e) => updateNumericField("femalesPerGroup", e.target.value)}
+                    className="border-blue-200"
+                  />
                 </div>
               </div>
               <div className="rounded-xl bg-gradient-to-r from-blue-50 to-green-50 p-3 text-sm border border-blue-100">
                 <div className="flex justify-between">
                   <span className="text-gray-500">每组人数</span>
-                  <span className="font-bold text-gray-700">{form.malesPerGroup + form.femalesPerGroup} 人</span>
+                  <span className="font-bold text-gray-700">{playersPerGroup} 人</span>
                 </div>
                 <div className="flex justify-between mt-1">
                   <span className="text-gray-500">总参赛人数</span>
@@ -340,11 +465,52 @@ export default function TournamentConfigPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-gray-600 font-medium">场地数</Label>
-                <Input type="number" min={1} max={10} value={form.courtsCount} onChange={(e) => setForm({ ...form, courtsCount: Number(e.target.value) })} className="border-amber-200" />
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={form.courtsCount}
+                  onChange={(e) => updateNumericField("courtsCount", e.target.value)}
+                  className="border-amber-200"
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-600 font-medium">每轮时间（分钟）</Label>
-                <Input type="number" min={5} max={60} value={form.roundDurationMinutes} onChange={(e) => setForm({ ...form, roundDurationMinutes: Number(e.target.value) })} className="border-amber-200" />
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={form.roundDurationMinutes}
+                  onChange={(e) => updateNumericField("roundDurationMinutes", e.target.value)}
+                  className="border-amber-200"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-gray-600 font-medium">连续上场上限</Label>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={form.maxConsecutivePlayingLimit}
+                    onChange={(e) => updateNumericField("maxConsecutivePlayingLimit", e.target.value)}
+                    className="border-amber-200"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-600 font-medium">连续轮空上限</Label>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={form.maxConsecutiveRestingLimit}
+                    onChange={(e) => updateNumericField("maxConsecutiveRestingLimit", e.target.value)}
+                    className="border-amber-200"
+                  />
+                </div>
+              </div>
+              <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-3 text-xs text-amber-800">
+                模拟器会尽量避开超过该上限的排布，并在质量报告中把超限选手标为异常。
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-600 font-medium">计分方式</Label>
@@ -447,9 +613,9 @@ export default function TournamentConfigPage() {
                 <ScheduleMatrix
                   schedule={simulation.schedule}
                   totalRounds={simulation.totalRounds}
-                  courtsCount={form.courtsCount}
+                  courtsCount={parsedCourtsCount}
                   startTime={form.startTime}
-                  roundDurationMinutes={form.roundDurationMinutes}
+                  roundDurationMinutes={parsedRoundDurationMinutes}
                   groups={simulation.groups}
                 />
               </TabsContent>
@@ -458,7 +624,9 @@ export default function TournamentConfigPage() {
                 <QualityReport
                   playerStats={simulation.playerStats}
                   groups={simulation.groups}
-                  roundDurationMinutes={form.roundDurationMinutes}
+                  roundDurationMinutes={parsedRoundDurationMinutes}
+                  maxConsecutivePlayingLimit={parsedMaxConsecutivePlayingLimit}
+                  maxConsecutiveRestingLimit={parsedMaxConsecutiveRestingLimit}
                 />
               </TabsContent>
             </Tabs>

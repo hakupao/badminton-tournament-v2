@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { templatePositions, templateMatches, tournaments } from "@/db/schema";
+import {
+  templatePositions,
+  templateMatches,
+  tournaments,
+  matches as tournamentMatches,
+  matchGames,
+  refereeRecords,
+  scoreEvents,
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
@@ -59,7 +67,16 @@ export async function PUT(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const body: any = await request.json();
+    const body = await request.json() as {
+      positions?: Array<{ positionNumber?: number; gender?: string }>;
+      matches?: Array<{
+        matchType?: string;
+        homePos1?: number;
+        homePos2?: number;
+        awayPos1?: number;
+        awayPos2?: number;
+      }>;
+    };
     const { positions, matches } = body;
 
     if (!Array.isArray(positions) || !Array.isArray(matches)) {
@@ -69,32 +86,78 @@ export async function PUT(
       );
     }
 
-    // Validate positions
+    const validatedPositions: Array<{ positionNumber: number; gender: "M" | "F" }> = [];
     for (const pos of positions) {
-      if (!pos.positionNumber || !["M", "F"].includes(pos.gender)) {
+      if (
+        typeof pos.positionNumber !== "number" ||
+        !pos.positionNumber ||
+        (pos.gender !== "M" && pos.gender !== "F")
+      ) {
         return NextResponse.json(
           { error: "Each position needs positionNumber and gender (M/F)" },
           { status: 400 }
         );
       }
+
+      validatedPositions.push({
+        positionNumber: pos.positionNumber,
+        gender: pos.gender,
+      });
     }
 
-    // Validate matches
+    const validatedMatches: Array<{
+      matchType: "MD" | "WD" | "XD";
+      homePos1: number;
+      homePos2: number;
+      awayPos1: number;
+      awayPos2: number;
+    }> = [];
+
     const validTypes = ["MD", "WD", "XD"];
     for (const m of matches) {
-      if (!validTypes.includes(m.matchType)) {
+      if (
+        !m.matchType ||
+        !validTypes.includes(m.matchType) ||
+        typeof m.homePos1 !== "number" ||
+        typeof m.homePos2 !== "number" ||
+        typeof m.awayPos1 !== "number" ||
+        typeof m.awayPos2 !== "number" ||
+        !m.homePos1 ||
+        !m.homePos2 ||
+        !m.awayPos1 ||
+        !m.awayPos2
+      ) {
         return NextResponse.json(
-          { error: `Invalid match type: ${m.matchType}` },
+          { error: `Each match needs matchType, homePos1, homePos2, awayPos1, awayPos2` },
           { status: 400 }
         );
       }
-      if (!m.homePos1 || !m.homePos2 || !m.awayPos1 || !m.awayPos2) {
-        return NextResponse.json(
-          { error: "Each match needs homePos1, homePos2, awayPos1, awayPos2" },
-          { status: 400 }
-        );
-      }
+
+      validatedMatches.push({
+        matchType: m.matchType as "MD" | "WD" | "XD",
+        homePos1: m.homePos1,
+        homePos2: m.homePos2,
+        awayPos1: m.awayPos1,
+        awayPos2: m.awayPos2,
+      });
     }
+
+    // Template changes invalidate the generated schedule.
+    const scheduledMatches = await db
+      .select()
+      .from(tournamentMatches)
+      .where(eq(tournamentMatches.tournamentId, tournamentId))
+      .all();
+
+    for (const scheduledMatch of scheduledMatches) {
+      await db.delete(scoreEvents).where(eq(scoreEvents.matchId, scheduledMatch.id)).run();
+      await db.delete(refereeRecords).where(eq(refereeRecords.matchId, scheduledMatch.id)).run();
+      await db.delete(matchGames).where(eq(matchGames.matchId, scheduledMatch.id)).run();
+    }
+    await db
+      .delete(tournamentMatches)
+      .where(eq(tournamentMatches.tournamentId, tournamentId))
+      .run();
 
     // Delete existing template
     await db.delete(templateMatches)
@@ -105,7 +168,7 @@ export async function PUT(
       .run();
 
     // Insert new positions
-    for (const pos of positions) {
+    for (const pos of validatedPositions) {
       await db
         .insert(templatePositions)
         .values({
@@ -117,8 +180,8 @@ export async function PUT(
     }
 
     // Insert new matches
-    for (let i = 0; i < matches.length; i++) {
-      const m = matches[i];
+    for (let i = 0; i < validatedMatches.length; i++) {
+      const m = validatedMatches[i];
       await db
         .insert(templateMatches)
         .values({

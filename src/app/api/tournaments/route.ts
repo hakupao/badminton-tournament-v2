@@ -2,10 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { tournaments, templatePositions, templateMatches, groups, players } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
-import { getDefaultTeam, DEFAULT_TEMPLATE } from "@/lib/constants";
+import { getDefaultTeam, buildDefaultTemplate, type ScoringMode } from "@/lib/constants";
 import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
+
+interface CreateTournamentBody {
+  name?: string;
+  courtsCount?: number;
+  roundDurationMinutes?: number;
+  scoringMode?: ScoringMode;
+  eventDate?: string | null;
+  startTime?: string;
+  endTime?: string;
+  malesPerGroup?: number;
+  femalesPerGroup?: number;
+  groupCount?: number;
+}
 
 export async function GET() {
   try {
@@ -33,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const db = getDb();
-    const body: any = await request.json();
+    const body = await request.json() as CreateTournamentBody;
     const {
       name,
       courtsCount = 3,
@@ -46,6 +59,18 @@ export async function POST(request: NextRequest) {
       femalesPerGroup = 2,
       groupCount = 4,
     } = body;
+
+    if (
+      scoringMode !== "single_21" &&
+      scoringMode !== "single_30" &&
+      scoringMode !== "best_of_3_15" &&
+      scoringMode !== "best_of_3_21"
+    ) {
+      return NextResponse.json(
+        { error: "Invalid scoring mode" },
+        { status: 400 }
+      );
+    }
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json(
@@ -81,8 +106,10 @@ export async function POST(request: NextRequest) {
     const recentTournaments = await db.select().from(tournaments).all();
     const tournament = recentTournaments.sort((a, b) => b.id - a.id)[0];
 
+    const defaultTemplate = buildDefaultTemplate(malesPerGroup, femalesPerGroup);
+
     // Create default template positions
-    for (const pos of DEFAULT_TEMPLATE.positions) {
+    for (const pos of defaultTemplate.positions) {
       await db.insert(templatePositions)
         .values({
           tournamentId: tournament.id,
@@ -93,7 +120,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create default template matches
-    for (const tm of DEFAULT_TEMPLATE.matches) {
+    for (const tm of defaultTemplate.matches) {
       await db.insert(templateMatches)
         .values({
           tournamentId: tournament.id,

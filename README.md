@@ -23,7 +23,7 @@
 | 层 | 技术 |
 |----|------|
 | 框架 | Next.js 16 (App Router, Edge Runtime) |
-| 数据库 | Cloudflare D1（生产）/ better-sqlite3（本地） |
+| 数据库 | Cloudflare D1（Cloudflare/本地 Edge 调试）/ better-sqlite3（Node 侧兜底） |
 | ORM | Drizzle ORM |
 | UI | Tailwind CSS v4 + shadcn/ui |
 | 部署 | Cloudflare Pages + @cloudflare/next-on-pages |
@@ -52,7 +52,11 @@ npm run d1:seed:local
 npm run dev
 ```
 
+`npm run dev` 会先自动执行本地 D1 的建表和 admin 种子，然后以 Cloudflare 本地绑定模式启动。
+
 访问 http://localhost:3000，使用 `admin` / `admin123` 登录。
+
+Windows 和 macOS 上的 `npm run dev` 都会连接各自机器上的本地 D1。
 
 如需在推送前按 Cloudflare 运行时做一次本地验收：
 
@@ -60,6 +64,8 @@ npm run dev
 npm run build:cf
 npm run preview:cf
 ```
+
+> 注意：`@cloudflare/next-on-pages` 在原生 Windows 上的本地 `build:cf` 存在上游兼容性问题。如果你要在 Windows 机器上做 Cloudflare 风格预览，请优先使用 WSL；普通本地联调直接用 `npm run dev` 即可，不影响 GitHub -> Cloudflare 的 Linux 构建链路。
 
 ---
 
@@ -84,8 +90,10 @@ npm run deploy
 ```
 
 部署后在 Cloudflare Dashboard 配置：
-- Environment variables: `USE_D1=true`, `JWT_SECRET=<随机密钥>`
+- Environment variables: `JWT_SECRET=<随机密钥>`
 - D1 binding: Variable `DB` → `shuttle-arena-db`
+
+GitHub 推送后的 Cloudflare 自动构建运行在 Linux 环境，运行时会直接使用绑定到 `DB` 的线上 D1。
 
 ---
 
@@ -118,12 +126,21 @@ src/
 
 | 命令 | 说明 |
 |------|------|
-| `npm run dev` | 本地开发（Turbopack，SQLite） |
+| `npm run dev` | 本地开发（自动初始化本地 D1，并以 Cloudflare 本地绑定启动） |
+| `npm run dev:fast` | 本地开发（跳过初始化，直接启动本地 D1 绑定） |
 | `npm run build` | 本地生产构建（Webpack） |
 | `npm run build:cf` | 编译为 Cloudflare Workers 格式 |
 | `npm run deploy` | 构建 + 部署到 Cloudflare Pages |
 | `npm run d1:init` | 初始化线上 D1 数据库表结构（`--remote`） |
 | `npm run d1:init:local` | 初始化本地模拟 D1 |
+
+---
+
+## 本地数据库说明
+
+- 页面/API 的本地开发默认连接 `.wrangler/state/v3/d1/` 里的本地 D1 数据库
+- `npm run d1:init:local` 负责建表，`npm run d1:seed:local` 负责确保 `admin/admin123` 存在
+- `shuttle-arena.db` 仍保留给非 Edge 的 Node 场景兜底，但日常联调请以本地 D1 为准
 
 ---
 

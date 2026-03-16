@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useTournament } from "@/lib/tournament-context";
+import { sanitizeIntegerInput } from "@/lib/utils";
 import {
   PenLine,
   ArrowLeft,
@@ -71,6 +72,16 @@ interface GameInput {
   awayScore: string;
 }
 
+interface ScheduleResponse {
+  matches?: ScheduleMatch[];
+}
+
+interface TournamentResponse {
+  groups?: GroupInfo[];
+  players?: PlayerInfo[];
+  tournament?: Tournament | null;
+}
+
 export default function AdminScoringPage() {
   const { currentId, currentName } = useTournament();
   const tournamentId = currentId ? String(currentId) : "";
@@ -97,9 +108,9 @@ export default function AdminScoringPage() {
     if (!tournamentId) { setLoading(false); return; }
     setLoading(true);
     Promise.all([
-      fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json()),
-      fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json()),
-    ]).then(([scheduleData, tournamentData]: any[]) => {
+      fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json() as Promise<ScheduleResponse>),
+      fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json() as Promise<TournamentResponse>),
+    ]).then(([scheduleData, tournamentData]) => {
       setMatches(scheduleData.matches || []);
       setGroups(tournamentData.groups || []);
       setPlayers(tournamentData.players || []);
@@ -220,7 +231,7 @@ export default function AdminScoringPage() {
         closeScoring();
         fetchData();
       } else {
-        const err: any = await res.json();
+        const err = await res.json() as { error?: string };
         toast.error(err.error || "录入失败");
       }
     } finally {
@@ -398,20 +409,22 @@ export default function AdminScoringPage() {
                             {batchMode && !isFinished ? (
                               <div className="flex items-center gap-1.5 shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
                                 <Input
-                                  type="number"
-                                  min={0}
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
                                   placeholder="主"
                                   value={batchScores[match.id]?.homeScore || ""}
-                                  onChange={(e) => updateBatchScore(match.id, "homeScore", e.target.value)}
+                                  onChange={(e) => updateBatchScore(match.id, "homeScore", sanitizeIntegerInput(e.target.value))}
                                   className="w-14 h-8 text-center text-sm font-bold"
                                 />
                                 <span className="text-gray-400 font-bold">:</span>
                                 <Input
-                                  type="number"
-                                  min={0}
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
                                   placeholder="客"
                                   value={batchScores[match.id]?.awayScore || ""}
-                                  onChange={(e) => updateBatchScore(match.id, "awayScore", e.target.value)}
+                                  onChange={(e) => updateBatchScore(match.id, "awayScore", sanitizeIntegerInput(e.target.value))}
                                   className="w-14 h-8 text-center text-sm font-bold"
                                 />
                               </div>
@@ -502,22 +515,24 @@ export default function AdminScoringPage() {
                     )}
                     <div className="flex-1">
                       <Input
-                        type="number"
-                        min={0}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="主队"
                         value={game.homeScore}
-                        onChange={(e) => updateGame(i, "homeScore", e.target.value)}
+                        onChange={(e) => updateGame(i, "homeScore", sanitizeIntegerInput(e.target.value))}
                         className="text-center font-bold text-lg"
                       />
                     </div>
                     <span className="text-gray-400 font-bold">:</span>
                     <div className="flex-1">
                       <Input
-                        type="number"
-                        min={0}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="客队"
                         value={game.awayScore}
-                        onChange={(e) => updateGame(i, "awayScore", e.target.value)}
+                        onChange={(e) => updateGame(i, "awayScore", sanitizeIntegerInput(e.target.value))}
                         className="text-center font-bold text-lg"
                       />
                     </div>

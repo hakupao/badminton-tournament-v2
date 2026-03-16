@@ -16,6 +16,7 @@ import {
   ScoreTimelineCard,
   type ScoreTimelineEvent,
 } from "@/components/match/score-timeline-card";
+import { sanitizeIntegerInput } from "@/lib/utils";
 
 const MATCH_TYPE_LABELS: Record<string, string> = {
   MD: "男双",
@@ -393,11 +394,12 @@ export default function ScoringPage() {
                 <div className="flex-1">
                   <div className="text-xs text-center text-gray-400 mb-1">{match.homeGroup.icon} {match.homeGroup.name}</div>
                   <Input
-                    type="number"
-                    min={0}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="主队得分"
                     value={game.homeScore}
-                    onChange={(e) => updateAdminGame(i, "homeScore", e.target.value)}
+                    onChange={(e) => updateAdminGame(i, "homeScore", sanitizeIntegerInput(e.target.value))}
                     className="text-center font-bold text-lg"
                   />
                 </div>
@@ -405,11 +407,12 @@ export default function ScoringPage() {
                 <div className="flex-1">
                   <div className="text-xs text-center text-gray-400 mb-1">{match.awayGroup.icon} {match.awayGroup.name}</div>
                   <Input
-                    type="number"
-                    min={0}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="客队得分"
                     value={game.awayScore}
-                    onChange={(e) => updateAdminGame(i, "awayScore", e.target.value)}
+                    onChange={(e) => updateAdminGame(i, "awayScore", sanitizeIntegerInput(e.target.value))}
                     className="text-center font-bold text-lg"
                   />
                 </div>

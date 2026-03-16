@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 export const runtime = 'edge';
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -48,6 +48,19 @@ export async function POST(
       .where(eq(templateMatches.tournamentId, tournamentId))
       .all();
 
+    let body: {
+      maxConsecutivePlayingLimit?: number;
+      maxConsecutiveRestingLimit?: number;
+    } = {};
+    const rawBody = await request.text();
+    if (rawBody.trim()) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      }
+    }
+
     const simParams: SimulationParams = {
       groupCount: tournamentGroups.length,
       malesPerGroup: tournament.malesPerGroup,
@@ -56,6 +69,14 @@ export async function POST(
       roundDurationMinutes: tournament.roundDurationMinutes,
       startTime: tournament.startTime || "09:00",
       endTime: tournament.endTime || "19:00",
+      maxConsecutivePlayingLimit:
+        typeof body.maxConsecutivePlayingLimit === "number"
+          ? body.maxConsecutivePlayingLimit
+          : undefined,
+      maxConsecutiveRestingLimit:
+        typeof body.maxConsecutiveRestingLimit === "number"
+          ? body.maxConsecutiveRestingLimit
+          : undefined,
       templateMatches: templates.map((t) => ({
         matchType: t.matchType,
         homePos1: t.homePos1,

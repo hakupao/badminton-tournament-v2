@@ -39,6 +39,14 @@ interface RegisteredUser {
   playerId: number | null;
 }
 
+interface GroupsResponse {
+  groups?: GroupWithPlayers[];
+}
+
+interface UsersResponse {
+  users?: RegisteredUser[];
+}
+
 function PlayersContent() {
   const { currentId } = useTournament();
   const tournamentId = currentId ? String(currentId) : "1";
@@ -55,8 +63,8 @@ function PlayersContent() {
         fetch(`/api/tournaments/${tournamentId}/groups`),
         fetch("/api/users"),
       ]);
-      const groupsData: any = await groupsRes.json();
-      const usersData: any = await usersRes.json();
+      const groupsData = await groupsRes.json() as GroupsResponse;
+      const usersData = await usersRes.json() as UsersResponse;
       setGroups(groupsData.groups || []);
       setRegisteredUsers((usersData.users || []).filter((u: RegisteredUser) => u.role === "athlete"));
     } catch {
@@ -152,7 +160,7 @@ function PlayersContent() {
         setUserEdits({});
         fetchData();
       } else {
-        const data: any = await res.json();
+        const data = await res.json() as { error?: string };
         toast.error(data.error || "保存失败");
       }
     } catch {
@@ -295,7 +303,7 @@ function PlayersContent() {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="outline"
-                        className={`text-xs w-16 justify-center shrink-0 ${
+                        className={`h-8 w-16 shrink-0 justify-center text-xs leading-none ${
                           player.gender === "M"
                             ? "border-blue-200 text-blue-600 bg-blue-50"
                             : "border-pink-200 text-pink-600 bg-pink-50"
