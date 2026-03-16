@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-context";
 import { useTournament } from "@/lib/tournament-context";
-import { Volleyball, LogIn, UserX, CalendarDays, Clock, CheckCircle, Play } from "lucide-react";
+import { LogIn, UserX, Clock, CheckCircle, Play } from "lucide-react";
 import Link from "next/link";
+import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
 
 const MATCH_TYPE_LABELS: Record<string, string> = {
   MD: "男双",
@@ -50,6 +51,18 @@ interface MatchInfo {
   awayPlayer2Id: number | null;
 }
 
+interface TournamentResponse {
+  tournament?: {
+    name?: string;
+  };
+  groups?: GroupInfo[];
+  players?: PlayerInfo[];
+}
+
+interface ScheduleResponse {
+  matches?: MatchInfo[];
+}
+
 export default function MyMatchesPage() {
   const { user, loading: authLoading } = useAuth();
   const { currentId } = useTournament();
@@ -65,10 +78,10 @@ export default function MyMatchesPage() {
 
     const tournamentId = String(currentId);
     Promise.all([
-      fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json()),
-      fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json()),
+      fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json() as Promise<TournamentResponse>),
+      fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json() as Promise<ScheduleResponse>),
     ])
-      .then(([tournamentData, scheduleData]: any[]) => {
+      .then(([tournamentData, scheduleData]) => {
         setTournamentName(tournamentData.tournament?.name || "");
         setGroups(tournamentData.groups || []);
         setPlayers(tournamentData.players || []);
@@ -221,7 +234,7 @@ export default function MyMatchesPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2.5">
-          <Volleyball className="w-5 h-5 text-green-700" />
+          <ShuttlecockIcon className="w-5 h-5 text-green-700" />
           <h1 className="text-2xl font-bold text-green-900">我的比赛</h1>
         </div>
         <Card className="border-amber-100 bg-amber-50/50 shadow-sm">
@@ -244,7 +257,7 @@ export default function MyMatchesPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2.5">
-          <Volleyball className="w-5 h-5 text-green-700" />
+          <ShuttlecockIcon className="w-5 h-5 text-green-700" />
           <h1 className="text-2xl font-bold text-green-900">我的比赛</h1>
         </div>
         <Card className="border-amber-100 bg-amber-50/50 shadow-sm">

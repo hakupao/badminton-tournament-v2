@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useTournament } from "@/lib/tournament-context";
-import { CalendarDays, Trophy, Volleyball, BarChart3, Smartphone, Award, LogIn, Zap } from "lucide-react";
+import { CalendarDays, Trophy, BarChart3, Smartphone, Award, LogIn, Zap } from "lucide-react";
+import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
+import { SiteLogo } from "@/components/brand/site-logo";
 
 interface Tournament {
   id: number;
@@ -15,6 +17,10 @@ interface Tournament {
   status: string;
   eventDate: string | null;
   courtsCount: number;
+}
+
+interface TournamentsResponse {
+  tournaments?: Tournament[];
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
@@ -31,8 +37,8 @@ export default function HomePage() {
 
   useEffect(() => {
     fetch("/api/tournaments")
-      .then((r) => r.json())
-      .then((data: any) => {
+      .then((r) => r.json() as Promise<TournamentsResponse>)
+      .then((data) => {
         setTournaments(data.tournaments || []);
         setLoading(false);
       })
@@ -58,17 +64,14 @@ export default function HomePage() {
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center shadow-inner">
-              <Volleyball className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-                ShuttleArena
-              </h1>
-              <p className="text-green-100/80 text-sm font-medium">
-                羽球竞技场 · 团体循环赛管理系统
-              </p>
-            </div>
+            <SiteLogo
+              size="hero"
+              showSubtitle
+              markClassName="bg-white/15 shadow-inner shadow-white/10 ring-white/20"
+              iconClassName="text-white"
+              titleClassName="text-white"
+              subtitleClassName="text-green-100/80"
+            />
           </div>
 
           <p className="text-green-50/90 text-base md:text-lg mb-8 max-w-lg leading-relaxed">
@@ -91,7 +94,7 @@ export default function HomePage() {
             {user && (
               <Link href="/my-matches">
                 <Button size="lg" variant="outline" className="border-2 border-white/50 bg-transparent text-white hover:bg-white/15 hover:text-white font-bold h-12 px-6 backdrop-blur-sm gap-2">
-                  <Volleyball className="w-4 h-4" />
+                  <ShuttlecockIcon className="w-4 h-4" />
                   我的比赛
                 </Button>
               </Link>
@@ -129,9 +132,9 @@ export default function HomePage() {
             ))}
           </div>
         ) : activeTournaments.length === 0 ? (
-          <Card className="border-dashed border-2 border-green-200 bg-gradient-to-br from-green-50/80 to-emerald-50/40">
+            <Card className="border-dashed border-2 border-green-200 bg-gradient-to-br from-green-50/80 to-emerald-50/40">
             <CardContent className="py-12 text-center">
-              <Volleyball className="w-12 h-12 text-green-300 mx-auto mb-4" />
+              <ShuttlecockIcon className="w-12 h-12 text-green-300 mx-auto mb-4" />
               <p className="text-gray-600 mb-1 font-semibold">暂无进行中的赛事</p>
               <p className="text-sm text-gray-400 mb-5">管理员可在后台创建新赛事</p>
               <Link href="/admin">

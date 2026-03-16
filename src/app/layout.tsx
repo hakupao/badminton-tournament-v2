@@ -21,6 +21,11 @@ const nunitoSans = Nunito_Sans({
 export const metadata: Metadata = {
   title: "ShuttleArena | 羽球竞技场",
   description: "羽毛球团体循环赛管理系统",
+  icons: {
+    icon: [{ url: "/icon", type: "image/png" }],
+    shortcut: "/icon",
+    apple: "/icon",
+  },
 };
 
 export default function RootLayout({

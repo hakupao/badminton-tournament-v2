@@ -6,7 +6,9 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useTournament } from "@/lib/tournament-context";
-import { Home, CalendarDays, Trophy, Volleyball, Settings, LogIn, LogOut, Shield, Menu, X, ChevronDown } from "lucide-react";
+import { Home, CalendarDays, Trophy, Settings, LogIn, LogOut, Shield, Menu, X, ChevronDown } from "lucide-react";
+import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
+import { SiteLogo } from "@/components/brand/site-logo";
 
 const publicLinks = [
   { href: "/", label: "首页", icon: Home },
@@ -38,7 +40,7 @@ export function MainNav() {
   }, [tournamentDropdown]);
 
   const isAdmin = user?.role === "admin";
-  const loggedInLinks = user ? [{ href: "/my-matches", label: "我的比赛", icon: Volleyball }] : [];
+  const loggedInLinks = user ? [{ href: "/my-matches", label: "我的比赛", icon: ShuttlecockIcon }] : [];
   const allLinks = [...publicLinks, ...loggedInLinks, ...(isAdmin ? adminLinks : [])];
 
   const handleLogout = async () => {
@@ -89,11 +91,12 @@ export function MainNav() {
       )}
 
       <div className="container mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-extrabold text-lg">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center shadow-sm">
-            <Volleyball className="w-4.5 h-4.5 text-white" />
-          </div>
-          <span className="text-gradient-court text-xl tracking-tight">ShuttleArena</span>
+        <Link href="/" className="block">
+          <SiteLogo
+            size="nav"
+            titleClassName="text-gradient-court"
+            markClassName="shadow-sm shadow-green-200/50"
+          />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
@@ -118,7 +121,7 @@ export function MainNav() {
             {loading ? null : user ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500 bg-green-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-                  {user.role === "admin" ? <Shield className="w-3 h-3" /> : <Volleyball className="w-3 h-3" />}
+                  {user.role === "admin" ? <Shield className="w-3 h-3" /> : <ShuttlecockIcon className="w-3 h-3" />}
                   {user.username}
                 </span>
                 <Button
@@ -175,7 +178,7 @@ export function MainNav() {
               {user ? (
                 <>
                   <div className="px-4 py-2 text-sm text-gray-500 flex items-center gap-1.5">
-                    {user.role === "admin" ? <Shield className="w-3.5 h-3.5" /> : <Volleyball className="w-3.5 h-3.5" />}
+                    {user.role === "admin" ? <Shield className="w-3.5 h-3.5" /> : <ShuttlecockIcon className="w-3.5 h-3.5" />}
                     {user.username}
                   </div>
                   <Button

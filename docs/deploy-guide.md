@@ -151,7 +151,7 @@ npm run deploy
 2. `npx wrangler pages deploy .vercel/output/static` — 上传到 Cloudflare Pages
 
 首次运行会提示输入 Pages 项目名称（建议使用 `shuttle-arena`）。
-
+n p m
 这里会生成一个本地 `.vercel/` 目录，其中最重要的是 `.vercel/output/static`：
 
 - `.vercel/` **不是业务源码**，而是本地构建/部署时生成的工作目录

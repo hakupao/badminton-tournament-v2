@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-context";
-import { Volleyball, UserPlus, CheckCircle } from "lucide-react";
+import { UserPlus, CheckCircle } from "lucide-react";
+import { SiteLogo } from "@/components/brand/site-logo";
 
 interface AuthErrorResponse {
   error?: string;
@@ -111,11 +112,15 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Decorative header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-teal-500 shadow-lg shadow-green-200/50 mb-4">
-            <Volleyball className="w-9 h-9 text-white" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-green-800 tracking-tight">ShuttleArena</h1>
-          <p className="text-sm text-gray-400 mt-1 font-medium">羽球竞技场 · 团体循环赛管理系统</p>
+          <SiteLogo
+            size="login"
+            centered
+            showSubtitle
+            className="justify-center"
+            titleClassName="text-green-800"
+            subtitleClassName="mt-1"
+            markClassName="mx-auto mb-1 shadow-lg shadow-green-200/50"
+          />
         </div>
 
         <Card className="border-green-100/60 shadow-xl shadow-green-100/30 backdrop-blur-sm">
