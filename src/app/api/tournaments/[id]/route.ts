@@ -34,6 +34,50 @@ interface UpdateTournamentRequestBody {
   status?: "draft" | "active" | "finished";
 }
 
+async function deleteTournamentMatches(db: ReturnType<typeof getDb>, tournamentId: number) {
+  const tournamentMatches = await db
+    .select()
+    .from(matches)
+    .where(eq(matches.tournamentId, tournamentId))
+    .all();
+
+  for (const match of tournamentMatches) {
+    await db.delete(scoreEvents).where(eq(scoreEvents.matchId, match.id)).run();
+    await db.delete(refereeRecords).where(eq(refereeRecords.matchId, match.id)).run();
+    await db.delete(matchGames).where(eq(matchGames.matchId, match.id)).run();
+  }
+
+  if (tournamentMatches.length > 0) {
+    await db.delete(matches).where(eq(matches.tournamentId, tournamentId)).run();
+  }
+}
+
+async function deleteTournamentDependencies(
+  db: ReturnType<typeof getDb>,
+  tournamentId: number
+) {
+  await deleteTournamentMatches(db, tournamentId);
+
+  const tournamentPlayers = await db
+    .select({ id: players.id })
+    .from(players)
+    .where(eq(players.tournamentId, tournamentId))
+    .all();
+
+  for (const player of tournamentPlayers) {
+    await db.update(users).set({ playerId: null }).where(eq(users.playerId, player.id)).run();
+  }
+
+  await db
+    .delete(tournamentParticipants)
+    .where(eq(tournamentParticipants.tournamentId, tournamentId))
+    .run();
+  await db.delete(players).where(eq(players.tournamentId, tournamentId)).run();
+  await db.delete(groups).where(eq(groups.tournamentId, tournamentId)).run();
+  await db.delete(templateMatches).where(eq(templateMatches.tournamentId, tournamentId)).run();
+  await db.delete(templatePositions).where(eq(templatePositions.tournamentId, tournamentId)).run();
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -210,18 +254,7 @@ export async function PUT(
       existing.femalesPerGroup !== nextFemalesPerGroup;
 
     if (groupCountChanged || rosterShapeChanged) {
-      const tournamentMatches = await db
-        .select()
-        .from(matches)
-        .where(eq(matches.tournamentId, tournamentId))
-        .all();
-
-      for (const match of tournamentMatches) {
-        await db.delete(scoreEvents).where(eq(scoreEvents.matchId, match.id)).run();
-        await db.delete(refereeRecords).where(eq(refereeRecords.matchId, match.id)).run();
-        await db.delete(matchGames).where(eq(matchGames.matchId, match.id)).run();
-      }
-      await db.delete(matches).where(eq(matches.tournamentId, tournamentId)).run();
+      await deleteTournamentMatches(db, tournamentId);
 
       if (rosterShapeChanged) {
         await db
@@ -355,23 +388,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    // Delete in dependency order
-    const tournamentMatches = await db.select().from(matches).where(eq(matches.tournamentId, tournamentId)).all();
-    const matchIds = tournamentMatches.map((m) => m.id);
-
-    if (matchIds.length > 0) {
-      for (const mid of matchIds) {
-        await db.delete(scoreEvents).where(eq(scoreEvents.matchId, mid)).run();
-        await db.delete(refereeRecords).where(eq(refereeRecords.matchId, mid)).run();
-        await db.delete(matchGames).where(eq(matchGames.matchId, mid)).run();
-      }
-      await db.delete(matches).where(eq(matches.tournamentId, tournamentId)).run();
-    }
-
-    await db.delete(players).where(eq(players.tournamentId, tournamentId)).run();
-    await db.delete(groups).where(eq(groups.tournamentId, tournamentId)).run();
-    await db.delete(templateMatches).where(eq(templateMatches.tournamentId, tournamentId)).run();
-    await db.delete(templatePositions).where(eq(templatePositions.tournamentId, tournamentId)).run();
+    await deleteTournamentDependencies(db, tournamentId);
     await db.delete(tournaments).where(eq(tournaments.id, tournamentId)).run();
 
     return NextResponse.json({ success: true });
