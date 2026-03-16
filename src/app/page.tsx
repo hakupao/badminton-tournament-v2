@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useTournament } from "@/lib/tournament-context";
-import { CalendarDays, Trophy, BarChart3, Smartphone, Award, LogIn, Zap } from "lucide-react";
+import { CalendarDays, Trophy, LogIn } from "lucide-react";
 import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
 import { SiteLogo } from "@/components/brand/site-logo";
 
@@ -230,24 +230,6 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
-      {/* Features */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { icon: Zap, title: "自动编排", desc: "智能分配场次轮次" },
-          { icon: BarChart3, title: "数据统计", desc: "胜率排名实时更新" },
-          { icon: Smartphone, title: "移动适配", desc: "手机平板随时查看" },
-          { icon: Award, title: "裁判记录", desc: "志愿服务排行榜" },
-        ].map((item) => (
-          <Card key={item.title} className="border-gray-100/60 bg-white/60 backdrop-blur-sm">
-            <CardContent className="py-4 text-center">
-              <item.icon className="w-6 h-6 text-green-600 mx-auto mb-1.5" />
-              <div className="text-sm font-bold text-gray-700">{item.title}</div>
-              <div className="text-[11px] text-gray-400 mt-0.5">{item.desc}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
     </div>
   );
 }

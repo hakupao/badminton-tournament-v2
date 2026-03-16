@@ -2,7 +2,7 @@
 
 export const runtime = 'edge';
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,15 +11,11 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { CheckCircle, Send } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-
-interface ScoreEventItem {
-  gameNumber: number;
-  eventOrder: number;
-  scoringSide: "home" | "away";
-  homeScore: number;
-  awayScore: number;
-  timestamp: string;
-}
+import {
+  normalizeScoreTimelineEvents,
+  ScoreTimelineCard,
+  type ScoreTimelineEvent,
+} from "@/components/match/score-timeline-card";
 
 const MATCH_TYPE_LABELS: Record<string, string> = {
   MD: "男双",
@@ -43,6 +39,7 @@ interface MatchData {
   awayPlayers: Array<{ id: number; name: string | null; position: number; boundUsername?: string | null }>;
   allPlayers: Array<{ id: number; name: string | null; groupIcon: string; position: number; boundUsername?: string | null }>;
   games: Array<{ gameNumber: number; homeScore: number; awayScore: number; winner: string | null }>;
+  scoreEvents?: ScoreTimelineEvent[];
 }
 
 interface GameScore {
@@ -81,14 +78,29 @@ export default function ScoringPage() {
   const [refereeId, setRefereeId] = useState<string>("");
   const [lineJudgeId, setLineJudgeId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
-
-  // Score event tracking (point-by-point log)
-  const scoreEventLogRef = useRef<ScoreEventItem[]>([]);
+  const [scoreEvents, setScoreEvents] = useState<ScoreTimelineEvent[]>([]);
 
   // Determine scoring rules
   const targetScore = match?.targetScore || 21;
   const bestOf = match?.bestOf || 1;
   const gamesToWin = Math.ceil(bestOf / 2);
+
+  const isGameWon = (homeScore: number, awayScore: number) => {
+    if (homeScore < targetScore && awayScore < targetScore) return false;
+
+    const lead = Math.abs(homeScore - awayScore);
+    const maxScore = Math.max(homeScore, awayScore);
+
+    if (targetScore === 21) {
+      return lead >= 2 || maxScore >= 30;
+    }
+
+    if (targetScore === 15) {
+      return lead >= 2 || maxScore >= 20;
+    }
+
+    return maxScore >= targetScore;
+  };
 
   useEffect(() => {
     fetch(`/api/matches/${matchId}`)
@@ -98,35 +110,30 @@ export default function ScoringPage() {
       })
       .then((data) => {
         setMatch(data);
+        setScoreEvents(normalizeScoreTimelineEvents(data.scoreEvents || []));
 
-        // If match is finished and has existing scores, pre-fill them
-        if (data.status === "finished" && data.games && data.games.length > 0) {
-          // Pre-fill admin mode
-          const numGames = data.bestOf > 1 ? data.bestOf : 1;
-          const prefilled = Array.from({ length: numGames }, (_, i) => {
-            const existing = data.games.find((g) => g.gameNumber === i + 1);
-            return existing
-              ? { homeScore: String(existing.homeScore), awayScore: String(existing.awayScore) }
-              : { homeScore: "", awayScore: "" };
-          });
-          setAdminGames(prefilled);
+        const numGames = data.bestOf > 1 ? data.bestOf : 1;
+        const prefilled = Array.from({ length: numGames }, (_, i) => {
+          const existing = data.games.find((g) => g.gameNumber === i + 1);
+          return existing
+            ? { homeScore: String(existing.homeScore), awayScore: String(existing.awayScore) }
+            : { homeScore: "", awayScore: "" };
+        });
+        setAdminGames(prefilled);
 
-          // Pre-fill athlete mode
+        if (data.games && data.games.length > 0) {
           const athleteGames: GameScore[] = data.games.map((g) => ({
             homeScore: g.homeScore,
             awayScore: g.awayScore,
             winner: g.winner as "home" | "away" | null,
           }));
           setGames(athleteGames);
-          setMatchFinished(true);
-          setCurrentGame(data.games.length - 1);
+          setMatchFinished(data.status === "finished");
+          setCurrentGame(Math.max(data.games.length - 1, 0));
         } else {
-          // Fresh match
           setGames([{ homeScore: 0, awayScore: 0, winner: null }]);
-          const numGames = data.bestOf > 1 ? data.bestOf : 1;
-          setAdminGames(
-            Array.from({ length: numGames }, () => ({ homeScore: "", awayScore: "" }))
-          );
+          setMatchFinished(false);
+          setCurrentGame(0);
         }
 
         setLoading(false);
@@ -135,79 +142,80 @@ export default function ScoringPage() {
   }, [matchId]);
 
   // === Athlete mode functions ===
-  const addPoint = useCallback((side: "home" | "away") => {
+  const addPoint = (side: "home" | "away") => {
     if (matchFinished) return;
+    const game = games[currentGame];
+    if (!game || game.winner) return;
 
-    setGames((prev) => {
-      const updated = [...prev];
-      const game = { ...updated[currentGame] };
+    const nextGame = { ...game };
+    if (side === "home") nextGame.homeScore++;
+    else nextGame.awayScore++;
 
-      if (side === "home") game.homeScore++;
-      else game.awayScore++;
+    const updatedGames = [...games];
+    updatedGames[currentGame] = nextGame;
 
-      // Record score event
-      const gameEvents = scoreEventLogRef.current.filter(
-        (e) => e.gameNumber === currentGame + 1
-      );
-      scoreEventLogRef.current.push({
+    const updatedEvents = normalizeScoreTimelineEvents([
+      ...scoreEvents,
+      {
         gameNumber: currentGame + 1,
-        eventOrder: gameEvents.length + 1,
+        eventOrder: scoreEvents.filter((evt) => evt.gameNumber === currentGame + 1).length + 1,
         scoringSide: side,
-        homeScore: game.homeScore,
-        awayScore: game.awayScore,
+        homeScore: nextGame.homeScore,
+        awayScore: nextGame.awayScore,
         timestamp: new Date().toISOString(),
-      });
+      },
+    ]);
 
-      // Check if game is won
-      if (game.homeScore >= targetScore || game.awayScore >= targetScore) {
-        const lead = Math.abs(game.homeScore - game.awayScore);
-        const maxScore = Math.max(game.homeScore, game.awayScore);
+    if (isGameWon(nextGame.homeScore, nextGame.awayScore)) {
+      nextGame.winner = nextGame.homeScore > nextGame.awayScore ? "home" : "away";
+      updatedGames[currentGame] = nextGame;
 
-        let gameWon = false;
-        if (targetScore === 21) {
-          if (lead >= 2 || maxScore >= 30) gameWon = true;
-        } else if (targetScore === 15) {
-          if (lead >= 2 || maxScore >= 20) gameWon = true;
-        } else {
-          if (maxScore >= targetScore) gameWon = true;
-        }
+      const homeGamesWon = updatedGames.filter((g) => g.winner === "home").length;
+      const awayGamesWon = updatedGames.filter((g) => g.winner === "away").length;
 
-        if (gameWon) {
-          game.winner = game.homeScore > game.awayScore ? "home" : "away";
-
-          const homeGamesWon = updated.filter((g) => g.winner === "home").length + (game.winner === "home" ? 1 : 0);
-          const awayGamesWon = updated.filter((g) => g.winner === "away").length + (game.winner === "away" ? 1 : 0);
-
-          updated[currentGame] = game;
-
-          if (homeGamesWon >= gamesToWin || awayGamesWon >= gamesToWin) {
-            setMatchFinished(true);
-          } else if (currentGame + 1 < bestOf) {
-            updated.push({ homeScore: 0, awayScore: 0, winner: null });
-            setTimeout(() => setCurrentGame(currentGame + 1), 500);
-          }
-
-          return updated;
-        }
+      if (homeGamesWon >= gamesToWin || awayGamesWon >= gamesToWin) {
+        setMatchFinished(true);
+      } else if (currentGame + 1 < bestOf && updatedGames.length === currentGame + 1) {
+        updatedGames.push({ homeScore: 0, awayScore: 0, winner: null });
+        setTimeout(() => setCurrentGame(currentGame + 1), 350);
       }
+    }
 
-      updated[currentGame] = game;
-      return updated;
-    });
-  }, [currentGame, matchFinished, targetScore, bestOf, gamesToWin]);
+    setGames(updatedGames);
+    setScoreEvents(updatedEvents);
+  };
 
-  const undoPoint = useCallback((side: "home" | "away") => {
-    if (matchFinished) return;
+  const undoPoint = (side: "home" | "away") => {
+    let lastEventIndex = -1;
+    for (let i = scoreEvents.length - 1; i >= 0; i--) {
+      if (scoreEvents[i].gameNumber === currentGame + 1) {
+        lastEventIndex = i;
+        break;
+      }
+    }
 
-    setGames((prev) => {
-      const updated = [...prev];
-      const game = { ...updated[currentGame] };
-      if (side === "home" && game.homeScore > 0) game.homeScore--;
-      if (side === "away" && game.awayScore > 0) game.awayScore--;
-      updated[currentGame] = game;
-      return updated;
-    });
-  }, [currentGame, matchFinished]);
+    if (lastEventIndex === -1) return;
+
+    const lastEvent = scoreEvents[lastEventIndex];
+    if (lastEvent.scoringSide !== side) return;
+
+    const game = games[currentGame];
+    if (!game) return;
+
+    const updatedGames = [...games];
+    updatedGames[currentGame] = {
+      ...game,
+      homeScore: Math.max(0, game.homeScore - (side === "home" ? 1 : 0)),
+      awayScore: Math.max(0, game.awayScore - (side === "away" ? 1 : 0)),
+      winner: null,
+    };
+
+    setGames(updatedGames);
+    setScoreEvents(
+      normalizeScoreTimelineEvents(scoreEvents.filter((_, index) => index !== lastEventIndex))
+    );
+    setMatchFinished(false);
+  };
 
   // === Admin mode functions ===
   const updateAdminGame = (index: number, field: "homeScore" | "awayScore", value: string) => {
@@ -273,15 +281,7 @@ export default function ScoringPage() {
         }
       }
 
-      // Deduplicate score events (React strict mode can cause double-fire)
-      let cleanedEvents = scoreEventLogRef.current;
-      if (cleanedEvents.length > 0) {
-        cleanedEvents = cleanedEvents.filter((evt, i) =>
-          i === 0 || evt.homeScore !== cleanedEvents[i - 1].homeScore || evt.awayScore !== cleanedEvents[i - 1].awayScore
-        );
-        // Re-number eventOrder after dedup
-        cleanedEvents = cleanedEvents.map((evt, i) => ({ ...evt, eventOrder: i + 1 }));
-      }
+      const cleanedEvents = normalizeScoreTimelineEvents(scoreEvents);
 
       const res = await fetch(`/api/tournaments/${match.tournamentId}/matches/${match.id}/score`, {
         method: "POST",
@@ -312,6 +312,8 @@ export default function ScoringPage() {
   const currentGameData = games[currentGame];
   const isEditingFinished = match.status === "finished";
   const canSubmit = isAdmin || (!isEditingFinished && matchFinished);
+  const currentGameEvents = scoreEvents.filter((evt) => evt.gameNumber === currentGame + 1);
+  const lastScoringSide = currentGameEvents[currentGameEvents.length - 1]?.scoringSide;
 
   return (
     <div className="max-w-lg mx-auto space-y-4">
@@ -332,6 +334,49 @@ export default function ScoringPage() {
           <span>{match.awayGroup.icon} {match.awayGroup.name}</span>
         </div>
       </div>
+
+      {/* Referee Buttons */}
+      <Card className="border-gray-100 shadow-sm">
+        <CardContent className="pt-4 space-y-3">
+          <div className="text-sm font-medium">裁判 & 边裁（可选）</div>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant={refereeId ? "default" : "outline"}
+              className={refereeId
+                ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                : "border-indigo-200 text-indigo-600 hover:bg-indigo-50"}
+              onClick={() => {
+                if (refereeId) {
+                  setRefereeId("");
+                } else if (user?.playerId) {
+                  setRefereeId(String(user.playerId));
+                } else {
+                  toast.error("你的账号未绑定选手");
+                }
+              }}
+            >
+              {refereeId ? `主裁: ${user?.username || "我"}` : "我是主裁"}
+            </Button>
+            <Button
+              variant={lineJudgeId ? "default" : "outline"}
+              className={lineJudgeId
+                ? "bg-teal-600 hover:bg-teal-700 text-white"
+                : "border-teal-200 text-teal-600 hover:bg-teal-50"}
+              onClick={() => {
+                if (lineJudgeId) {
+                  setLineJudgeId("");
+                } else if (user?.playerId) {
+                  setLineJudgeId(String(user.playerId));
+                } else {
+                  toast.error("你的账号未绑定选手");
+                }
+              }}
+            >
+              {lineJudgeId ? `边裁: ${user?.username || "我"}` : "我是边裁"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Admin Mode: Direct Score Input */}
       {isAdmin ? (
@@ -415,7 +460,7 @@ export default function ScoringPage() {
                       size="sm"
                       className="text-xs text-gray-400 hover:text-gray-600"
                       onClick={() => undoPoint("home")}
-                      disabled={matchFinished || currentGameData.homeScore === 0}
+                      disabled={currentGameData.homeScore === 0 || lastScoringSide !== "home"}
                     >
                       撤销
                     </Button>
@@ -442,7 +487,7 @@ export default function ScoringPage() {
                       size="sm"
                       className="text-xs text-gray-400 hover:text-gray-600"
                       onClick={() => undoPoint("away")}
-                      disabled={matchFinished || currentGameData.awayScore === 0}
+                      disabled={currentGameData.awayScore === 0 || lastScoringSide !== "away"}
                     >
                       撤销
                     </Button>
@@ -451,6 +496,14 @@ export default function ScoringPage() {
               </div>
             </CardContent>
           </Card>
+
+          <ScoreTimelineCard
+            homeGroup={match.homeGroup}
+            awayGroup={match.awayGroup}
+            events={scoreEvents}
+            live
+            emptyMessage="开始记分后，这里会实时显示得分路径。"
+          />
 
           {/* Match Result */}
           {matchFinished && (
@@ -481,49 +534,6 @@ export default function ScoringPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* Referee Buttons */}
-      <Card className="border-gray-100 shadow-sm">
-        <CardContent className="pt-4 space-y-3">
-          <div className="text-sm font-medium">裁判 & 边裁（可选）</div>
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant={refereeId ? "default" : "outline"}
-              className={refereeId
-                ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                : "border-indigo-200 text-indigo-600 hover:bg-indigo-50"}
-              onClick={() => {
-                if (refereeId) {
-                  setRefereeId("");
-                } else if (user?.playerId) {
-                  setRefereeId(String(user.playerId));
-                } else {
-                  toast.error("你的账号未绑定选手");
-                }
-              }}
-            >
-              {refereeId ? `主裁: ${user?.username || "我"}` : "我是主裁"}
-            </Button>
-            <Button
-              variant={lineJudgeId ? "default" : "outline"}
-              className={lineJudgeId
-                ? "bg-teal-600 hover:bg-teal-700 text-white"
-                : "border-teal-200 text-teal-600 hover:bg-teal-50"}
-              onClick={() => {
-                if (lineJudgeId) {
-                  setLineJudgeId("");
-                } else if (user?.playerId) {
-                  setLineJudgeId(String(user.playerId));
-                } else {
-                  toast.error("你的账号未绑定选手");
-                }
-              }}
-            >
-              {lineJudgeId ? `边裁: ${user?.username || "我"}` : "我是边裁"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Submit */}
       {canSubmit && (

@@ -11,21 +11,13 @@ import { Button } from "@/components/ui/button";
 import { PenLine, Trophy, Eye, Edit3, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { ScoreTimelineCard, type ScoreTimelineEvent } from "@/components/match/score-timeline-card";
 
 const MATCH_TYPE_LABELS: Record<string, string> = {
   MD: "男双",
   WD: "女双",
   XD: "混双",
 };
-
-interface ScoreEventItem {
-  gameNumber: number;
-  eventOrder: number;
-  scoringSide: "home" | "away";
-  homeScore: number;
-  awayScore: number;
-  timestamp: string;
-}
 
 interface MatchDetail {
   id: number;
@@ -40,7 +32,7 @@ interface MatchDetail {
   awayPlayers: Array<{ id: number; name: string | null; position: number; boundUsername?: string | null }>;
   games: Array<{ gameNumber: number; homeScore: number; awayScore: number; winner: string | null }>;
   referees: Array<{ playerName: string | null; role: string; groupIcon: string; position: number }>;
-  scoreEvents?: ScoreEventItem[];
+  scoreEvents?: ScoreTimelineEvent[];
 }
 
 function formatPlayerName(player: { name: string | null; position: number; boundUsername?: string | null }, groupIcon: string) {
@@ -63,9 +55,9 @@ export default function MatchDetailPage() {
     fetch(`/api/matches/${matchId}`)
       .then((r) => {
         if (!r.ok) throw new Error("Not found");
-        return r.json();
+        return r.json() as Promise<MatchDetail>;
       })
-      .then((data: any) => {
+      .then((data) => {
         setMatch(data);
         setLoading(false);
       })
@@ -173,88 +165,11 @@ export default function MatchDetailPage() {
 
       {/* Score Timeline - BWF standard score sheet format */}
       {match.scoreEvents && match.scoreEvents.length > 0 && (
-        <Card className="border-gray-100 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base text-gray-800 flex items-center gap-2">
-              <PenLine className="w-4 h-4 text-blue-500" />
-              得分路径
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {(() => {
-              const gameNumbers = [...new Set(match.scoreEvents!.map((e) => e.gameNumber))].sort();
-              return gameNumbers.map((gn) => {
-                const rawEvents = match.scoreEvents!.filter((e) => e.gameNumber === gn).sort((a, b) => a.eventOrder - b.eventOrder);
-                // Deduplicate consecutive events with same scores (caused by React strict mode double-fire)
-                const events = rawEvents.filter((evt, i) =>
-                  i === 0 || evt.homeScore !== rawEvents[i - 1].homeScore || evt.awayScore !== rawEvents[i - 1].awayScore
-                );
-                // Find service change points (where scoring side switches)
-                const getServiceBreaks = () => {
-                  const breaks = new Set<number>();
-                  for (let i = 1; i < events.length; i++) {
-                    if (events[i].scoringSide !== events[i - 1].scoringSide) {
-                      breaks.add(i);
-                    }
-                  }
-                  return breaks;
-                };
-                const serviceBreaks = getServiceBreaks();
-
-                return (
-                  <div key={gn} className="mb-4 last:mb-0">
-                    {gameNumbers.length > 1 && (
-                      <div className="text-xs font-semibold text-gray-500 mb-2">第 {gn} 局</div>
-                    )}
-                    <table className="w-full max-w-xs mx-auto border-collapse">
-                      <thead>
-                        <tr>
-                          <th className="w-1/2 text-center text-xs font-bold py-1.5 border-b-2 border-green-400 text-green-700">
-                            {match.homeGroup.icon} {match.homeGroup.name}
-                          </th>
-                          <th className="w-1/2 text-center text-xs font-bold py-1.5 border-b-2 border-teal-400 text-teal-700">
-                            {match.awayGroup.icon} {match.awayGroup.name}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {events.map((evt, i) => (
-                          <tr
-                            key={i}
-                            className={serviceBreaks.has(i) ? "border-t border-gray-200" : ""}
-                            title={new Date(evt.timestamp).toLocaleTimeString("zh-CN")}
-                          >
-                            <td className={`text-center py-0.5 font-mono text-sm ${
-                              evt.scoringSide === "home" ? "font-bold text-green-700" : "text-transparent select-none"
-                            }`}>
-                              {evt.scoringSide === "home" ? evt.homeScore : ""}
-                            </td>
-                            <td className={`text-center py-0.5 font-mono text-sm ${
-                              evt.scoringSide === "away" ? "font-bold text-teal-700" : "text-transparent select-none"
-                            }`}>
-                              {evt.scoringSide === "away" ? evt.awayScore : ""}
-                            </td>
-                          </tr>
-                        ))}
-                        {/* Final score row */}
-                        {events.length > 0 && (
-                          <tr className="border-t-2 border-gray-300">
-                            <td className="text-center py-1.5 font-mono text-base font-extrabold text-green-700">
-                              {events[events.length - 1].homeScore}
-                            </td>
-                            <td className="text-center py-1.5 font-mono text-base font-extrabold text-teal-700">
-                              {events[events.length - 1].awayScore}
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              });
-            })()}
-          </CardContent>
-        </Card>
+        <ScoreTimelineCard
+          homeGroup={match.homeGroup}
+          awayGroup={match.awayGroup}
+          events={match.scoreEvents}
+        />
       )}
 
       {/* Actions */}
