@@ -87,8 +87,11 @@ function StandingsContent() {
 
   useEffect(() => {
     fetch(`/api/tournaments/${tournamentId}/stats`)
-      .then((r) => r.json())
-      .then((data) => {
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to fetch stats");
+        return r.json();
+      })
+      .then((data: any) => {
         setStats(data);
         setLoading(false);
       })

@@ -104,7 +104,7 @@ function ScheduleContent() {
       fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json()),
       fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json()),
     ])
-      .then(([scheduleData, tournamentData]) => {
+      .then(([scheduleData, tournamentData]: any[]) => {
         const matchList: ScheduleMatch[] = scheduleData.matches || [];
         setMatches(matchList);
         setGroups(tournamentData.groups || []);

@@ -8,4 +8,4 @@ pages_build_output_dir = ".vercel/output/static"
 [[d1_databases]]
 binding = "DB"
 database_name = "shuttle-arena-db"
-database_id = "" # Run: npx wrangler d1 create shuttle-arena-db, then fill this in
+database_id = "8a72c38b-04e4-4297-972f-42e439e80dd3"

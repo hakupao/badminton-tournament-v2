@@ -14,6 +14,8 @@ import { generateMatches, scheduleMatches, generateTimeSlots } from "@/lib/engin
 import type { SimulationParams } from "@/lib/engine";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -190,7 +192,6 @@ export async function POST(
     };
 
     // Insert matches with actual player references
-    const insertedMatches = [];
     for (const sm of scheduled) {
       const homeGroup = tournamentGroups[sm.homeGroupIndex];
       const awayGroup = tournamentGroups[sm.awayGroupIndex];
@@ -202,7 +203,7 @@ export async function POST(
 
       const templateMatch = templates[sm.templateIndex] || null;
 
-      const inserted = await db
+      await db
         .insert(matches)
         .values({
           tournamentId,
@@ -217,11 +218,15 @@ export async function POST(
           awayPlayer1Id: awayPlayer1?.id || null,
           awayPlayer2Id: awayPlayer2?.id || null,
         })
-        .returning()
-        .get();
-
-      insertedMatches.push(inserted);
+        .run();
     }
+
+    // Query back inserted matches
+    const insertedMatches = await db
+      .select()
+      .from(matches)
+      .where(eq(matches.tournamentId, tournamentId))
+      .all();
 
     const totalRounds = scheduled.length > 0
       ? Math.max(...scheduled.map((s) => s.roundNumber))

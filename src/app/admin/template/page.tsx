@@ -52,8 +52,8 @@ function TemplateContent() {
         fetch(`/api/tournaments/${tournamentId}`),
         fetch(`/api/tournaments/${tournamentId}/template`),
       ]);
-      const tournData = await tournRes.json();
-      const data = await tmplRes.json();
+      const tournData: any = await tournRes.json();
+      const data: any = await tmplRes.json();
 
       // Build positions from tournament settings (always in sync)
       const males = tournData.tournament?.malesPerGroup || 3;
@@ -164,7 +164,7 @@ function TemplateContent() {
       if (res.ok) {
         toast.success("模板已保存");
       } else {
-        const data = await res.json();
+        const data: any = await res.json();
         toast.error(data.error || "保存失败");
       }
     } catch {

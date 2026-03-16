@@ -37,7 +37,7 @@ export default function AdminPage() {
   const fetchTournaments = () => {
     fetch("/api/tournaments")
       .then((r) => r.json())
-      .then((data) => {
+      .then((data: any) => {
         const list: Tournament[] = data.tournaments || [];
         setTournaments(list);
         setLoading(false);
@@ -60,13 +60,13 @@ export default function AdminPage() {
         }),
       });
       if (res.ok) {
-        const data = await res.json();
+        const data: any = await res.json();
         toast.success("赛事创建成功！");
         setCurrentId(data.tournament.id);
         fetchTournaments();
         refreshGlobal();
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         toast.error(err.error || "创建失败");
       }
     } finally {
@@ -86,7 +86,7 @@ export default function AdminPage() {
         fetchTournaments();
         refreshGlobal();
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         toast.error(err.error || "状态切换失败");
       }
     } catch {

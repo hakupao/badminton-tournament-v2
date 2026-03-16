@@ -32,7 +32,7 @@ export default function HomePage() {
   useEffect(() => {
     fetch("/api/tournaments")
       .then((r) => r.json())
-      .then((data) => {
+      .then((data: any) => {
         setTournaments(data.tournaments || []);
         setLoading(false);
       })

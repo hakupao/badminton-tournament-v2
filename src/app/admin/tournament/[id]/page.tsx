@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = 'edge';
+
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -110,7 +112,7 @@ export default function TournamentConfigPage() {
   const fetchTournament = useCallback(async () => {
     const res = await fetch(`/api/tournaments/${id}`);
     if (res.ok) {
-      const data = await res.json();
+      const data: any = await res.json();
       setTournament(data.tournament);
       const fetchedGroups: GroupInfo[] = (data.groups || []).sort((a: GroupInfo, b: GroupInfo) => a.sortOrder - b.sortOrder);
       setGroups(fetchedGroups);
@@ -159,7 +161,7 @@ export default function TournamentConfigPage() {
       });
       const res = await fetch(`/api/tournaments/${id}/simulate`, { method: "POST" });
       if (res.ok) {
-        const data = await res.json();
+        const data: any = await res.json();
         setSimulation(data);
       }
     } finally {

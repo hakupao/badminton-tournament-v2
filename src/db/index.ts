@@ -7,8 +7,18 @@
  *
  * All consumers use getDb() and `await` all DB operations,
  * since D1 is async. `await` on sync better-sqlite3 calls is a no-op.
+ *
+ * NOTE on module loading strategy:
+ * - D1 modules use static import — the packages exist in node_modules and
+ *   Webpack resolves them at build time. @cloudflare/next-on-pages CLI
+ *   replaces the reference at post-build time with its runtime implementation.
+ * - Local SQLite modules use eval('require(...)') to hide native Node.js
+ *   dependencies (fs, path, better-sqlite3) from the Edge Runtime bundler.
+ *   This code path is never reached in production (USE_D1=true).
  */
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { getRequestContext } from "@cloudflare/next-on-pages";
+import { drizzle as drizzleD1 } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
 export { schema };
@@ -18,13 +28,12 @@ type DbInstance = BetterSQLite3Database<typeof schema>;
 let _localDb: DbInstance | null = null;
 
 function createLocalDb(): DbInstance {
-  // Dynamic require to prevent Cloudflare from bundling native modules
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const Database = require("better-sqlite3");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const path = require("path");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { drizzle } = require("drizzle-orm/better-sqlite3");
+  // eslint-disable-next-line no-eval
+  const Database = eval('require("better-sqlite3")');
+  // eslint-disable-next-line no-eval
+  const path = eval('require("path")');
+  // eslint-disable-next-line no-eval
+  const { drizzle } = eval('require("drizzle-orm/better-sqlite3")');
 
   const DB_PATH = path.join(process.cwd(), "shuttle-arena.db");
   const sqlite = new Database(DB_PATH);
@@ -34,15 +43,8 @@ function createLocalDb(): DbInstance {
 }
 
 function createD1Db(): DbInstance {
-  // Use eval to hide module names from Turbopack's static analysis
-  // These modules only exist in the Cloudflare runtime
-  // eslint-disable-next-line no-eval
-  const { getRequestContext } = eval('require("@cloudflare/next-on-pages")');
-  // eslint-disable-next-line no-eval
-  const { drizzle } = eval('require("drizzle-orm/d1")');
-
   const { env } = getRequestContext();
-  return drizzle(env.DB, { schema });
+  return drizzleD1(env.DB, { schema }) as unknown as DbInstance;
 }
 
 /**

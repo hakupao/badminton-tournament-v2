@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 
 // ========== 用户账号 ==========
 export const users = sqliteTable("users", {
@@ -7,7 +8,7 @@ export const users = sqliteTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: text("role", { enum: ["admin", "athlete"] }).notNull().default("athlete"),
   playerId: integer("player_id").references(() => players.id),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ========== 赛事 ==========
@@ -25,8 +26,8 @@ export const tournaments = sqliteTable("tournaments", {
   endTime: text("end_time").default("19:00"),
   malesPerGroup: integer("males_per_group").notNull().default(3),
   femalesPerGroup: integer("females_per_group").notNull().default(2),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
-  updatedAt: text("updated_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ========== 小组 ==========
@@ -36,7 +37,7 @@ export const groups = sqliteTable("groups", {
   name: text("name").notNull(),       // 如「猫队」
   icon: text("icon").notNull(),       // 如「🐱」
   sortOrder: integer("sort_order").notNull().default(0),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ========== 参赛者（= 代号位置，抽签前无真名） ==========
@@ -47,7 +48,7 @@ export const players = sqliteTable("players", {
   positionNumber: integer("position_number").notNull(), // 1,2,3=男 4,5=女
   gender: text("gender", { enum: ["M", "F"] }).notNull(),
   name: text("name"), // 真名，抽签后填入
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ========== 比赛模板 - 位置定义 ==========
@@ -86,8 +87,8 @@ export const matches = sqliteTable("matches", {
   awayPlayer2Id: integer("away_player_2_id").references(() => players.id),
   status: text("status", { enum: ["pending", "in_progress", "finished"] }).notNull().default("pending"),
   winner: text("winner", { enum: ["home", "away"] }),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
-  updatedAt: text("updated_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ========== 比分（每局） ==========
@@ -106,7 +107,7 @@ export const refereeRecords = sqliteTable("referee_records", {
   matchId: integer("match_id").notNull().references(() => matches.id),
   playerId: integer("player_id").notNull().references(() => players.id),
   role: text("role", { enum: ["referee", "line_judge"] }).notNull(),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ========== 得分事件（逐球记录） ==========
@@ -118,7 +119,7 @@ export const scoreEvents = sqliteTable("score_events", {
   scoringSide: text("scoring_side", { enum: ["home", "away"] }).notNull(),
   homeScore: integer("home_score").notNull(), // 得分后的比分
   awayScore: integer("away_score").notNull(),
-  timestamp: text("timestamp").notNull().default("(datetime('now'))"),
+  timestamp: text("timestamp").notNull().default(sql`(datetime('now'))`),
 });
 
 // ========== 赛事报名（摇号前的位置分配） ==========
@@ -128,7 +129,7 @@ export const tournamentParticipants = sqliteTable("tournament_participants", {
   userId: integer("user_id").notNull().references(() => users.id),
   assignedPosition: integer("assigned_position").notNull(), // 技术位置 1-n
   gender: text("gender", { enum: ["M", "F"] }).notNull(),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ========== 类型导出 ==========

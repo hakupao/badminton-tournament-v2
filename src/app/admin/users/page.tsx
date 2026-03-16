@@ -34,7 +34,7 @@ export default function AdminUsersPage() {
   const fetchUsers = useCallback(async () => {
     try {
       const res = await fetch("/api/users");
-      const data = await res.json();
+      const data: any = await res.json();
       setUsers(data.users || []);
     } catch {
       toast.error("加载用户列表失败");
@@ -69,7 +69,7 @@ export default function AdminUsersPage() {
         setNewPassword("");
         fetchUsers();
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         toast.error(err.error || "创建失败");
       }
     } catch {
@@ -87,7 +87,7 @@ export default function AdminUsersPage() {
         toast.success("已删除");
         fetchUsers();
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         toast.error(err.error || "删除失败");
       }
     } catch {
@@ -111,7 +111,7 @@ export default function AdminUsersPage() {
         setResetUserId(null);
         setResetPassword("");
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         toast.error(err.error || "重置失败");
       }
     } catch {

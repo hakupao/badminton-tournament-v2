@@ -72,7 +72,7 @@ export default function LoginPage() {
           role: "athlete",
         }),
       });
-      const data = await res.json();
+      const data: any = await res.json();
 
       if (res.ok) {
         setRegSuccess(true);

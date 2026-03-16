@@ -4,6 +4,8 @@ import { users } from "@/db/schema";
 import { requireAdmin, hashPassword } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -22,7 +24,7 @@ export async function PUT(
     }
 
     const db = getDb();
-    const { password } = await request.json();
+    const { password }: any = await request.json();
     if (!password || typeof password !== "string") {
       return NextResponse.json({ error: "密码不能为空" }, { status: 400 });
     }

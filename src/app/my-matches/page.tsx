@@ -68,7 +68,7 @@ export default function MyMatchesPage() {
       fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json()),
       fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json()),
     ])
-      .then(([tournamentData, scheduleData]) => {
+      .then(([tournamentData, scheduleData]: any[]) => {
         setTournamentName(tournamentData.tournament?.name || "");
         setGroups(tournamentData.groups || []);
         setPlayers(tournamentData.players || []);

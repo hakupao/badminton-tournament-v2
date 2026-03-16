@@ -55,8 +55,8 @@ function PlayersContent() {
         fetch(`/api/tournaments/${tournamentId}/groups`),
         fetch("/api/users"),
       ]);
-      const groupsData = await groupsRes.json();
-      const usersData = await usersRes.json();
+      const groupsData: any = await groupsRes.json();
+      const usersData: any = await usersRes.json();
       setGroups(groupsData.groups || []);
       setRegisteredUsers((usersData.users || []).filter((u: RegisteredUser) => u.role === "athlete"));
     } catch {
@@ -152,7 +152,7 @@ function PlayersContent() {
         setUserEdits({});
         fetchData();
       } else {
-        const data = await res.json();
+        const data: any = await res.json();
         toast.error(data.error || "保存失败");
       }
     } catch {

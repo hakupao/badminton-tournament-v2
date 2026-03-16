@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = 'edge';
+
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,7 +92,7 @@ export default function ScoringPage() {
         if (!r.ok) throw new Error("Not found");
         return r.json();
       })
-      .then((data: MatchData) => {
+      .then((data: any) => {
         setMatch(data);
 
         // If match is finished and has existing scores, pre-fill them
@@ -292,7 +294,7 @@ export default function ScoringPage() {
         toast.success("比分已保存！");
         router.push(`/match/${match.id}`);
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         toast.error(err.error || "保存失败");
       }
     } finally {

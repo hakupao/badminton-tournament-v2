@@ -121,5 +121,5 @@ CREATE TABLE IF NOT EXISTS tournament_participants (
 
 -- Default admin account (password: admin123)
 -- You should change this password after first login
-INSERT OR IGNORE INTO users (username, password_hash, role)
-VALUES ('admin', '$2a$10$default_hash_replace_me', 'admin');
+-- NOTE: For proper password hashing, run `npx tsx src/db/seed.ts` instead of this SQL file.
+-- This INSERT is a fallback; the seed script will UPDATE the hash to a valid bcrypt value.

@@ -59,8 +59,10 @@ export default function LotteryPage() {
         fetch(`/api/tournaments/${tournamentId}/participants`),
         fetch("/api/users"),
       ]);
-      const partData = await partRes.json();
-      const usersData = await usersRes.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const partData: any = await partRes.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const usersData: any = await usersRes.json();
       setParticipants(partData.participants || []);
       setMalesPerGroup(partData.malesPerGroup || 3);
       setFemalesPerGroup(partData.femalesPerGroup || 2);
@@ -108,7 +110,7 @@ export default function LotteryPage() {
         setSelectedGender("");
         fetchData();
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         toast.error(err.error || "添加失败");
       }
     } catch {
@@ -140,7 +142,7 @@ export default function LotteryPage() {
       const res = await fetch(`/api/tournaments/${tournamentId}/lottery`, {
         method: "POST",
       });
-      const data = await res.json();
+      const data: any = await res.json();
       if (res.ok) {
         toast.success(data.message || "摇号完成！");
         setLotteryResults(data.assignments || []);

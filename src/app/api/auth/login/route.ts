@@ -4,10 +4,12 @@ import { users } from "@/db/schema";
 import { verifyPassword, createToken } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     const db = getDb();
-    const body = await request.json();
+    const body: any = await request.json();
     const { username, password } = body;
 
     if (!username || !password) {

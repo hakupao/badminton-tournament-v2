@@ -4,6 +4,8 @@ import { tournamentParticipants, tournaments, groups, players, users } from "@/d
 import { requireAdmin } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 // POST: Run lottery - randomly assign participants to teams based on their position
 export async function POST(
   _request: NextRequest,
@@ -114,11 +116,13 @@ export async function POST(
         const user = userMap.get(participant.userId);
         const username = user?.username || "未知";
 
-        // Update player name
-        await db.update(players)
-          .set({ name: username })
-          .where(eq(players.id, playerSlot.id))
-          .run();
+        // Update player name only if not already set
+        if (!playerSlot.name) {
+          await db.update(players)
+            .set({ name: username })
+            .where(eq(players.id, playerSlot.id))
+            .run();
+        }
 
         // Bind user to player
         // First unbind any existing binding

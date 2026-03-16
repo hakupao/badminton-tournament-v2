@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = 'edge';
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -63,7 +65,7 @@ export default function MatchDetailPage() {
         if (!r.ok) throw new Error("Not found");
         return r.json();
       })
-      .then((data) => {
+      .then((data: any) => {
         setMatch(data);
         setLoading(false);
       })

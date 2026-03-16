@@ -4,6 +4,8 @@ import { groups, players, users } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -81,7 +83,7 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body: any = await request.json();
     const { groupUpdates } = body;
 
     if (!Array.isArray(groupUpdates)) {
@@ -159,7 +161,7 @@ export async function POST(
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body: any = await request.json();
     const { assignments } = body;
 
     if (!Array.isArray(assignments)) {

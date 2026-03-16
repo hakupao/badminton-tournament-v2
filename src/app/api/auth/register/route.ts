@@ -4,10 +4,12 @@ import { users } from "@/db/schema";
 import { hashPassword, createToken } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     const db = getDb();
-    const body = await request.json();
+    const body: any = await request.json();
     const { username, password, role } = body;
 
     if (!username || !password) {
@@ -50,17 +52,22 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await hashPassword(password);
 
-    const result = await db
+    await db
       .insert(users)
       .values({
         username: username.trim(),
         passwordHash,
         role: userRole,
       })
-      .returning()
+      .run();
+
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username.trim()))
       .get();
 
-    const token = await createToken(result.id, result.role);
+    const token = await createToken(result!.id, result!.role);
 
     const response = NextResponse.json({
       user: {

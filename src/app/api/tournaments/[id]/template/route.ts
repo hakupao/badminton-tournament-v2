@@ -3,6 +3,8 @@ import { getDb } from "@/db";
 import { templatePositions, templateMatches, tournaments } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -57,7 +59,7 @@ export async function PUT(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body: any = await request.json();
     const { positions, matches } = body;
 
     if (!Array.isArray(positions) || !Array.isArray(matches)) {
@@ -103,25 +105,21 @@ export async function PUT(
       .run();
 
     // Insert new positions
-    const insertedPositions = [];
     for (const pos of positions) {
-      const inserted = await db
+      await db
         .insert(templatePositions)
         .values({
           tournamentId,
           positionNumber: pos.positionNumber,
           gender: pos.gender,
         })
-        .returning()
-        .get();
-      insertedPositions.push(inserted);
+        .run();
     }
 
     // Insert new matches
-    const insertedMatches = [];
     for (let i = 0; i < matches.length; i++) {
       const m = matches[i];
-      const inserted = await db
+      await db
         .insert(templateMatches)
         .values({
           tournamentId,
@@ -132,10 +130,21 @@ export async function PUT(
           awayPos2: m.awayPos2,
           sortOrder: i + 1,
         })
-        .returning()
-        .get();
-      insertedMatches.push(inserted);
+        .run();
     }
+
+    // Query back inserted data
+    const insertedPositions = await db
+      .select()
+      .from(templatePositions)
+      .where(eq(templatePositions.tournamentId, tournamentId))
+      .all();
+
+    const insertedMatches = await db
+      .select()
+      .from(templateMatches)
+      .where(eq(templateMatches.tournamentId, tournamentId))
+      .all();
 
     return NextResponse.json({
       positions: insertedPositions,

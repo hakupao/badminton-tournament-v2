@@ -10,7 +10,7 @@ export default function TournamentRedirectPage() {
   useEffect(() => {
     fetch("/api/tournaments")
       .then((r) => r.json())
-      .then((data) => {
+      .then((data: any) => {
         const tournaments = data.tournaments || [];
         if (tournaments.length > 0) {
           // Redirect to the latest tournament

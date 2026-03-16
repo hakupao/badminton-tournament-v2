@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ShuttleArena 羽球竞技场
 
-## Getting Started
+混合双打羽毛球团体联赛管理系统。支持多赛事管理、摇号分组、赛程生成、实时计分。
 
-First, run the development server:
+**线上体验**: https://shuttle-arena.pages.dev
+
+---
+
+## 功能
+
+- **赛事管理** — 创建比赛、配置小组数/人数、自定义队伍名称
+- **摇号分组** — 随机分配参赛者到各队位置
+- **人员管理** — 绑定注册账号到队伍位置
+- **赛程生成** — 自动排期，支持多场地并行
+- **实时计分** — 逐局计分，自动计算胜负
+- **排名统计** — 积分榜、个人参赛统计
+- **用户系统** — admin / athlete 双角色，JWT 鉴权
+
+---
+
+## 技术栈
+
+| 层 | 技术 |
+|----|------|
+| 框架 | Next.js 16 (App Router, Edge Runtime) |
+| 数据库 | Cloudflare D1（生产）/ better-sqlite3（本地） |
+| ORM | Drizzle ORM |
+| UI | Tailwind CSS v4 + shadcn/ui |
+| 部署 | Cloudflare Pages + @cloudflare/next-on-pages |
+| 认证 | JWT (jose) + bcryptjs |
+
+---
+
+## 本地开发
+
+```bash
+git clone https://github.com/hakupao/badminton-tournament-v2.git
+cd badminton-tournament-v2
+npm install --legacy-peer-deps
+```
+
+初始化本地数据库并创建 admin 账号：
+
+```bash
+npm run d1:init:local
+npx tsx src/db/seed.ts
+```
+
+启动开发服务器：
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+访问 http://localhost:3000，使用 `admin` / `admin123` 登录。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 部署到 Cloudflare Pages
 
-## Learn More
+完整部署教程见 [docs/deploy-guide.md](docs/deploy-guide.md)。
 
-To learn more about Next.js, take a look at the following resources:
+**快速流程：**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# 1. 登录 Cloudflare
+npx wrangler login
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 2. 创建 D1 数据库，将 database_id 填入 wrangler.toml
+npx wrangler d1 create shuttle-arena-db
 
-## Deploy on Vercel
+# 3. 初始化数据库表
+npx wrangler d1 execute shuttle-arena-db --remote --file=schema.sql
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 4. 部署
+npm run deploy
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+部署后在 Cloudflare Dashboard 配置：
+- Environment variables: `USE_D1=true`, `JWT_SECRET=<随机密钥>`
+- D1 binding: Variable `DB` → `shuttle-arena-db`
+
+---
+
+## 项目结构
+
+```
+src/
+├── app/
+│   ├── api/          # API Routes (Edge Runtime)
+│   │   ├── auth/     # 登录、注册、登出
+│   │   ├── tournaments/  # 赛事 CRUD、小组、赛程、摇号
+│   │   ├── matches/  # 比赛详情
+│   │   └── users/    # 用户管理
+│   ├── admin/        # 管理后台页面
+│   ├── match/        # 比赛详情、计分页
+│   └── ...           # 公开页面（首页、排名、赛程）
+├── components/       # UI 组件
+├── db/
+│   ├── index.ts      # 数据库切换层（D1 / SQLite）
+│   ├── schema.ts     # Drizzle ORM 表定义
+│   └── seed.ts       # 本地开发种子数据
+└── lib/
+    ├── auth.ts       # JWT 鉴权
+    └── constants.ts  # 默认队伍、比赛模板
+```
+
+---
+
+## npm scripts
+
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 本地开发（Turbopack，SQLite） |
+| `npm run build` | 本地生产构建（Webpack） |
+| `npm run build:cf` | 编译为 Cloudflare Workers 格式 |
+| `npm run deploy` | 构建 + 部署到 Cloudflare Pages |
+| `npm run d1:init` | 初始化线上 D1 数据库表结构 |
+| `npm run d1:init:local` | 初始化本地模拟 D1 |

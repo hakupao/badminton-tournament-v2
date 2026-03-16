@@ -94,7 +94,7 @@ export default function AdminSchedulePage() {
     Promise.all([
       fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json()),
       fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json()),
-    ]).then(([scheduleData, tournamentData]) => {
+    ]).then(([scheduleData, tournamentData]: any[]) => {
       setMatches(scheduleData.matches || []);
       setGroups(tournamentData.groups || []);
       setPlayers(tournamentData.players || []);
@@ -110,11 +110,11 @@ export default function AdminSchedulePage() {
         method: "POST",
       });
       if (res.ok) {
-        const data = await res.json();
+        const data: any = await res.json();
         toast.success(`赛程生成成功！共 ${data.totalMatches} 场比赛，${data.totalRounds} 轮`);
         fetchSchedule();
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         toast.error(err.error || "生成失败");
       }
     } finally {

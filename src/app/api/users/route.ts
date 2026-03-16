@@ -4,6 +4,8 @@ import { users } from "@/db/schema";
 import { requireAdmin, hashPassword } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function GET() {
   try {
     const db = getDb();
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const db = getDb();
-    const { username, password, role } = await request.json();
+    const { username, password, role }: any = await request.json();
 
     if (!username || !password) {
       return NextResponse.json({ error: "用户名和密码不能为空" }, { status: 400 });
@@ -50,18 +52,23 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const newUser = await db
+    await db
       .insert(users)
       .values({
         username,
         passwordHash,
         role: role || "athlete",
       })
-      .returning()
+      .run();
+
+    const newUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username))
       .get();
 
     return NextResponse.json({
-      user: { id: newUser.id, username: newUser.username, role: newUser.role },
+      user: { id: newUser!.id, username: newUser!.username, role: newUser!.role },
     });
   } catch (error) {
     console.error("Create user error:", error);

@@ -4,6 +4,8 @@ import { tournamentParticipants, tournaments, users, players, groups } from "@/d
 import { requireAdmin } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 // GET: List all participants for a tournament (with their assigned positions)
 export async function GET(
   _request: NextRequest,
@@ -84,7 +86,7 @@ export async function POST(
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body: any = await request.json();
     const { assignments } = body;
 
     if (!Array.isArray(assignments)) {

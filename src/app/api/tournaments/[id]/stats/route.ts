@@ -10,6 +10,8 @@ import {
 } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 interface GroupStanding {
   groupId: number;
   groupName: string;

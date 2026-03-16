@@ -99,7 +99,7 @@ export default function AdminScoringPage() {
     Promise.all([
       fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json()),
       fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json()),
-    ]).then(([scheduleData, tournamentData]) => {
+    ]).then(([scheduleData, tournamentData]: any[]) => {
       setMatches(scheduleData.matches || []);
       setGroups(tournamentData.groups || []);
       setPlayers(tournamentData.players || []);
@@ -220,7 +220,7 @@ export default function AdminScoringPage() {
         closeScoring();
         fetchData();
       } else {
-        const err = await res.json();
+        const err: any = await res.json();
         toast.error(err.error || "录入失败");
       }
     } finally {

@@ -3,6 +3,9 @@ import { getDb } from "@/db";
 import { tournaments, templatePositions, templateMatches, groups, players } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { getDefaultTeam, DEFAULT_TEMPLATE } from "@/lib/constants";
+import { eq } from "drizzle-orm";
+
+export const runtime = 'edge';
 
 export async function GET() {
   try {
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const db = getDb();
-    const body = await request.json();
+    const body: any = await request.json();
     const {
       name,
       courtsCount = 3,
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create tournament
-    const tournament = await db
+    await db
       .insert(tournaments)
       .values({
         name: name.trim(),
@@ -72,8 +75,11 @@ export async function POST(request: NextRequest) {
         malesPerGroup,
         femalesPerGroup,
       })
-      .returning()
-      .get();
+      .run();
+
+    // Query back to get the real ID (D1 compatible - .returning().get() unreliable on D1)
+    const recentTournaments = await db.select().from(tournaments).all();
+    const tournament = recentTournaments.sort((a, b) => b.id - a.id)[0];
 
     // Create default template positions
     for (const pos of DEFAULT_TEMPLATE.positions) {
@@ -104,7 +110,7 @@ export async function POST(request: NextRequest) {
     // Create groups using ANIMAL_TEAMS
     for (let i = 0; i < groupCount; i++) {
       const team = getDefaultTeam(i);
-      const group = await db
+      await db
         .insert(groups)
         .values({
           tournamentId: tournament.id,
@@ -112,11 +118,19 @@ export async function POST(request: NextRequest) {
           icon: team.icon,
           sortOrder: i,
         })
-        .returning()
-        .get();
+        .run();
+    }
 
-      // Create player slots for each group
-      const totalPerGroup = malesPerGroup + femalesPerGroup;
+    // Query back the created groups to get their real IDs
+    const createdGroups = await db
+      .select()
+      .from(groups)
+      .where(eq(groups.tournamentId, tournament.id))
+      .all();
+
+    // Create player slots for each group
+    const totalPerGroup = malesPerGroup + femalesPerGroup;
+    for (const group of createdGroups) {
       for (let p = 1; p <= totalPerGroup; p++) {
         await db.insert(players)
           .values({

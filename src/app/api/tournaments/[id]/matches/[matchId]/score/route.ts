@@ -4,6 +4,8 @@ import { matches, matchGames, refereeRecords, scoreEvents } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; matchId: string }> }
@@ -39,7 +41,7 @@ export async function POST(
 
     // Any logged-in user can submit scores (anyone can be a referee)
 
-    const body = await request.json();
+    const body: any = await request.json();
     const { games, refereePlayerId, lineJudgePlayerId, scoreEventLog } = body;
 
     if (!Array.isArray(games) || games.length === 0) {
@@ -77,7 +79,6 @@ export async function POST(
     // Insert games and calculate winners
     let homeWins = 0;
     let awayWins = 0;
-    const insertedGames = [];
 
     for (let i = 0; i < games.length; i++) {
       const { homeScore, awayScore } = games[i];
@@ -91,7 +92,7 @@ export async function POST(
         awayWins++;
       }
 
-      const inserted = await db
+      await db
         .insert(matchGames)
         .values({
           matchId,
@@ -100,11 +101,15 @@ export async function POST(
           awayScore,
           winner: gameWinner,
         })
-        .returning()
-        .get();
-
-      insertedGames.push(inserted);
+        .run();
     }
+
+    // Query back inserted games
+    const insertedGames = await db
+      .select()
+      .from(matchGames)
+      .where(eq(matchGames.matchId, matchId))
+      .all();
 
     // Determine overall match winner
     let matchWinner: "home" | "away" | null = null;

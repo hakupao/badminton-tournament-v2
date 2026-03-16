@@ -15,6 +15,8 @@ import { requireAdmin } from "@/lib/auth";
 import { getDefaultTeam } from "@/lib/constants";
 import { eq, and, inArray } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -120,7 +122,7 @@ export async function PUT(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body: any = await request.json();
     const {
       name,
       courtsCount,
@@ -149,11 +151,16 @@ export async function PUT(
     if (status !== undefined) updateData.status = status;
     updateData.updatedAt = new Date().toISOString();
 
-    const updated = await db
+    await db
       .update(tournaments)
       .set(updateData)
       .where(eq(tournaments.id, tournamentId))
-      .returning()
+      .run();
+
+    const updated = await db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, tournamentId))
       .get();
 
     // If groupCount changed, recreate groups and players
@@ -197,7 +204,7 @@ export async function PUT(
 
         for (let i = 0; i < groupCount; i++) {
           const team = getDefaultTeam(i);
-          const group = await db
+          await db
             .insert(groups)
             .values({
               tournamentId,
@@ -205,9 +212,17 @@ export async function PUT(
               icon: team.icon,
               sortOrder: i,
             })
-            .returning()
-            .get();
+            .run();
+        }
 
+        // Query back created groups to get their real IDs
+        const createdGroups = await db
+          .select()
+          .from(groups)
+          .where(eq(groups.tournamentId, tournamentId))
+          .all();
+
+        for (const group of createdGroups) {
           for (let p = 1; p <= totalPerGroup; p++) {
             await db.insert(players)
               .values({

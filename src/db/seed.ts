@@ -139,14 +139,13 @@ sqlite.exec(`
 
 // Create default admin account
 const adminPassword = bcrypt.hashSync("admin123", 10);
-try {
-  sqlite.exec(`
-    INSERT OR IGNORE INTO users (username, password_hash, role)
-    VALUES ('admin', '${adminPassword}', 'admin')
-  `);
+const existingAdmin = sqlite.prepare("SELECT id FROM users WHERE username = 'admin'").get();
+if (existingAdmin) {
+  sqlite.prepare("UPDATE users SET password_hash = ?, role = 'admin' WHERE username = 'admin'").run(adminPassword);
+  console.log("✅ Admin account updated (username: admin, password: admin123)");
+} else {
+  sqlite.prepare("INSERT INTO users (username, password_hash, role) VALUES ('admin', ?, 'admin')").run(adminPassword);
   console.log("✅ Admin account created (username: admin, password: admin123)");
-} catch (e) {
-  console.log("Admin account already exists");
 }
 
 console.log("✅ Database initialized at", DB_PATH);

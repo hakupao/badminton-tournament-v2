@@ -14,6 +14,8 @@ import { eq } from "drizzle-orm";
 import { SCORING_MODES } from "@/lib/constants";
 import type { ScoringMode } from "@/lib/constants";
 
+export const runtime = 'edge';
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

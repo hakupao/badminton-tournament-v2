@@ -6,6 +6,8 @@ import type { SimulationParams } from "@/lib/engine";
 import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
+export const runtime = 'edge';
+
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
