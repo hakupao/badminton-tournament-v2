@@ -10,6 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-context";
 import { Volleyball, UserPlus, CheckCircle } from "lucide-react";
 
+interface AuthErrorResponse {
+  error?: string;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
@@ -69,10 +73,9 @@ export default function LoginPage() {
         body: JSON.stringify({
           username: regUsername.trim(),
           password: regPassword,
-          role: "athlete",
         }),
       });
-      const data: any = await res.json();
+      const data = await res.json() as AuthErrorResponse;
 
       if (res.ok) {
         setRegSuccess(true);
@@ -162,10 +165,6 @@ export default function LoginPage() {
                   >
                     {loginLoading ? "登录中..." : "登录"}
                   </Button>
-
-                  <p className="text-center text-xs text-gray-400 pt-2">
-                    管理员默认账号：admin / admin123
-                  </p>
                 </form>
               </TabsContent>
 

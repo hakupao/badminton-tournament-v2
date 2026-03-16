@@ -6,11 +6,17 @@ import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
 
+interface RegisterRequestBody {
+  username?: unknown;
+  password?: unknown;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const db = getDb();
-    const body: any = await request.json();
-    const { username, password, role } = body;
+    const body = await request.json() as RegisterRequestBody;
+    const username = typeof body.username === "string" ? body.username.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
 
     if (!username || !password) {
       return NextResponse.json(
@@ -19,28 +25,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (typeof username !== "string" || username.trim().length < 2) {
+    if (username.length < 2) {
       return NextResponse.json(
         { error: "Username must be at least 2 characters" },
         { status: 400 }
       );
     }
 
-    if (typeof password !== "string" || password.length < 4) {
+    if (password.length < 4) {
       return NextResponse.json(
         { error: "Password must be at least 4 characters" },
         { status: 400 }
       );
     }
 
-    const validRoles = ["admin", "athlete"] as const;
-    const userRole = validRoles.includes(role) ? role : "athlete";
-
     // Check if username already exists
     const existing = await db
       .select()
       .from(users)
-      .where(eq(users.username, username.trim()))
+      .where(eq(users.username, username))
       .get();
 
     if (existing) {
@@ -55,19 +58,23 @@ export async function POST(request: NextRequest) {
     await db
       .insert(users)
       .values({
-        username: username.trim(),
+        username,
         passwordHash,
-        role: userRole,
+        role: "athlete",
       })
       .run();
 
     const result = await db
       .select()
       .from(users)
-      .where(eq(users.username, username.trim()))
+      .where(eq(users.username, username))
       .get();
 
-    const token = await createToken(result!.id, result!.role);
+    if (!result) {
+      throw new Error("Failed to load the newly created user");
+    }
+
+    const token = await createToken(result.id, result.role);
 
     const response = NextResponse.json({
       user: {

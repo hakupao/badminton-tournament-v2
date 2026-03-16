@@ -9,7 +9,7 @@
     "lint": "eslint",
     "build:cf": "USE_D1=true npx @cloudflare/next-on-pages",
     "deploy": "npm run build:cf && npx wrangler pages deploy .vercel/output/static",
-    "d1:init": "npx wrangler d1 execute shuttle-arena-db --file=schema.sql",
+    "d1:init": "npx wrangler d1 execute shuttle-arena-db --remote --file=schema.sql",
     "d1:init:local": "npx wrangler d1 execute shuttle-arena-db --local --file=schema.sql"
   },
   "dependencies": {

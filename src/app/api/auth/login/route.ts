@@ -6,11 +6,17 @@ import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
 
+interface LoginRequestBody {
+  username?: unknown;
+  password?: unknown;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const db = getDb();
-    const body: any = await request.json();
-    const { username, password } = body;
+    const body = await request.json() as LoginRequestBody;
+    const username = typeof body.username === "string" ? body.username.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
 
     if (!username || !password) {
       return NextResponse.json(
@@ -22,7 +28,7 @@ export async function POST(request: NextRequest) {
     const user = await db
       .select()
       .from(users)
-      .where(eq(users.username, username.trim()))
+      .where(eq(users.username, username))
       .get();
 
     if (!user) {

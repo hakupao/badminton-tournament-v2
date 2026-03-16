@@ -14,7 +14,7 @@
 
 ## 前置条件
 
-1. **Node.js** >= 18
+1. **Node.js** >= 20.9
 2. **Cloudflare 账号** — 免费版即可（D1 免费额度：5GB 存储 + 5M 行读 / 天）
 3. **项目已 clone 到本地**
 
@@ -88,7 +88,7 @@ npx wrangler d1 execute shuttle-arena-db --remote --command="SELECT name FROM sq
 
 ## 第四步：创建管理员账号
 
-D1 数据库初始化后需要手动创建 admin 账号。
+D1 数据库初始化后需要创建首个 admin 账号。公开注册接口只能创建运动员账号，不能直接注册为 admin。
 
 ### 方法 A：直接插入（推荐）
 
@@ -125,8 +125,10 @@ npx wrangler d1 execute shuttle-arena-db --remote --command="UPDATE users SET ro
 
 | 变量名 | 值 | 说明 |
 |--------|------|------|
-| `USE_D1` | `true` | 启用 D1 数据库（不设则使用本地 SQLite） |
+| `USE_D1` | `true` | 生产环境启用 D1；Cloudflare Pages 部署必须设置 |
 | `JWT_SECRET` | `你的随机密钥` | JWT 签名密钥，生产环境**必须**修改 |
+
+> 如果你走的是“本机命令行首次部署”，Pages 项目要等第六步首次 `npm run deploy` 后才会在 Dashboard 中出现。也就是说，第一次命令行部署主要是为了创建项目；随后再回来补环境变量和 D1 绑定，并重新部署一次。
 
 生成随机密钥：
 
@@ -149,6 +151,14 @@ npm run deploy
 2. `npx wrangler pages deploy .vercel/output/static` — 上传到 Cloudflare Pages
 
 首次运行会提示输入 Pages 项目名称（建议使用 `shuttle-arena`）。
+
+这里会生成一个本地 `.vercel/` 目录，其中最重要的是 `.vercel/output/static`：
+
+- `.vercel/` **不是业务源码**，而是本地构建/部署时生成的工作目录
+- `npm run build:cf` 会自动生成它，**不需要手动创建**
+- `npm run deploy` 之所以能工作，是因为第二步 `wrangler pages deploy` 读取的正是 `.vercel/output/static`
+- 如果你删除了 `.vercel/`，下次重新执行 `npm run build:cf` 或 `npm run deploy` 时会自动再生成
+- 因此它应该被 `.gitignore` 忽略，**不需要提交到 GitHub**
 
 部署成功后会输出访问 URL：
 
@@ -202,7 +212,7 @@ npm run deploy
 5. 在 **Environment variables** 中添加（Production + Preview 都要勾选）：
    - `USE_D1` = `true`
    - `JWT_SECRET` = 你的随机密钥
-   - `NODE_VERSION` = `18`
+   - `NODE_VERSION` = `20`
 
 6. 点击 **Save and Deploy**
 
@@ -235,6 +245,19 @@ npm run d1:init:local
 # 线上执行（写入真实 D1）
 npx wrangler d1 execute shuttle-arena-db --remote --file=schema.sql
 ```
+
+### Q: `.vercel/` 文件夹到底有什么用？可以删除吗？
+
+可以把 `.vercel/` 理解为“本地 Cloudflare/Vercel 构建产物目录”，不是你需要手工维护的源码目录。
+
+- 对本机命令行部署来说，它**会被使用**：`npm run build:cf` 会生成 `.vercel/output/static`，随后 `wrangler pages deploy` 从这里读取产物
+- 对 GitHub 自动部署来说，它**不需要预先存在**：Cloudflare 会在 CI 构建过程中自动生成对应产物
+- 它**可以删除**：删除后不会影响线上服务；只是下次本地执行 `npm run build:cf` / `npm run deploy` 时会重新生成
+- 它**不应该提交到 GitHub**：仓库里只保留源码和配置，`.vercel/` 属于可重建的本地产物
+
+一句话记忆：
+
+> `.vercel/` 对“本地构建后的部署命令”是临时必需的，但它不是需要入库的长期文件。
 
 ### Q: 本地开发如何切换回 SQLite？
 

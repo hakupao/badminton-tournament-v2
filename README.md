@@ -115,5 +115,14 @@ src/
 | `npm run build` | 本地生产构建（Webpack） |
 | `npm run build:cf` | 编译为 Cloudflare Workers 格式 |
 | `npm run deploy` | 构建 + 部署到 Cloudflare Pages |
-| `npm run d1:init` | 初始化线上 D1 数据库表结构 |
+| `npm run d1:init` | 初始化线上 D1 数据库表结构（`--remote`） |
 | `npm run d1:init:local` | 初始化本地模拟 D1 |
+
+---
+
+## 本地产物说明
+
+- `.vercel/` 是本地执行 `npm run build:cf` 或 `npm run deploy` 时自动生成的构建产物目录
+- 它不是业务源码，不需要手动维护，也不需要提交到 GitHub
+- 如果你删除了 `.vercel/`，下次重新构建时会自动生成
+- GitHub -> Cloudflare Pages 自动部署时，Cloudflare 会在 CI 里自行生成对应产物

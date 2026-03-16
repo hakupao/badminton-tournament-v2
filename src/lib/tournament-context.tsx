@@ -26,6 +26,10 @@ const TournamentContext = createContext<TournamentContextType>({
   refresh: async () => {},
 });
 
+interface TournamentListResponse {
+  tournaments?: TournamentInfo[];
+}
+
 const STORAGE_KEY = "shuttle-arena-tournament-id";
 
 export function TournamentProvider({ children }: { children: ReactNode }) {
@@ -37,7 +41,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch("/api/tournaments");
       if (res.ok) {
-        const data = await res.json();
+        const data = await res.json() as TournamentListResponse;
         const list: TournamentInfo[] = (data.tournaments || []).map((t: TournamentInfo) => ({
           id: t.id,
           name: t.name,

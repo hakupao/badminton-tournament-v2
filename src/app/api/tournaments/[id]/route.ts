@@ -13,9 +13,23 @@ import {
 } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { getDefaultTeam } from "@/lib/constants";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
+
+interface UpdateTournamentRequestBody {
+  name?: string;
+  courtsCount?: number;
+  roundDurationMinutes?: number;
+  scoringMode?: string;
+  eventDate?: string | null;
+  startTime?: string;
+  endTime?: string;
+  malesPerGroup?: number;
+  femalesPerGroup?: number;
+  groupCount?: number;
+  status?: "draft" | "active" | "finished";
+}
 
 export async function GET(
   _request: NextRequest,
@@ -122,7 +136,7 @@ export async function PUT(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
-    const body: any = await request.json();
+    const body = await request.json() as UpdateTournamentRequestBody;
     const {
       name,
       courtsCount,
@@ -162,6 +176,10 @@ export async function PUT(
       .from(tournaments)
       .where(eq(tournaments.id, tournamentId))
       .get();
+
+    if (!updated) {
+      throw new Error("Updated tournament not found");
+    }
 
     // If groupCount changed, recreate groups and players
     if (groupCount !== undefined) {

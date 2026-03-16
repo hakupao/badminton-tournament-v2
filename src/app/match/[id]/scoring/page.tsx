@@ -56,6 +56,10 @@ interface AdminGameInput {
   awayScore: string;
 }
 
+interface ScoreApiError {
+  error?: string;
+}
+
 export default function ScoringPage() {
   const params = useParams();
   const router = useRouter();
@@ -88,11 +92,11 @@ export default function ScoringPage() {
 
   useEffect(() => {
     fetch(`/api/matches/${matchId}`)
-      .then((r) => {
+      .then(async (r) => {
         if (!r.ok) throw new Error("Not found");
-        return r.json();
+        return r.json() as Promise<MatchData>;
       })
-      .then((data: any) => {
+      .then((data) => {
         setMatch(data);
 
         // If match is finished and has existing scores, pre-fill them
@@ -294,7 +298,7 @@ export default function ScoringPage() {
         toast.success("比分已保存！");
         router.push(`/match/${match.id}`);
       } else {
-        const err: any = await res.json();
+        const err = await res.json() as ScoreApiError;
         toast.error(err.error || "保存失败");
       }
     } finally {
@@ -307,6 +311,7 @@ export default function ScoringPage() {
 
   const currentGameData = games[currentGame];
   const isEditingFinished = match.status === "finished";
+  const canSubmit = isAdmin || (!isEditingFinished && matchFinished);
 
   return (
     <div className="max-w-lg mx-auto space-y-4">
@@ -469,6 +474,14 @@ export default function ScoringPage() {
         </>
       )}
 
+      {!isAdmin && isEditingFinished && (
+        <Card className="border-gray-100 shadow-sm">
+          <CardContent className="py-4 text-center text-sm text-gray-500">
+            这场比赛的比分已经提交。普通用户可以记录新比分，但只能由管理员修改已提交结果。
+          </CardContent>
+        </Card>
+      )}
+
       {/* Referee Buttons */}
       <Card className="border-gray-100 shadow-sm">
         <CardContent className="pt-4 space-y-3">
@@ -513,7 +526,7 @@ export default function ScoringPage() {
       </Card>
 
       {/* Submit */}
-      {(isAdmin || matchFinished) && (
+      {canSubmit && (
         <Button
           className={`w-full ${isEditingFinished ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"}`}
           size="lg"

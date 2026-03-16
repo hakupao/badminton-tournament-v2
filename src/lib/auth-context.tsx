@@ -25,6 +25,15 @@ const AuthContext = createContext<AuthContextType>({
   refresh: async () => {},
 });
 
+interface AuthMeResponse {
+  user?: AuthUser;
+}
+
+interface AuthActionResponse {
+  user?: AuthUser;
+  error?: string;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,8 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch("/api/auth/me");
       if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
+        const data = await res.json() as AuthMeResponse;
+        setUser(data.user ?? null);
       } else {
         setUser(null);
       }
@@ -55,9 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
-    const data = await res.json();
+    const data = await res.json() as AuthActionResponse;
     if (res.ok) {
-      setUser(data.user);
+      setUser(data.user ?? null);
       return { ok: true };
     }
     return { ok: false, error: data.error || "登录失败" };

@@ -24,15 +24,13 @@ import * as schema from "./schema";
 export { schema };
 
 type DbInstance = BetterSQLite3Database<typeof schema>;
+type CloudflareEnvWithDb = CloudflareEnv & { DB: D1Database };
 
 let _localDb: DbInstance | null = null;
 
 function createLocalDb(): DbInstance {
-  // eslint-disable-next-line no-eval
   const Database = eval('require("better-sqlite3")');
-  // eslint-disable-next-line no-eval
   const path = eval('require("path")');
-  // eslint-disable-next-line no-eval
   const { drizzle } = eval('require("drizzle-orm/better-sqlite3")');
 
   const DB_PATH = path.join(process.cwd(), "shuttle-arena.db");
@@ -44,7 +42,8 @@ function createLocalDb(): DbInstance {
 
 function createD1Db(): DbInstance {
   const { env } = getRequestContext();
-  return drizzleD1(env.DB, { schema }) as unknown as DbInstance;
+  const cloudflareEnv = env as CloudflareEnvWithDb;
+  return drizzleD1(cloudflareEnv.DB, { schema }) as unknown as DbInstance;
 }
 
 /**

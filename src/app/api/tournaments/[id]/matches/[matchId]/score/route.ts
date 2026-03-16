@@ -6,11 +6,36 @@ import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
 
+interface ScoreGameInput {
+  homeScore?: unknown;
+  awayScore?: unknown;
+}
+
+interface ScoreEventInput {
+  gameNumber?: unknown;
+  eventOrder?: unknown;
+  scoringSide?: unknown;
+  homeScore?: unknown;
+  awayScore?: unknown;
+  timestamp?: unknown;
+}
+
+interface ScoreRequestBody {
+  games?: ScoreGameInput[];
+  refereePlayerId?: unknown;
+  lineJudgePlayerId?: unknown;
+  scoreEventLog?: ScoreEventInput[];
+}
+
+interface ValidatedScoreGame {
+  homeScore: number;
+  awayScore: number;
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; matchId: string }> }
 ) {
-  // Require logged-in user (admin or athlete)
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json(
@@ -39,10 +64,21 @@ export async function POST(
       return NextResponse.json({ error: "Match not found" }, { status: 404 });
     }
 
-    // Any logged-in user can submit scores (anyone can be a referee)
+    const isAdmin = user.role === "admin";
+    if (match.status === "finished" && !isAdmin) {
+      return NextResponse.json(
+        { error: "比分已提交，如需修改请联系管理员" },
+        { status: 403 }
+      );
+    }
 
-    const body: any = await request.json();
-    const { games, refereePlayerId, lineJudgePlayerId, scoreEventLog } = body;
+    const body = await request.json() as ScoreRequestBody;
+    const games = body.games;
+    const refereePlayerId =
+      typeof body.refereePlayerId === "number" ? body.refereePlayerId : undefined;
+    const lineJudgePlayerId =
+      typeof body.lineJudgePlayerId === "number" ? body.lineJudgePlayerId : undefined;
+    const scoreEventLog = Array.isArray(body.scoreEventLog) ? body.scoreEventLog : [];
 
     if (!Array.isArray(games) || games.length === 0) {
       return NextResponse.json(
@@ -50,6 +86,28 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    if (!isAdmin) {
+      const claimedIds = [refereePlayerId, lineJudgePlayerId].filter(
+        (playerId): playerId is number => typeof playerId === "number"
+      );
+
+      if (claimedIds.length > 0 && !user.playerId) {
+        return NextResponse.json(
+          { error: "你的账号未绑定选手，不能登记裁判身份" },
+          { status: 400 }
+        );
+      }
+
+      if (claimedIds.some((playerId) => playerId !== user.playerId)) {
+        return NextResponse.json(
+          { error: "普通用户只能登记自己的裁判身份" },
+          { status: 403 }
+        );
+      }
+    }
+
+    const validatedGames: ValidatedScoreGame[] = [];
 
     // Validate each game
     for (const game of games) {
@@ -64,6 +122,11 @@ export async function POST(
           { status: 400 }
         );
       }
+
+      validatedGames.push({
+        homeScore: game.homeScore,
+        awayScore: game.awayScore,
+      });
     }
 
     // Delete existing games for this match
@@ -80,8 +143,8 @@ export async function POST(
     let homeWins = 0;
     let awayWins = 0;
 
-    for (let i = 0; i < games.length; i++) {
-      const { homeScore, awayScore } = games[i];
+    for (let i = 0; i < validatedGames.length; i++) {
+      const { homeScore, awayScore } = validatedGames[i];
       let gameWinner: "home" | "away" | null = null;
 
       if (homeScore > awayScore) {
@@ -152,33 +215,33 @@ export async function POST(
         .run();
     }
 
-    // Store score events (point-by-point tracking) if provided
-    if (Array.isArray(scoreEventLog) && scoreEventLog.length > 0) {
-      // Delete existing events for this match
-      await db.delete(scoreEvents)
-        .where(eq(scoreEvents.matchId, matchId))
-        .run();
+    // Replace the timeline to avoid keeping stale point-by-point data after edits.
+    await db.delete(scoreEvents)
+      .where(eq(scoreEvents.matchId, matchId))
+      .run();
 
-      for (const evt of scoreEventLog) {
-        if (
-          typeof evt.gameNumber === "number" &&
-          typeof evt.eventOrder === "number" &&
-          typeof evt.scoringSide === "string" &&
-          typeof evt.homeScore === "number" &&
-          typeof evt.awayScore === "number"
-        ) {
-          await db.insert(scoreEvents)
-            .values({
-              matchId,
-              gameNumber: evt.gameNumber,
-              eventOrder: evt.eventOrder,
-              scoringSide: evt.scoringSide,
-              homeScore: evt.homeScore,
-              awayScore: evt.awayScore,
-              timestamp: evt.timestamp || new Date().toISOString(),
-            })
-            .run();
-        }
+    for (const evt of scoreEventLog) {
+      if (
+        typeof evt.gameNumber === "number" &&
+        typeof evt.eventOrder === "number" &&
+        (evt.scoringSide === "home" || evt.scoringSide === "away") &&
+        typeof evt.homeScore === "number" &&
+        typeof evt.awayScore === "number"
+      ) {
+        await db.insert(scoreEvents)
+          .values({
+            matchId,
+            gameNumber: evt.gameNumber,
+            eventOrder: evt.eventOrder,
+            scoringSide: evt.scoringSide,
+            homeScore: evt.homeScore,
+            awayScore: evt.awayScore,
+            timestamp:
+              typeof evt.timestamp === "string"
+                ? evt.timestamp
+                : new Date().toISOString(),
+          })
+          .run();
       }
     }
 
