@@ -184,59 +184,62 @@ export default function AdminPage() {
               }`}
               onClick={() => setCurrentId(t.id)}
             >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${selectedId === t.id ? "bg-green-500" : "bg-gray-300"}`} />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${selectedId === t.id ? "bg-green-500" : "bg-gray-300"}`} />
                   <div className="min-w-0">
-                    <div className="font-semibold text-gray-800 text-sm truncate">{t.name}</div>
-                    <div className="text-xs text-gray-400">{t.eventDate || "日期待定"} · {t.courtsCount} 片场地</div>
+                    <div className="truncate text-sm font-semibold text-gray-800">{t.name}</div>
+                    <div className="mt-1 text-xs text-gray-400">{t.eventDate || "日期待定"} · {t.courtsCount} 片场地</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${STATUS_COLORS[t.status] || ""}`}>
+
+                <div className="flex shrink-0 items-center gap-2 overflow-x-auto whitespace-nowrap sm:overflow-visible">
+                  <span className={`inline-flex whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[t.status] || ""}`}>
                     {STATUS_LABELS[t.status] || t.status}
                   </span>
+
+                  {t.status === "draft" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-3 text-xs text-green-600 hover:bg-green-50"
+                      onClick={(e) => { e.stopPropagation(); changeTournamentStatus(t.id, "active"); }}
+                    >
+                      <Play className="w-3 h-3" />
+                      开始
+                    </Button>
+                  )}
+                  {t.status === "active" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-3 text-xs text-gray-600 hover:bg-gray-50"
+                      onClick={(e) => { e.stopPropagation(); changeTournamentStatus(t.id, "finished"); }}
+                    >
+                      <Square className="w-3 h-3" />
+                      结束
+                    </Button>
+                  )}
+                  {t.status === "finished" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-3 text-xs text-amber-600 hover:bg-amber-50"
+                      onClick={(e) => { e.stopPropagation(); changeTournamentStatus(t.id, "draft"); }}
+                    >
+                      重置
+                    </Button>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0 text-gray-300 hover:bg-red-50 hover:text-red-500"
+                    onClick={(e) => { e.stopPropagation(); deleteTournament(t.id, t.name); }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
-              </div>
-              <div className="flex items-center gap-1.5 mt-2 pl-5">
-                {t.status === "draft" && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs text-green-600 hover:bg-green-50 gap-1"
-                    onClick={(e) => { e.stopPropagation(); changeTournamentStatus(t.id, "active"); }}
-                  >
-                    <Play className="w-3 h-3" /> 开始
-                  </Button>
-                )}
-                {t.status === "active" && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs text-gray-500 hover:bg-gray-50 gap-1"
-                    onClick={(e) => { e.stopPropagation(); changeTournamentStatus(t.id, "finished"); }}
-                  >
-                    <Square className="w-3 h-3" /> 结束
-                  </Button>
-                )}
-                {t.status === "finished" && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs text-amber-600 hover:bg-amber-50"
-                    onClick={(e) => { e.stopPropagation(); changeTournamentStatus(t.id, "draft"); }}
-                  >
-                    重置
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 w-7 p-0 text-gray-300 hover:text-red-500 ml-auto"
-                  onClick={(e) => { e.stopPropagation(); deleteTournament(t.id, t.name); }}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
               </div>
             </div>
           ))}

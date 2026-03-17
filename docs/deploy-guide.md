@@ -338,7 +338,7 @@ npx wrangler pages deployment tail
 - `npm run preview:cf`：连接 Wrangler 提供的本地 Cloudflare D1 绑定
 - Cloudflare Pages 正式/预览环境：连接 Dashboard 里绑定的真实 D1（变量名 `DB`）
 
-项目在运行时会优先检测 Cloudflare 的 `DB` 绑定；只有在非 Edge 的 Node 场景下，才会退回到本地 `better-sqlite3` 兜底。
+项目实际运行的 API route 使用 Cloudflare 的 `DB` 绑定；Node 侧的 `better-sqlite3` fallback 已保留在单独的 Node-only 入口里，避免 Edge bundle 扫到 Node API。
 
 补充说明：
 
@@ -356,7 +356,8 @@ npx wrangler pages deployment tail
 | `.npmrc` | 配置 `legacy-peer-deps=true`，解决 peer dep 冲突 |
 | `schema.sql` | D1 数据库表结构（仅建表，无初始数据） |
 | `scripts/seed-local-d1.sql` | 本地 D1 管理员初始化脚本（admin/admin123） |
-| `src/db/index.ts` | 数据库切换层（D1 / better-sqlite3 双轨） |
+| `src/db/index.ts` | Edge-safe 数据库入口（D1） |
+| `src/db/node.ts` | Node-only 数据库 fallback（better-sqlite3） |
 | `src/db/schema.ts` | Drizzle ORM schema 定义 |
 | `src/lib/auth.ts` | JWT 认证逻辑 |
 | `next.config.ts` | Next.js 配置（开发模式下注入 Cloudflare 本地绑定） |

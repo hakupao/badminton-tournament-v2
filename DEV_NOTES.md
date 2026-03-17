@@ -6,16 +6,16 @@
 ## 技术栈
 - **前端**: Next.js 16.1.6 + React 19 + Tailwind CSS 4 + shadcn/ui
 - **后端**: Next.js API Routes
-- **数据库**: SQLite (better-sqlite3 本地 / Cloudflare D1 生产)
+- **数据库**: Cloudflare D1（本地 Edge 调试 / 生产）+ better-sqlite3（Node fallback）
 - **ORM**: Drizzle ORM
 - **认证**: JWT (jose) + httpOnly cookie
 - **状态管理**: SWR + React Context
 
 ## 数据库双轨制
-- **Plan A (生产)**: Cloudflare D1 — `USE_D1=true` 环境变量触发
-- **Plan B (本地)**: better-sqlite3 — 默认模式，零配置
-- 切换逻辑在 `src/db/index.ts` 的 `getDb()` 函数
-- 所有 API route 使用 `await` 调用 DB（D1 异步，better-sqlite3 同步但 await 无影响）
+- **Plan A (应用运行时)**: Cloudflare D1 — `npm run dev` 与 Cloudflare Pages 都走这条路径
+- **Plan B (Node-only fallback)**: better-sqlite3 — 保留给显式 Node 场景
+- `src/db/index.ts` 是 Edge-safe D1 入口，`src/db/node.ts` 是 Node fallback
+- 所有 API route 使用 `await` 调用 DB（D1 异步）
 
 ## 已完成功能
 
@@ -104,8 +104,8 @@ npm run deploy
 - `@cloudflare/next-on-pages` 对 Next.js 16 的兼容性需验证，可能需要降级到 15
 
 ## 关键文件
-- `src/db/index.ts` — 数据库切换层（D1 / better-sqlite3）
-- `src/db/local.ts` — Plan B 本地数据库
+- `src/db/index.ts` — Edge-safe 数据库入口（D1）
+- `src/db/node.ts` — Plan B Node-only 本地数据库
 - `src/db/schema.ts` — Drizzle ORM schema
 - `src/db/seed.ts` — 本地数据库初始化
 - `schema.sql` — D1 初始化 SQL
