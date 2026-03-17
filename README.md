@@ -2,7 +2,7 @@
 
 混合双打羽毛球团体联赛管理系统。支持多赛事管理、摇号分组、赛程生成、实时计分。
 
-**线上体验**: https://shuttle-arena.pages.dev
+**线上体验**: https://game.bojiang.org
 
 ---
 
