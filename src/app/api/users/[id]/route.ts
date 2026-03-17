@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { requireAdmin, hashPassword } from "@/lib/auth";
+import { normalizePassword, validatePassword } from "@/lib/account-validation";
 import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
@@ -28,9 +29,11 @@ export async function PUT(
     }
 
     const db = getDb();
-    const { password } = await request.json() as UpdateUserRequest;
-    if (!password || typeof password !== "string") {
-      return NextResponse.json({ error: "密码不能为空" }, { status: 400 });
+    const body = await request.json() as UpdateUserRequest;
+    const password = normalizePassword(body.password);
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 });
     }
 
     const existing = await db.select().from(users).where(eq(users.id, userId)).get();

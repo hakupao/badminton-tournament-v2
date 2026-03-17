@@ -99,8 +99,9 @@ function normalizeTemplateSignature(matches: TemplateMatch[]) {
 }
 
 export default function AdminRulesPage() {
-  const { currentId } = useTournament();
+  const { currentId, loading: tournamentLoading } = useTournament();
   const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [hasFormalSchedule, setHasFormalSchedule] = useState(false);
   const [groupCount, setGroupCount] = useState("5");
@@ -126,10 +127,12 @@ export default function AdminRulesPage() {
 
   const fetchData = useCallback(async () => {
     if (!currentId) {
+      setLoadedTournamentId(null);
       setLoading(false);
       return;
     }
 
+    const selectedTournamentId = currentId;
     setLoading(true);
     try {
       const [tournamentRes, templateRes, scheduleRes] = await Promise.all([
@@ -168,6 +171,7 @@ export default function AdminRulesPage() {
     } catch {
       toast.error("加载赛制设置失败");
     } finally {
+      setLoadedTournamentId(selectedTournamentId);
       setLoading(false);
     }
   }, [currentId]);
@@ -338,7 +342,7 @@ export default function AdminRulesPage() {
     }
   };
 
-  if (loading) {
+  if (tournamentLoading || (currentId !== null && loadedTournamentId !== currentId) || loading) {
     return <div className="text-center py-12 text-gray-400">加载中...</div>;
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTournament } from "@/lib/tournament-context";
 import { Badge } from "@/components/ui/badge";
@@ -58,53 +58,71 @@ function buildMirroredDefaults(males: number, females: number): TemplateMatch[] 
 }
 
 function TemplateContent() {
-  const { currentId } = useTournament();
-  const tournamentId = currentId ? String(currentId) : "1";
+  const { currentId, loading: tournamentLoading } = useTournament();
   const [positions, setPositions] = useState<Position[]>([]);
   const [matches, setMatches] = useState<TemplateMatch[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const fetchTemplate = useCallback(async () => {
-    try {
-      // Fetch both tournament info (for malesPerGroup/femalesPerGroup) and template
-      const [tournRes, tmplRes] = await Promise.all([
-        fetch(`/api/tournaments/${tournamentId}`),
-        fetch(`/api/tournaments/${tournamentId}/template`),
-      ]);
-      const tournData = await tournRes.json() as {
-        tournament?: { malesPerGroup?: number; femalesPerGroup?: number };
-      };
-      const data = await tmplRes.json() as { matches?: TemplateMatch[] };
-
-      // Build positions from tournament settings (always in sync)
-      const males = tournData.tournament?.malesPerGroup || 3;
-      const females = tournData.tournament?.femalesPerGroup || 2;
-      const derivedPositions = buildTemplatePositions(males, females);
-      setPositions(derivedPositions);
-
-      const templateMatches = data.matches ?? [];
-      if (templateMatches.length > 0) {
-        setMatches(templateMatches.map((m) => ({
-          matchType: m.matchType,
-          homePos1: m.homePos1,
-          homePos2: m.homePos2,
-          awayPos1: m.homePos1,
-          awayPos2: m.homePos2,
-        })));
-      } else {
-        setMatches(buildMirroredDefaults(males, females));
-      }
-    } catch {
-      toast.error("加载模板失败");
-    } finally {
-      setLoading(false);
-    }
-  }, [tournamentId]);
-
   useEffect(() => {
-    fetchTemplate();
-  }, [fetchTemplate]);
+    if (tournamentLoading || !currentId) return;
+
+    let cancelled = false;
+
+    async function fetchTemplate() {
+      try {
+        const [tournRes, tmplRes] = await Promise.all([
+          fetch(`/api/tournaments/${currentId}`),
+          fetch(`/api/tournaments/${currentId}/template`),
+        ]);
+
+        if (!tournRes.ok || !tmplRes.ok) {
+          throw new Error("Failed to fetch template");
+        }
+
+        const tournData = await tournRes.json() as {
+          tournament?: { malesPerGroup?: number; femalesPerGroup?: number };
+        };
+        const data = await tmplRes.json() as { matches?: TemplateMatch[] };
+
+        if (cancelled) return;
+
+        const males = tournData.tournament?.malesPerGroup || 3;
+        const females = tournData.tournament?.femalesPerGroup || 2;
+        const derivedPositions = buildTemplatePositions(males, females);
+        setPositions(derivedPositions);
+
+        const templateMatches = data.matches ?? [];
+        if (templateMatches.length > 0) {
+          setMatches(templateMatches.map((m) => ({
+            matchType: m.matchType,
+            homePos1: m.homePos1,
+            homePos2: m.homePos2,
+            awayPos1: m.homePos1,
+            awayPos2: m.homePos2,
+          })));
+        } else {
+          setMatches(buildMirroredDefaults(males, females));
+        }
+      } catch {
+        if (cancelled) return;
+
+        setPositions([]);
+        setMatches([]);
+        toast.error("加载模板失败");
+      } finally {
+        if (!cancelled) {
+          setLoadedTournamentId(currentId);
+        }
+      }
+    }
+
+    void fetchTemplate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentId, tournamentLoading]);
 
   const malePositions = positions.filter((p) => p.gender === "M");
   const femalePositions = positions.filter((p) => p.gender === "F");
@@ -162,9 +180,11 @@ function TemplateContent() {
   };
 
   const handleSave = async () => {
+    if (!currentId) return;
+
     setSaving(true);
     try {
-      const res = await fetch(`/api/tournaments/${tournamentId}/template`, {
+      const res = await fetch(`/api/tournaments/${currentId}/template`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ positions, matches: matches.map(syncMirroredMatch) }),
@@ -190,8 +210,32 @@ function TemplateContent() {
     toast.info("已重置为默认模板");
   };
 
-  if (loading) {
+  if (tournamentLoading || (currentId !== null && loadedTournamentId !== currentId)) {
     return <div className="text-center py-12 text-gray-400">加载中...</div>;
+  }
+
+  if (!currentId) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="flex items-center gap-2.5">
+          <Link href="/admin">
+            <Button variant="ghost" size="sm" className="gap-1 text-gray-500">
+              <ArrowLeft className="w-4 h-4" /> 返回
+            </Button>
+          </Link>
+          <FileText className="w-5 h-5 text-purple-600" />
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-green-900">比赛模板</h1>
+            <p className="text-xs text-gray-400">请先回到管理后台选择一个赛事</p>
+          </div>
+        </div>
+        <Card className="border-dashed border-gray-200">
+          <CardContent className="py-10 text-center text-gray-400 text-sm">
+            请选择赛事后再配置模板
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const mdCount = matches.filter((m) => m.matchType === "MD").length;

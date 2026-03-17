@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { requireAdmin, hashPassword } from "@/lib/auth";
+import { normalizePassword, normalizeUsername, validatePassword, validateUsername } from "@/lib/account-validation";
 import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
@@ -48,12 +49,18 @@ export async function POST(request: NextRequest) {
   try {
     const db = getDb();
     const body = await request.json() as CreateUserRequestBody;
-    const username = typeof body.username === "string" ? body.username.trim() : "";
-    const password = typeof body.password === "string" ? body.password.trim() : "";
+    const username = normalizeUsername(body.username);
+    const password = normalizePassword(body.password);
     const role = body.role === "admin" || body.role === "athlete" ? body.role : undefined;
 
-    if (!username || !password) {
-      return NextResponse.json({ error: "用户名和密码不能为空" }, { status: 400 });
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      return NextResponse.json({ error: usernameError }, { status: 400 });
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 });
     }
 
     if (body.role !== undefined && !role) {

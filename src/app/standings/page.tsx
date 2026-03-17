@@ -88,21 +88,57 @@ function formatComboName(name: string | null, icon: string, pos: number) {
 }
 
 function StandingsContent() {
-  const { currentId } = useTournament();
-  const tournamentId = currentId ? String(currentId) : "1";
+  const { currentId, loading: tournamentLoading } = useTournament();
   const [stats, setStats] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchJson<StatsData>(`/api/tournaments/${tournamentId}/stats`)
-      .then((data) => {
-        setStats(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [tournamentId]);
+    if (tournamentLoading || !currentId) return;
 
-  if (loading) return <div className="text-center py-12 text-muted-foreground">加载中...</div>;
+    let cancelled = false;
+
+    async function loadStats() {
+      try {
+        const data = await fetchJson<StatsData>(`/api/tournaments/${currentId}/stats`);
+        if (cancelled) return;
+        setStats(data);
+      } catch {
+        if (cancelled) return;
+        setStats(null);
+      } finally {
+        if (!cancelled) {
+          setLoadedTournamentId(currentId);
+        }
+      }
+    }
+
+    void loadStats();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentId, tournamentLoading]);
+
+  if (tournamentLoading || (currentId !== null && loadedTournamentId !== currentId)) {
+    return <div className="text-center py-12 text-muted-foreground">加载中...</div>;
+  }
+
+  if (!currentId) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-2.5">
+          <Trophy className="w-5 h-5 text-green-700" />
+          <h1 className="text-2xl font-bold text-green-900">排名 & 统计</h1>
+        </div>
+        <Card className="border-dashed border-border/50">
+          <CardContent className="py-12 text-center">
+            <Trophy className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-muted-foreground">暂无可查看的赛事</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!stats) {
     return (

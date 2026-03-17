@@ -76,6 +76,9 @@ interface TournamentDetailsResponse {
 
 async function fetchJson<T>(input: RequestInfo | URL): Promise<T> {
   const response = await fetch(input);
+  if (!response.ok) {
+    throw new Error("Failed to fetch data");
+  }
   return response.json() as Promise<T>;
 }
 
@@ -91,15 +94,13 @@ function formatPlayer(player: PlayerInfo | undefined, groupMap: Map<number, Grou
 
 function ScheduleContent() {
   const { user } = useAuth();
-  const { currentId } = useTournament();
-  const tournamentId = currentId ? String(currentId) : "1";
+  const { currentId, loading: tournamentLoading } = useTournament();
   const [matches, setMatches] = useState<ScheduleMatch[]>([]);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<"matrix" | "list">("matrix");
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
-  const [autoScrollDone, setAutoScrollDone] = useState(false);
 
   const myPlayerId = user?.playerId;
 
@@ -114,35 +115,72 @@ function ScheduleContent() {
   };
 
   useEffect(() => {
-    Promise.all([
-      fetchJson<ScheduleResponse>(`/api/tournaments/${tournamentId}/schedule`),
-      fetchJson<TournamentDetailsResponse>(`/api/tournaments/${tournamentId}`),
-    ])
-      .then(([scheduleData, tournamentData]: [ScheduleResponse, TournamentDetailsResponse]) => {
+    if (tournamentLoading || !currentId) return;
+
+    let cancelled = false;
+
+    async function loadSchedule() {
+      try {
+        const [scheduleData, tournamentData] = await Promise.all([
+          fetchJson<ScheduleResponse>(`/api/tournaments/${currentId}/schedule`),
+          fetchJson<TournamentDetailsResponse>(`/api/tournaments/${currentId}`),
+        ]);
+
+        if (cancelled) return;
+
         const matchList: ScheduleMatch[] = scheduleData.matches || [];
         setMatches(matchList);
         setGroups(tournamentData.groups || []);
         setPlayers(tournamentData.players || []);
-        setLoading(false);
 
-        // Auto-expand first unfinished round on mobile
-        if (!autoScrollDone && matchList.length > 0) {
-          const maxR = Math.max(...matchList.map((m) => m.roundNumber));
-          for (let r = 1; r <= maxR; r++) {
-            const roundMatches = matchList.filter((m) => m.roundNumber === r);
-            if (roundMatches.some((m) => m.status !== "finished")) {
-              setExpandedRound(r);
-              break;
-            }
-          }
-          setAutoScrollDone(true);
+        const firstUnfinishedRound = matchList.length > 0
+          ? matchList
+              .map((m) => m.roundNumber)
+              .sort((a, b) => a - b)
+              .find((round) =>
+                matchList
+                  .filter((m) => m.roundNumber === round)
+                  .some((m) => m.status !== "finished")
+              ) ?? null
+          : null;
+        setExpandedRound(firstUnfinishedRound);
+      } catch {
+        if (cancelled) return;
+
+        setMatches([]);
+        setGroups([]);
+        setPlayers([]);
+        setExpandedRound(null);
+      } finally {
+        if (!cancelled) {
+          setLoadedTournamentId(currentId);
         }
-      })
-      .catch(() => setLoading(false));
-  }, [tournamentId, autoScrollDone]);
+      }
+    }
 
-  if (loading) {
+    void loadSchedule();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentId, tournamentLoading]);
+
+  if (tournamentLoading || (currentId !== null && loadedTournamentId !== currentId)) {
     return <div className="text-center py-12 text-muted-foreground">加载中...</div>;
+  }
+
+  if (!currentId) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">赛程</h1>
+        <Card className="border-dashed border-border/50">
+          <CardContent className="py-12 text-center">
+            <CalendarDays className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-muted-foreground">暂无可查看的赛事</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (matches.length === 0) {

@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useTournament } from "@/lib/tournament-context";
-import { Home, CalendarDays, Trophy, Settings, LogIn, LogOut, Shield, Menu, X, ChevronDown } from "lucide-react";
+import { Home, CalendarDays, Trophy, Settings, LogIn, LogOut, Shield, Menu, X, ChevronDown, User } from "lucide-react";
 import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
 import { SiteLogo } from "@/components/brand/site-logo";
 
@@ -40,7 +40,10 @@ export function MainNav() {
   }, [tournamentDropdown]);
 
   const isAdmin = user?.role === "admin";
-  const loggedInLinks = user ? [{ href: "/my-matches", label: "我的比赛", icon: ShuttlecockIcon }] : [];
+  const loggedInLinks = user ? [
+    { href: "/my-matches", label: "我的比赛", icon: ShuttlecockIcon },
+    { href: "/account", label: "我的账号", icon: User },
+  ] : [];
   const allLinks = [...publicLinks, ...loggedInLinks, ...(isAdmin ? adminLinks : [])];
 
   const handleLogout = async () => {

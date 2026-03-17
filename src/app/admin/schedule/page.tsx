@@ -178,13 +178,14 @@ function formatDuration(minutes: number) {
 }
 
 export default function AdminSchedulePage() {
-  const { currentId } = useTournament();
+  const { currentId, loading: tournamentLoading } = useTournament();
   const tournamentId = currentId ? String(currentId) : "";
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [matches, setMatches] = useState<ScheduleMatch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -221,10 +222,12 @@ export default function AdminSchedulePage() {
 
   const fetchData = useCallback(async () => {
     if (!tournamentId) {
+      setLoadedTournamentId(null);
       setLoading(false);
       return;
     }
 
+    const selectedTournamentId = currentId;
     setLoading(true);
     try {
       const [scheduleRes, tournamentRes] = await Promise.all([
@@ -253,9 +256,12 @@ export default function AdminSchedulePage() {
     } catch {
       toast.error("加载赛程安排失败");
     } finally {
+      if (selectedTournamentId !== undefined) {
+        setLoadedTournamentId(selectedTournamentId ?? null);
+      }
       setLoading(false);
     }
-  }, [tournamentId]);
+  }, [currentId, tournamentId]);
 
   useEffect(() => {
     setSimulation(null);
@@ -404,7 +410,7 @@ export default function AdminSchedulePage() {
   const totalFinished = matches.filter((match) => match.status === "finished").length;
   const totalPending = matches.filter((match) => match.status === "pending").length;
 
-  if (loading) {
+  if (tournamentLoading || (currentId !== null && loadedTournamentId !== currentId) || loading) {
     return <div className="text-center py-12 text-muted-foreground">加载中...</div>;
   }
 

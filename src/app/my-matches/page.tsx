@@ -66,40 +66,68 @@ interface ScheduleResponse {
 
 export default function MyMatchesPage() {
   const { user, loading: authLoading } = useAuth();
-  const { currentId } = useTournament();
+  const { currentId, loading: tournamentLoading } = useTournament();
   const [matches, setMatches] = useState<MatchInfo[]>([]);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [myPlayer, setMyPlayer] = useState<PlayerInfo | null>(null);
-  const [loading, setLoading] = useState(true);
   const [tournamentName, setTournamentName] = useState("");
+  const [loadedRequestKey, setLoadedRequestKey] = useState<string | null>(null);
+
+  const requestKey = user && currentId ? `${currentId}:${user.id}:${user.playerId ?? "none"}` : null;
 
   useEffect(() => {
-    if (authLoading || !currentId) return;
+    if (authLoading || tournamentLoading || !user || !currentId || !requestKey) return;
 
-    const tournamentId = String(currentId);
-    Promise.all([
-      fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json() as Promise<TournamentResponse>),
-      fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json() as Promise<ScheduleResponse>),
-    ])
-      .then(([tournamentData, scheduleData]) => {
+    const currentUser = user;
+    let cancelled = false;
+
+    async function loadMatches() {
+      try {
+        const tournamentId = String(currentId);
+        const [tournamentData, scheduleData] = await Promise.all([
+          fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json() as Promise<TournamentResponse>),
+          fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json() as Promise<ScheduleResponse>),
+        ]);
+
+        if (cancelled) return;
+
         setTournamentName(tournamentData.tournament?.name || "");
         setGroups(tournamentData.groups || []);
         setPlayers(tournamentData.players || []);
         setMatches(scheduleData.matches || []);
 
-        if (user?.playerId) {
+        if (currentUser.playerId) {
           const p = (tournamentData.players || []).find(
-            (pl: PlayerInfo) => pl.id === user.playerId
+            (pl: PlayerInfo) => pl.id === currentUser.playerId
           );
           setMyPlayer(p || null);
+        } else {
+          setMyPlayer(null);
         }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [user, authLoading, currentId]);
+      } catch {
+        if (cancelled) return;
 
-  if (authLoading || loading) {
+        setTournamentName("");
+        setGroups([]);
+        setPlayers([]);
+        setMatches([]);
+        setMyPlayer(null);
+      } finally {
+        if (!cancelled) {
+          setLoadedRequestKey(requestKey);
+        }
+      }
+    }
+
+    void loadMatches();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authLoading, tournamentLoading, currentId, requestKey]);
+
+  if (authLoading || tournamentLoading || (requestKey !== null && loadedRequestKey !== requestKey)) {
     return <div className="text-center py-12 text-gray-400">加载中...</div>;
   }
 
@@ -248,6 +276,24 @@ export default function MyMatchesPage() {
                 去登录
               </button>
             </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!currentId) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-2.5">
+          <ShuttlecockIcon className="w-5 h-5 text-green-700" />
+          <h1 className="text-2xl font-bold text-green-900">我的比赛</h1>
+        </div>
+        <Card className="border-gray-200 bg-gray-50/60 shadow-sm">
+          <CardContent className="py-8 text-center">
+            <Clock className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-700 font-medium">当前还没有可查看的赛事</p>
+            <p className="text-sm text-gray-500 mt-1">请先创建赛事或在顶部切换到一个赛事后再查看个人赛程</p>
           </CardContent>
         </Card>
       </div>

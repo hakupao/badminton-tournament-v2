@@ -23,9 +23,10 @@ interface TournamentResponse {
 }
 
 export default function AdminSettingsPage() {
-  const { currentId, refresh } = useTournament();
+  const { currentId, refresh, loading: tournamentLoading } = useTournament();
   const [tournament, setTournament] = useState<TournamentDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -37,13 +38,15 @@ export default function AdminSettingsPage() {
   const fetchTournament = useCallback(async () => {
     if (!currentId) {
       setTournament(null);
+      setLoadedTournamentId(null);
       setLoading(false);
       return;
     }
 
+    const selectedTournamentId = currentId;
     setLoading(true);
     try {
-      const res = await fetch(`/api/tournaments/${currentId}`);
+      const res = await fetch(`/api/tournaments/${selectedTournamentId}`);
       const data = await res.json() as TournamentResponse;
       const nextTournament = data.tournament || null;
       setTournament(nextTournament);
@@ -58,6 +61,7 @@ export default function AdminSettingsPage() {
     } catch {
       toast.error("加载赛事设置失败");
     } finally {
+      setLoadedTournamentId(selectedTournamentId);
       setLoading(false);
     }
   }, [currentId]);
@@ -98,7 +102,7 @@ export default function AdminSettingsPage() {
     }
   };
 
-  if (loading) {
+  if (tournamentLoading || (currentId !== null && loadedTournamentId !== currentId) || loading) {
     return <div className="text-center py-12 text-gray-400">加载中...</div>;
   }
 

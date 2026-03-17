@@ -41,7 +41,7 @@ interface ActionResponse {
 }
 
 export default function LotteryPage() {
-  const { currentId } = useTournament();
+  const { currentId, loading: tournamentLoading } = useTournament();
   const tournamentId = currentId ? String(currentId) : "";
 
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -50,6 +50,7 @@ export default function LotteryPage() {
   const [femalesPerGroup, setFemalesPerGroup] = useState(2);
   const [groupCount, setGroupCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
   const [lotteryRunning, setLotteryRunning] = useState(false);
   const [lotteryResults, setLotteryResults] = useState<LotteryResult[] | null>(null);
 
@@ -59,7 +60,12 @@ export default function LotteryPage() {
   const [selectedGender, setSelectedGender] = useState<string>("");
 
   const fetchData = useCallback(async () => {
-    if (!tournamentId) { setLoading(false); return; }
+    if (!tournamentId) {
+      setLoadedTournamentId(null);
+      setLoading(false);
+      return;
+    }
+    const selectedTournamentId = currentId;
     try {
       const [partRes, usersRes] = await Promise.all([
         fetch(`/api/tournaments/${tournamentId}/participants`),
@@ -79,9 +85,12 @@ export default function LotteryPage() {
     } catch {
       toast.error("加载失败");
     } finally {
+      if (selectedTournamentId !== undefined) {
+        setLoadedTournamentId(selectedTournamentId ?? null);
+      }
       setLoading(false);
     }
-  }, [tournamentId]);
+  }, [currentId, tournamentId]);
 
   useEffect(() => {
     fetchData();
@@ -163,7 +172,9 @@ export default function LotteryPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-gray-400">加载中...</div>;
+  if (tournamentLoading || (currentId !== null && loadedTournamentId !== currentId) || loading) {
+    return <div className="text-center py-12 text-gray-400">加载中...</div>;
+  }
 
   if (!currentId) {
     return (

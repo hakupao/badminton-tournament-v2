@@ -49,11 +49,12 @@ interface UsersResponse {
 }
 
 function PlayersContent() {
-  const { currentId } = useTournament();
+  const { currentId, loading: tournamentLoading } = useTournament();
   const tournamentId = currentId ? String(currentId) : "";
   const [groups, setGroups] = useState<GroupWithPlayers[]>([]);
   const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [nameEdits, setNameEdits] = useState<Record<number, string>>({});
   const [userEdits, setUserEdits] = useState<Record<number, number | null>>({});
@@ -62,10 +63,12 @@ function PlayersContent() {
     if (!tournamentId) {
       setGroups([]);
       setRegisteredUsers([]);
+      setLoadedTournamentId(null);
       setLoading(false);
       return;
     }
 
+    const selectedTournamentId = currentId;
     try {
       const [groupsRes, usersRes] = await Promise.all([
         fetch(`/api/tournaments/${tournamentId}/groups`),
@@ -78,9 +81,12 @@ function PlayersContent() {
     } catch {
       toast.error("加载失败");
     } finally {
+      if (selectedTournamentId !== undefined) {
+        setLoadedTournamentId(selectedTournamentId ?? null);
+      }
       setLoading(false);
     }
-  }, [tournamentId]);
+  }, [currentId, tournamentId]);
 
   useEffect(() => {
     fetchData();
@@ -191,7 +197,7 @@ function PlayersContent() {
     setUserEdits(allUserEdits);
   };
 
-  if (loading) {
+  if (tournamentLoading || (currentId !== null && loadedTournamentId !== currentId) || loading) {
     return <div className="text-center py-12 text-gray-400">加载中...</div>;
   }
 

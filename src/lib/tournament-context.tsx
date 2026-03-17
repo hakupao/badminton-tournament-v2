@@ -58,12 +58,23 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         const savedId = saved ? parseInt(saved, 10) : null;
         if (savedId && list.some((t) => t.id === savedId)) {
           setCurrentIdState(savedId);
+          localStorage.setItem(STORAGE_KEY, String(savedId));
         } else if (list.length > 0) {
           setCurrentIdState(list[0].id);
+          localStorage.setItem(STORAGE_KEY, String(list[0].id));
+        } else {
+          setCurrentIdState(null);
+          localStorage.removeItem(STORAGE_KEY);
         }
+      } else {
+        setTournaments([]);
+        setCurrentIdState(null);
+        localStorage.removeItem(STORAGE_KEY);
       }
     } catch {
-      // ignore
+      setTournaments([]);
+      setCurrentIdState(null);
+      localStorage.removeItem(STORAGE_KEY);
     } finally {
       setLoading(false);
     }

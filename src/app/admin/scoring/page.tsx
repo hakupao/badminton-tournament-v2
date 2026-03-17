@@ -82,13 +82,14 @@ interface TournamentResponse {
 }
 
 export default function AdminScoringPage() {
-  const { currentId } = useTournament();
+  const { currentId, loading: tournamentLoading } = useTournament();
   const tournamentId = currentId ? String(currentId) : "";
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [matches, setMatches] = useState<ScheduleMatch[]>([]);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "finished">("pending");
 
   // Scoring modal state
@@ -104,7 +105,12 @@ export default function AdminScoringPage() {
   const [batchSubmitting, setBatchSubmitting] = useState(false);
 
   const fetchData = useCallback(() => {
-    if (!tournamentId) { setLoading(false); return; }
+    if (!tournamentId) {
+      setLoadedTournamentId(null);
+      setLoading(false);
+      return;
+    }
+    const selectedTournamentId = currentId;
     setLoading(true);
     Promise.all([
       fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json() as Promise<ScheduleResponse>),
@@ -115,8 +121,16 @@ export default function AdminScoringPage() {
       setPlayers(tournamentData.players || []);
       setTournament(tournamentData.tournament || null);
       setLoading(false);
+      if (selectedTournamentId !== undefined) {
+        setLoadedTournamentId(selectedTournamentId ?? null);
+      }
+    }).catch(() => {
+      setLoading(false);
+      if (selectedTournamentId !== undefined) {
+        setLoadedTournamentId(selectedTournamentId ?? null);
+      }
     });
-  }, [tournamentId]);
+  }, [currentId, tournamentId]);
 
   useEffect(() => {
     fetchData();
@@ -295,7 +309,9 @@ export default function AdminScoringPage() {
     fetchData();
   };
 
-  if (loading) return <div className="text-center py-12 text-muted-foreground">加载中...</div>;
+  if (tournamentLoading || (currentId !== null && loadedTournamentId !== currentId) || loading) {
+    return <div className="text-center py-12 text-muted-foreground">加载中...</div>;
+  }
 
   if (!currentId) {
     return (
