@@ -62,6 +62,14 @@ interface StatsData {
   refereeLeaderboard: RefereeStat[];
 }
 
+async function fetchJson<T>(input: RequestInfo | URL): Promise<T> {
+  const response = await fetch(input);
+  if (!response.ok) {
+    throw new Error("Failed to fetch data");
+  }
+  return response.json() as Promise<T>;
+}
+
 const RANK_STYLES = ["text-amber-500 font-black", "text-gray-400 font-bold", "text-amber-700 font-bold"];
 
 function RankCell({ index }: { index: number }) {
@@ -86,12 +94,8 @@ function StandingsContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/tournaments/${tournamentId}/stats`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed to fetch stats");
-        return r.json();
-      })
-      .then((data: any) => {
+    fetchJson<StatsData>(`/api/tournaments/${tournamentId}/stats`)
+      .then((data) => {
         setStats(data);
         setLoading(false);
       })

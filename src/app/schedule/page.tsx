@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,6 +65,20 @@ interface PlayerInfo {
   boundUsername: string | null;
 }
 
+interface ScheduleResponse {
+  matches?: ScheduleMatch[];
+}
+
+interface TournamentDetailsResponse {
+  groups?: GroupInfo[];
+  players?: PlayerInfo[];
+}
+
+async function fetchJson<T>(input: RequestInfo | URL): Promise<T> {
+  const response = await fetch(input);
+  return response.json() as Promise<T>;
+}
+
 function formatPlayer(player: PlayerInfo | undefined, groupMap: Map<number, GroupInfo>) {
   if (!player) return "?";
   const group = groupMap.get(player.groupId);
@@ -101,10 +115,10 @@ function ScheduleContent() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/tournaments/${tournamentId}/schedule`).then((r) => r.json()),
-      fetch(`/api/tournaments/${tournamentId}`).then((r) => r.json()),
+      fetchJson<ScheduleResponse>(`/api/tournaments/${tournamentId}/schedule`),
+      fetchJson<TournamentDetailsResponse>(`/api/tournaments/${tournamentId}`),
     ])
-      .then(([scheduleData, tournamentData]: any[]) => {
+      .then(([scheduleData, tournamentData]: [ScheduleResponse, TournamentDetailsResponse]) => {
         const matchList: ScheduleMatch[] = scheduleData.matches || [];
         setMatches(matchList);
         setGroups(tournamentData.groups || []);

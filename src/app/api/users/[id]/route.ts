@@ -6,6 +6,10 @@ import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
 
+interface UpdateUserRequest {
+  password?: string;
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -24,7 +28,7 @@ export async function PUT(
     }
 
     const db = getDb();
-    const { password }: any = await request.json();
+    const { password } = await request.json() as UpdateUserRequest;
     if (!password || typeof password !== "string") {
       return NextResponse.json({ error: "密码不能为空" }, { status: 400 });
     }

@@ -6,6 +6,26 @@ import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
 
+interface GroupUpdateInput {
+  groupId: number;
+  icon?: string;
+  name?: string;
+}
+
+interface PlayerAssignmentInput {
+  playerId: number;
+  name?: string | null;
+  userId?: number | null;
+}
+
+interface GroupUpdateRequest {
+  groupUpdates?: GroupUpdateInput[];
+}
+
+interface PlayerAssignmentRequest {
+  assignments?: PlayerAssignmentInput[];
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -83,7 +103,7 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const body: any = await request.json();
+    const body = await request.json() as GroupUpdateRequest;
     const { groupUpdates } = body;
 
     if (!Array.isArray(groupUpdates)) {
@@ -161,7 +181,7 @@ export async function POST(
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const body: any = await request.json();
+    const body = await request.json() as PlayerAssignmentRequest;
     const { assignments } = body;
 
     if (!Array.isArray(assignments)) {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { tournamentParticipants, tournaments, groups, players, users } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
 

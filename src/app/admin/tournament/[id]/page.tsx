@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTournament } from "@/lib/tournament-context";
 
+export const runtime = "edge";
+
 export default function LegacyTournamentPage() {
   const params = useParams();
   const router = useRouter();

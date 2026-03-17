@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { tournamentParticipants, tournaments, users, players, groups } from "@/db/schema";
+import { tournamentParticipants, tournaments, users, groups } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 
 export const runtime = 'edge';
+
+interface ParticipantAssignmentInput {
+  userId: number;
+  assignedPosition: number;
+  gender: "M" | "F";
+}
+
+interface ParticipantAssignmentsRequest {
+  assignments?: ParticipantAssignmentInput[];
+}
 
 // GET: List all participants for a tournament (with their assigned positions)
 export async function GET(
@@ -86,7 +96,7 @@ export async function POST(
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
-    const body: any = await request.json();
+    const body = await request.json() as ParticipantAssignmentsRequest;
     const { assignments } = body;
 
     if (!Array.isArray(assignments)) {

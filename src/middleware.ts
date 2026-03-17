@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 export function middleware(request: NextRequest) {
   const method = request.method.toUpperCase();
 
-  // Only check CSRF for state-changing API requests
   if (
     !request.nextUrl.pathname.startsWith("/api/") ||
     method === "GET" || method === "HEAD" || method === "OPTIONS"

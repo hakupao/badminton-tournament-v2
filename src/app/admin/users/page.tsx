@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/layout/admin-page-header";
-import { useTournament } from "@/lib/tournament-context";
 import { Users, Trash2, KeyRound, ShieldCheck, User } from "lucide-react";
 
 interface UserItem {
@@ -27,7 +26,6 @@ interface UserMutationResponse {
 }
 
 export default function AdminUsersPage() {
-  const { currentName } = useTournament();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
 
