@@ -237,20 +237,14 @@ export default function MyMatchesPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <span className="text-gray-500">搭档：</span>
-                <span className="font-medium text-gray-800">{formatPlayerName(partner)}</span>
-              </div>
-              <div className="text-center text-lg">
-                {homeGroup?.icon} vs {awayGroup?.icon}
-              </div>
-              <div className="text-sm text-right">
-                <span className="text-gray-500">对手：</span>
-                <span className="font-medium text-gray-800">
-                  {opponents.map((o) => formatPlayerName(o as PlayerInfo | undefined)).join(" + ")}
-                </span>
-              </div>
+            <div className="flex items-center justify-center gap-2 text-base">
+              {homeGroup?.icon}
+              <span className="text-xs text-gray-400">vs</span>
+              {awayGroup?.icon}
+            </div>
+            <div className="flex justify-between text-xs mt-1.5">
+              <span className="text-gray-500">搭档 <span className="font-medium text-gray-700">{formatPlayerName(partner)}</span></span>
+              <span className="text-gray-500">对手 <span className="font-medium text-gray-700">{opponents.map((o) => formatPlayerName(o as PlayerInfo | undefined)).join("+")}</span></span>
             </div>
           </CardContent>
         </Card>
@@ -261,18 +255,17 @@ export default function MyMatchesPage() {
   // Not logged in
   if (!user) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2.5">
-          <ShuttlecockIcon className="w-5 h-5 text-green-700" />
-          <h1 className="text-2xl font-bold text-green-900">我的比赛</h1>
+      <div className="space-y-4 max-w-lg mx-auto">
+        <div className="flex items-center gap-2">
+          <ShuttlecockIcon className="w-4.5 h-4.5 text-green-700" />
+          <h1 className="text-lg font-bold text-green-900">我的比赛</h1>
         </div>
         <Card className="border-amber-100 bg-amber-50/50 shadow-sm">
           <CardContent className="py-8 text-center">
-            <LogIn className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <p className="text-gray-700 font-medium">请先登录</p>
-            <p className="text-sm text-gray-500 mt-1">登录运动员账号后可查看个人赛程</p>
+            <LogIn className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-700 font-medium">请先登录查看个人赛程</p>
             <Link href="/login">
-              <button className="mt-4 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium">
+              <button className="mt-3 px-5 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
                 去登录
               </button>
             </Link>
@@ -284,16 +277,15 @@ export default function MyMatchesPage() {
 
   if (!currentId) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2.5">
-          <ShuttlecockIcon className="w-5 h-5 text-green-700" />
-          <h1 className="text-2xl font-bold text-green-900">我的比赛</h1>
+      <div className="space-y-4 max-w-lg mx-auto">
+        <div className="flex items-center gap-2">
+          <ShuttlecockIcon className="w-4.5 h-4.5 text-green-700" />
+          <h1 className="text-lg font-bold text-green-900">我的比赛</h1>
         </div>
         <Card className="border-gray-200 bg-gray-50/60 shadow-sm">
           <CardContent className="py-8 text-center">
-            <Clock className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-700 font-medium">当前还没有可查看的赛事</p>
-            <p className="text-sm text-gray-500 mt-1">请先创建赛事或在顶部切换到一个赛事后再查看个人赛程</p>
+            <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-600">暂无可查看的赛事</p>
           </CardContent>
         </Card>
       </div>
@@ -302,36 +294,25 @@ export default function MyMatchesPage() {
 
   if (!myPlayer) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2.5">
-          <ShuttlecockIcon className="w-5 h-5 text-green-700" />
-          <h1 className="text-2xl font-bold text-green-900">我的比赛</h1>
+      <div className="space-y-4 max-w-lg mx-auto">
+        <div className="flex items-center gap-2">
+          <ShuttlecockIcon className="w-4.5 h-4.5 text-green-700" />
+          <h1 className="text-lg font-bold text-green-900">我的比赛</h1>
         </div>
         <Card className="border-amber-100 bg-amber-50/50 shadow-sm">
           <CardContent className="py-6 text-center">
-            <UserX className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <p className="text-gray-700 font-medium">账号尚未绑定选手</p>
-            <p className="text-sm text-gray-500 mt-1">
-              请联系管理员将你的账号与参赛位置绑定
-            </p>
-            {tournamentName && (
-              <p className="text-xs text-gray-400 mt-2">当前赛事：{tournamentName}</p>
-            )}
+            <UserX className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-700 font-medium">账号尚未绑定选手</p>
+            <p className="text-xs text-gray-500 mt-1">请联系管理员绑定参赛位置</p>
           </CardContent>
         </Card>
 
         {matches.length > 0 && (
-          <div>
-            <h2 className="text-lg font-bold text-gray-700 mb-3">完整赛程参考</h2>
-            <p className="text-sm text-gray-500 mb-3">
-              你可以浏览所有比赛，绑定选手后将在这里看到你的专属视图
-            </p>
-            <Link href="/schedule">
-              <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
-                查看完整赛程
-              </button>
-            </Link>
-          </div>
+          <Link href="/schedule">
+            <button className="px-4 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
+              查看完整赛程
+            </button>
+          </Link>
         )}
       </div>
     );
@@ -343,39 +324,41 @@ export default function MyMatchesPage() {
   const losses = finishedMatches.filter((m) => getResult(m) === "loss").length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 max-w-3xl mx-auto">
       {/* Player Header */}
-      <Card className="border-green-100 shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-green-500 to-teal-500 p-5 text-white">
-          <div className="flex items-center gap-4">
-            <div className="text-4xl">{myGroup?.icon || ""}</div>
-            <div>
-              <h1 className="text-xl font-bold">
-                {myPlayer.name || `${myGroup?.icon}${myPlayer.positionNumber}号位`}
-              </h1>
-              <div className="flex items-center gap-2 mt-1 text-white/80 text-sm">
-                <span>{myGroup?.name}</span>
-                <span>·</span>
-                <PositionLabel
-                  gender={myPlayer.gender === "M" ? "M" : "F"}
-                  positionNumber={myPlayer.positionNumber}
-                  suffix="号位"
-                />
+      <Card className="border-green-100 shadow-sm overflow-hidden">
+        <div className="bg-gradient-to-r from-green-500 to-teal-500 px-5 py-4 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="text-3xl">{myGroup?.icon || ""}</div>
+              <div>
+                <h1 className="text-lg font-bold">
+                  {myPlayer.name || `${myGroup?.icon}${myPlayer.positionNumber}号位`}
+                </h1>
+                <div className="flex items-center gap-1.5 text-white/75 text-xs">
+                  <span>{myGroup?.name}</span>
+                  <span>·</span>
+                  <PositionLabel
+                    gender={myPlayer.gender === "M" ? "M" : "F"}
+                    positionNumber={myPlayer.positionNumber}
+                    suffix="号位"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4 mt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold">{myMatches.length}</div>
-              <div className="text-xs text-white/70">总场次</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-200">{wins}</div>
-              <div className="text-xs text-white/70">胜利</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-200">{losses}</div>
-              <div className="text-xs text-white/70">失利</div>
+            <div className="flex items-center gap-5 text-center">
+              <div>
+                <div className="text-xl font-bold">{myMatches.length}</div>
+                <div className="text-[10px] text-white/60">场次</div>
+              </div>
+              <div>
+                <div className="text-xl font-bold text-green-200">{wins}</div>
+                <div className="text-[10px] text-white/60">胜</div>
+              </div>
+              <div>
+                <div className="text-xl font-bold text-red-200">{losses}</div>
+                <div className="text-[10px] text-white/60">负</div>
+              </div>
             </div>
           </div>
         </div>

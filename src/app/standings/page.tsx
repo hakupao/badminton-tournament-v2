@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useTournament } from "@/lib/tournament-context";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -125,15 +125,15 @@ function StandingsContent() {
 
   if (!currentId) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2.5">
-          <Trophy className="w-5 h-5 text-green-700" />
-          <h1 className="text-2xl font-bold text-green-900">排名 & 统计</h1>
+      <div className="space-y-4 max-w-lg mx-auto">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-4.5 h-4.5 text-green-700" />
+          <h1 className="text-lg font-bold text-green-900">排名 & 统计</h1>
         </div>
         <Card className="border-dashed border-border/50">
-          <CardContent className="py-12 text-center">
-            <Trophy className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-muted-foreground">暂无可查看的赛事</p>
+          <CardContent className="py-10 text-center">
+            <Trophy className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">暂无可查看的赛事</p>
           </CardContent>
         </Card>
       </div>
@@ -142,12 +142,15 @@ function StandingsContent() {
 
   if (!stats) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">排名 & 统计</h1>
+      <div className="space-y-4 max-w-lg mx-auto">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-4.5 h-4.5 text-green-700" />
+          <h1 className="text-lg font-bold text-green-900">排名 & 统计</h1>
+        </div>
         <Card className="border-dashed border-border/50">
-          <CardContent className="py-12 text-center">
-            <Trophy className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-muted-foreground">暂无数据</p>
+          <CardContent className="py-10 text-center">
+            <Trophy className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">暂无数据</p>
           </CardContent>
         </Card>
       </div>
@@ -278,12 +281,6 @@ function StandingsContent() {
         {/* Combination Stats */}
         <TabsContent value="combo" className="mt-4">
           <Card className="border-green-100/80 shadow-sm overflow-hidden">
-            <CardHeader className="bg-green-50/40 pb-3">
-              <CardTitle className="text-base flex items-center gap-2 text-green-800">
-                <Handshake className="w-4 h-4" />
-                搭档组合排名
-              </CardTitle>
-            </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -346,12 +343,6 @@ function StandingsContent() {
         {/* Referee Leaderboard */}
         <TabsContent value="referee" className="mt-4">
           <Card className="border-amber-100/80 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-amber-50/60 to-yellow-50/40">
-              <CardTitle className="text-base flex items-center gap-2 text-amber-800">
-                <Award className="w-4 h-4" />
-                裁判志愿排行榜
-              </CardTitle>
-            </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

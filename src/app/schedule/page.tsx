@@ -171,12 +171,15 @@ function ScheduleContent() {
 
   if (!currentId) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">赛程</h1>
+      <div className="space-y-4 max-w-lg mx-auto">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4.5 h-4.5 text-green-700" />
+          <h1 className="text-lg font-bold text-green-900">赛程</h1>
+        </div>
         <Card className="border-dashed border-border/50">
-          <CardContent className="py-12 text-center">
-            <CalendarDays className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-muted-foreground">暂无可查看的赛事</p>
+          <CardContent className="py-10 text-center">
+            <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">暂无可查看的赛事</p>
           </CardContent>
         </Card>
       </div>
@@ -185,13 +188,15 @@ function ScheduleContent() {
 
   if (matches.length === 0) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">赛程</h1>
+      <div className="space-y-4 max-w-lg mx-auto">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4.5 h-4.5 text-green-700" />
+          <h1 className="text-lg font-bold text-green-900">赛程</h1>
+        </div>
         <Card className="border-dashed border-border/50">
-          <CardContent className="py-12 text-center">
-            <CalendarDays className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-muted-foreground">赛程尚未生成</p>
-            <p className="text-sm text-muted-foreground mt-2">管理员需要先在后台配置并生成赛程</p>
+          <CardContent className="py-10 text-center">
+            <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">赛程尚未生成</p>
           </CardContent>
         </Card>
       </div>
@@ -217,9 +222,9 @@ function ScheduleContent() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <CalendarDays className="w-5 h-5 text-green-700" />
-          <h1 className="text-2xl font-bold text-green-900">赛程</h1>
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4.5 h-4.5 text-green-700" />
+          <h1 className="text-lg font-bold text-green-900">赛程</h1>
         </div>
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "matrix" | "list")}>
           <TabsList className="bg-green-50/80">
@@ -236,9 +241,9 @@ function ScheduleContent() {
       </div>
 
       {myPlayerId && (
-        <div className="flex items-center gap-1.5 text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-1.5">
-          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-500" />
-          <span>黄色高亮的是你参与的比赛</span>
+        <div className="flex items-center gap-1.5 text-xs text-yellow-700 bg-yellow-50/80 border border-yellow-200 rounded-md px-2.5 py-1">
+          <Star className="w-3 h-3 fill-yellow-400 text-yellow-500 shrink-0" />
+          <span>黄色高亮 = 你的比赛</span>
         </div>
       )}
 

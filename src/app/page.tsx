@@ -134,11 +134,10 @@ export default function HomePage() {
         ) : activeTournaments.length === 0 ? (
             <Card className="border-dashed border-2 border-green-200 bg-gradient-to-br from-green-50/80 to-emerald-50/40">
             <CardContent className="py-12 text-center">
-              <ShuttlecockIcon className="w-12 h-12 text-green-300 mx-auto mb-4" />
-              <p className="text-gray-600 mb-1 font-semibold">暂无进行中的赛事</p>
-              <p className="text-sm text-gray-400 mb-5">管理员可在后台创建新赛事</p>
+              <ShuttlecockIcon className="w-10 h-10 text-green-300 mx-auto mb-3" />
+              <p className="text-sm text-gray-500 mb-4">暂无进行中的赛事</p>
               <Link href="/admin">
-                <Button className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md shadow-green-200/50">
+                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm">
                   进入管理后台
                 </Button>
               </Link>

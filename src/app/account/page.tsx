@@ -109,14 +109,13 @@ export default function AccountPage() {
 
   if (!user) {
     return (
-      <div className="mx-auto max-w-xl px-4 py-8">
-        <Card className="border-dashed border-2 border-green-200 bg-gradient-to-br from-green-50/80 to-emerald-50/50">
-          <CardContent className="py-12 text-center">
-            <LogIn className="mx-auto mb-4 h-10 w-10 text-green-500" />
-            <p className="text-lg font-semibold text-gray-800">登录后才能管理自己的账号</p>
-            <p className="mt-2 text-sm text-gray-500">支持修改用户名和密码，管理员与运动员账号都可以使用。</p>
-            <Link href="/login" className="mt-5 inline-block">
-              <Button className="bg-green-600 text-white hover:bg-green-700">
+      <div className="mx-auto max-w-md py-6">
+        <Card className="border-dashed border-green-200 bg-green-50/50">
+          <CardContent className="py-10 text-center">
+            <LogIn className="mx-auto mb-3 h-8 w-8 text-green-500" />
+            <p className="text-sm font-medium text-gray-700">请先登录</p>
+            <Link href="/login" className="mt-4 inline-block">
+              <Button size="sm" className="bg-green-600 text-white hover:bg-green-700">
                 前往登录
               </Button>
             </Link>
@@ -129,26 +128,24 @@ export default function AccountPage() {
   const isAdmin = user.role === "admin";
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-green-500 to-teal-500 px-6 py-7 text-white shadow-xl shadow-green-200/40">
-        <div className="absolute inset-0 opacity-[0.08]">
+    <div className="mx-auto max-w-xl space-y-5 py-4">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-green-500 to-teal-500 px-5 py-5 text-white shadow-md shadow-green-200/30">
+        <div className="absolute inset-0 opacity-[0.06]">
           <div className="absolute left-0 right-0 top-1/2 h-[2px] bg-white" />
-          <div className="absolute bottom-[18%] left-[12%] right-[12%] top-[18%] rounded-2xl border-2 border-white" />
+          <div className="absolute bottom-[18%] left-[12%] right-[12%] top-[18%] rounded-xl border-2 border-white" />
         </div>
         <div className="relative z-10">
-          <div className="flex items-center gap-2 text-sm font-medium text-green-50/90">
-            <User className="h-4 w-4" />
-            我的账号
-          </div>
-          <h1 className="mt-2 text-2xl font-bold">{user.username}</h1>
-          <p className="mt-2 text-sm text-green-50/85">在这里维护你自己的登录信息，修改后会立即生效。</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Badge className="border-white/25 bg-white/15 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 text-xs text-green-50/80">
+                <User className="h-3.5 w-3.5" />
+                我的账号
+              </div>
+              <h1 className="mt-1 text-xl font-bold">{user.username}</h1>
+            </div>
+            <Badge className="border-white/25 bg-white/15 text-white text-xs">
               {isAdmin ? <Shield className="h-3 w-3" /> : <ShuttlecockIcon className="h-3 w-3" />}
               {isAdmin ? "管理员" : "运动员"}
-            </Badge>
-            <Badge className="border-white/25 bg-white/15 text-white">
-              {isAdmin ? "拥有后台管理权限" : user.playerId ? "已绑定参赛位置" : "未绑定参赛位置"}
             </Badge>
           </div>
         </div>
@@ -156,12 +153,12 @@ export default function AccountPage() {
 
       <Card className="border-green-100/80 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-gray-800">
-            <KeyRound className="h-4 w-4 text-green-600" />
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+            <KeyRound className="h-3.5 w-3.5 text-green-600" />
             修改账号信息
           </CardTitle>
-          <CardDescription>
-            为了安全起见，保存任何修改前都需要输入当前密码。新密码留空则仅修改用户名。
+          <CardDescription className="text-xs">
+            修改前需输入当前密码。新密码留空则仅改用户名。
           </CardDescription>
         </CardHeader>
         <CardContent>
