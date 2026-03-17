@@ -14,10 +14,9 @@
  * - D1 modules use static import — the packages exist in node_modules and
  *   Webpack resolves them at build time. Cloudflare runtime wiring provides
  *   the actual `DB` binding when available.
- * - Local SQLite modules use eval('require(...)') to hide native Node.js
- *   dependencies (fs, path, better-sqlite3) from the Edge Runtime bundler.
- *   This code path is only reached outside Edge runtimes when no D1 binding
- *   is available.
+ * - Local SQLite modules are loaded through Node's builtin module loader
+ *   only when we are in a real Node.js runtime. This keeps native Node-only
+ *   dependencies out of the Edge code path without relying on direct eval.
  */
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { getRequestContext } from "@cloudflare/next-on-pages";
@@ -28,16 +27,34 @@ export { schema };
 
 type DbInstance = BetterSQLite3Database<typeof schema>;
 type CloudflareEnvWithDb = CloudflareEnv & { DB: D1Database };
+type NodeModuleLoader = {
+  createRequire: (filename: string | URL) => NodeJS.Require;
+};
 
 let _localDb: DbInstance | null = null;
 
-function createLocalDb(): DbInstance {
-  const Database = eval('require("better-sqlite3")');
-  const path = eval('require("path")');
-  const { drizzle } = eval('require("drizzle-orm/better-sqlite3")');
-  const cwd = eval("process.cwd()");
+function getNodeRequire(): NodeJS.Require {
+  const processWithBuiltinModule = process as typeof process & {
+    getBuiltinModule?: (id: string) => unknown;
+  };
+  const builtinModuleLoader = processWithBuiltinModule.getBuiltinModule?.("module") as
+    | NodeModuleLoader
+    | undefined;
 
-  const DB_PATH = path.join(cwd, "shuttle-arena.db");
+  if (!builtinModuleLoader) {
+    throw new Error("Node.js module loader is not available for local SQLite fallback.");
+  }
+
+  return builtinModuleLoader.createRequire(import.meta.url);
+}
+
+function createLocalDb(): DbInstance {
+  const nodeRequire = getNodeRequire();
+  const Database = nodeRequire("better-sqlite3") as typeof import("better-sqlite3");
+  const path = nodeRequire("node:path") as typeof import("node:path");
+  const { drizzle } = nodeRequire("drizzle-orm/better-sqlite3") as typeof import("drizzle-orm/better-sqlite3");
+
+  const DB_PATH = path.join(process.cwd(), "shuttle-arena.db");
   const sqlite = new Database(DB_PATH);
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");
