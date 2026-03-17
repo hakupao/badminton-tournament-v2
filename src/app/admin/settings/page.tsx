@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Settings2, Info } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -20,33 +20,6 @@ interface TournamentDetail {
 
 interface TournamentResponse {
   tournament?: TournamentDetail | null;
-}
-
-function formatDurationSummary(startTime: string, endTime: string) {
-  if (!startTime || !endTime) return "待设置";
-
-  const [startHour, startMinute] = startTime.split(":").map(Number);
-  const [endHour, endMinute] = endTime.split(":").map(Number);
-  const startTotal = startHour * 60 + startMinute;
-  const endTotal = endHour * 60 + endMinute;
-
-  if (Number.isNaN(startTotal) || Number.isNaN(endTotal) || endTotal <= startTotal) {
-    return "请检查时间范围";
-  }
-
-  const diff = endTotal - startTotal;
-  const hours = Math.floor(diff / 60);
-  const minutes = diff % 60;
-
-  if (hours > 0 && minutes > 0) {
-    return `${hours} 小时 ${minutes} 分钟`;
-  }
-
-  if (hours > 0) {
-    return `${hours} 小时`;
-  }
-
-  return `${minutes} 分钟`;
 }
 
 export default function AdminSettingsPage() {
@@ -125,23 +98,16 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const durationSummary = formatDurationSummary(form.startTime, form.endTime);
-
   if (loading) {
     return <div className="text-center py-12 text-gray-400">加载中...</div>;
   }
 
   if (!currentId || !tournament) {
     return (
-      <div className="admin-page-shell">
-        <AdminPageHeader
-          title="赛事设置"
-          description="名称、日期与时间窗口"
-          icon={Settings2}
-          iconClassName="w-5 h-5 text-emerald-600"
-        />
+      <div className="admin-page-narrow">
+        <AdminPageHeader title="赛事设置" icon={Settings2} iconClassName="w-4.5 h-4.5 text-emerald-600" />
         <Card className="border-dashed border-gray-200">
-          <CardContent className="py-12 text-center text-gray-500">
+          <CardContent className="py-10 text-center text-gray-400 text-sm">
             请先回到管理后台选择一个赛事
           </CardContent>
         </Card>
@@ -150,109 +116,62 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="admin-page-shell">
+    <div className="admin-page-narrow">
       <AdminPageHeader
         title="赛事设置"
-        description="管理赛事名称、日期和比赛时间窗口"
         icon={Settings2}
-        iconClassName="w-5 h-5 text-emerald-600"
+        iconClassName="w-4.5 h-4.5 text-emerald-600"
         actions={(
           <Button
+            size="sm"
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
           >
-            {saving ? "保存中..." : "保存设置"}
+            {saving ? "保存中..." : "保存"}
           </Button>
         )}
       />
 
-      <div className="admin-page-grid">
-        <div className="admin-page-main">
-          <Card className="border-emerald-100 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-gray-800">基础信息</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-gray-600 font-medium">赛事名称</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  className="border-emerald-200 focus:border-emerald-400 focus:ring-emerald-400"
-                />
-              </div>
+      <Card className="border-gray-200">
+        <CardContent className="pt-5 space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-gray-600 text-sm">赛事名称</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+            />
+          </div>
 
-              <div className="space-y-2">
-                <Label className="text-gray-600 font-medium">比赛日期</Label>
-                <Input
-                  type="date"
-                  value={form.eventDate}
-                  onChange={(e) => setForm((prev) => ({ ...prev, eventDate: e.target.value }))}
-                  className="border-emerald-200"
-                />
-              </div>
+          <div className="space-y-1.5">
+            <Label className="text-gray-600 text-sm">比赛日期</Label>
+            <Input
+              type="date"
+              value={form.eventDate}
+              onChange={(e) => setForm((prev) => ({ ...prev, eventDate: e.target.value }))}
+            />
+          </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-gray-600 font-medium">开始时间</Label>
-                  <Input
-                    type="time"
-                    value={form.startTime}
-                    onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
-                    className="border-emerald-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-gray-600 font-medium">结束时间</Label>
-                  <Input
-                    type="time"
-                    value={form.endTime}
-                    onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))}
-                    className="border-emerald-200"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="admin-page-sidebar">
-          <Card className="border-emerald-100 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-gray-800">当前概览</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
-                <div className="text-xs text-emerald-700">赛事名称</div>
-                <div className="mt-1 text-base font-semibold text-gray-800">{form.name.trim() || "未命名赛事"}</div>
-              </div>
-              <div className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2.5">
-                <span className="text-gray-500">比赛日期</span>
-                <span className="font-medium text-gray-700">{form.eventDate || "待定"}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2.5">
-                <span className="text-gray-500">时间窗口</span>
-                <span className="font-medium text-gray-700">{form.startTime} - {form.endTime}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2.5">
-                <span className="text-gray-500">可用时长</span>
-                <span className="font-medium text-emerald-700">{durationSummary}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-blue-100 bg-blue-50/60 shadow-sm">
-            <CardContent className="py-4 text-sm text-blue-900 flex items-start gap-2">
-              <Info className="w-4 h-4 mt-0.5 shrink-0" />
-              <div>
-                赛事状态切换、赛事切换与删除入口保留在管理后台首页。
-                时间窗口会影响赛程模拟中的可用总时长判断。
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-gray-600 text-sm">开始时间</Label>
+              <Input
+                type="time"
+                value={form.startTime}
+                onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-gray-600 text-sm">结束时间</Label>
+              <Input
+                type="time"
+                value={form.endTime}
+                onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

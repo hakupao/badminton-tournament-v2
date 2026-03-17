@@ -167,15 +167,14 @@ export default function LotteryPage() {
 
   if (!currentId) {
     return (
-      <div className="admin-page-shell">
+      <div className="admin-page-medium">
         <AdminPageHeader
           title="摇号分组"
-          description="管理报名池、位置号池和抽签分配工具"
           icon={Shuffle}
-          iconClassName="w-5 h-5 text-indigo-600"
+          iconClassName="w-4.5 h-4.5 text-indigo-600"
         />
         <Card className="border-dashed border-gray-200">
-          <CardContent className="py-12 text-center text-gray-500">
+          <CardContent className="py-10 text-center text-gray-400 text-sm">
             请先回到管理后台选择一个赛事
           </CardContent>
         </Card>
@@ -192,12 +191,11 @@ export default function LotteryPage() {
   }
 
   return (
-    <div className="admin-page-shell">
+    <div className="admin-page-medium">
       <AdminPageHeader
         title="摇号分组"
-        description="管理报名池、位置号池和抽签分配工具"
         icon={Shuffle}
-        iconClassName="w-5 h-5 text-indigo-600"
+        iconClassName="w-4.5 h-4.5 text-indigo-600"
         actions={(
           <Button
             className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-md"
@@ -403,9 +401,6 @@ export default function LotteryPage() {
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-400 mt-3">
-              摇号结果已自动保存到人员管理中，可前往「人员管理」查看详情
-            </p>
           </CardContent>
         </Card>
       )}

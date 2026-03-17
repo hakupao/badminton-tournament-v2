@@ -96,11 +96,19 @@
 
 @layer components {
   .admin-page-shell {
-    @apply mx-auto w-full max-w-7xl space-y-6;
+    @apply mx-auto w-full max-w-7xl space-y-5;
+  }
+
+  .admin-page-narrow {
+    @apply mx-auto w-full max-w-2xl space-y-5;
+  }
+
+  .admin-page-medium {
+    @apply mx-auto w-full max-w-4xl space-y-5;
   }
 
   .admin-page-grid {
-    @apply grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)];
+    @apply grid grid-cols-1 gap-5 xl:grid-cols-[320px_minmax(0,1fr)];
   }
 
   .admin-page-sidebar {
@@ -112,7 +120,7 @@
   }
 
   .admin-section-heading {
-    @apply flex items-center gap-2 text-lg font-bold text-gray-700;
+    @apply flex items-center gap-2 text-base font-semibold text-gray-700;
   }
 }
 

@@ -200,9 +200,8 @@ function PlayersContent() {
       <div className="admin-page-shell">
         <AdminPageHeader
           title="运动员设置"
-          description="管理最终队伍槽位、姓名和账号绑定"
           icon={Users}
-          iconClassName="w-5 h-5 text-sky-600"
+          iconClassName="w-4.5 h-4.5 text-sky-600"
         />
         <Card className="border-dashed border-gray-200">
           <CardContent className="py-12 text-center">
@@ -234,9 +233,9 @@ function PlayersContent() {
     <div className="admin-page-shell">
       <AdminPageHeader
         title="运动员设置"
-        description={`绑定账号 ${boundPlayers}/${totalPlayers} · 已命名 ${namedPlayers}/${totalPlayers}`}
         icon={Users}
-        iconClassName="w-5 h-5 text-sky-600"
+        iconClassName="w-4.5 h-4.5 text-sky-600"
+        extraBadge={<span className="text-xs text-gray-400">绑定 {boundPlayers}/{totalPlayers} · 命名 {namedPlayers}/{totalPlayers}</span>}
         actions={(
           <div className="flex gap-2">
             <Button
@@ -271,17 +270,6 @@ function PlayersContent() {
         </div>
       </div>
 
-      <p className="text-xs text-gray-500">
-        可直接在中间输入姓名，账号绑定仅对已注册运动员可选；未注册账号的选手保留姓名即可。
-      </p>
-
-      {/* Progress bar */}
-      <div className="w-full bg-gray-100 rounded-full h-2">
-        <div
-          className="bg-green-500 h-2 rounded-full transition-all duration-300"
-          style={{ width: `${totalPlayers > 0 ? (boundPlayers / totalPlayers) * 100 : 0}%` }}
-        />
-      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {groups.map((group) => (

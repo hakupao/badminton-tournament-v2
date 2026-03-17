@@ -299,15 +299,14 @@ export default function AdminScoringPage() {
 
   if (!currentId) {
     return (
-      <div className="admin-page-shell">
+      <div className="admin-page-medium">
         <AdminPageHeader
           title="比分录入"
-          description="支持待录入筛选、逐场录分和批量录分；单场详情与单场记分页继续保留"
           icon={PenLine}
-          iconClassName="w-5 h-5 text-rose-500"
+          iconClassName="w-4.5 h-4.5 text-rose-500"
         />
         <Card className="border-dashed border-gray-200">
-          <CardContent className="py-12 text-center text-gray-500">
+          <CardContent className="py-10 text-center text-gray-400 text-sm">
             请先回到管理后台选择一个赛事
           </CardContent>
         </Card>
@@ -316,12 +315,11 @@ export default function AdminScoringPage() {
   }
 
   return (
-    <div className="admin-page-shell">
+    <div className="admin-page-medium">
       <AdminPageHeader
         title="比分录入"
-        description="支持待录入筛选、逐场录分和批量录分；单场详情与单场记分页继续保留"
         icon={PenLine}
-        iconClassName="w-5 h-5 text-rose-500"
+        iconClassName="w-4.5 h-4.5 text-rose-500"
         actions={(
           <div className="flex gap-1.5 flex-wrap">
             {([["pending", "待录入"], ["finished", "已完成"], ["all", "全部"]] as const).map(([val, label]) => (

@@ -9,7 +9,6 @@ import {
   Plus,
   Trash2,
   Save,
-  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -345,15 +344,14 @@ export default function AdminRulesPage() {
 
   if (!currentId) {
     return (
-      <div className="admin-page-shell">
+      <div className="admin-page-medium">
         <AdminPageHeader
           title="赛制设置"
-          description="分组规模与对抗模板"
           icon={SlidersHorizontal}
-          iconClassName="w-5 h-5 text-blue-600"
+          iconClassName="w-4.5 h-4.5 text-blue-600"
         />
         <Card className="border-dashed border-gray-200">
-          <CardContent className="py-12 text-center text-gray-500">
+          <CardContent className="py-10 text-center text-gray-400 text-sm">
             请先回到管理后台选择一个赛事
           </CardContent>
         </Card>
@@ -367,12 +365,11 @@ export default function AdminRulesPage() {
   const xdCount = matches.filter((match) => match.matchType === "XD").length;
 
   return (
-    <div className="admin-page-shell">
+    <div className="admin-page-medium">
       <AdminPageHeader
         title="赛制设置"
-        description="统一管理分组规模、位置编制和每次小组对抗的比赛模板"
         icon={SlidersHorizontal}
-        iconClassName="w-5 h-5 text-blue-600"
+        iconClassName="w-4.5 h-4.5 text-blue-600"
         actions={(
           <div className="flex gap-2">
             <Button
@@ -455,14 +452,6 @@ export default function AdminRulesPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-amber-100 bg-amber-50/70 shadow-sm">
-            <CardContent className="py-4 text-sm text-amber-900 flex items-start gap-2">
-              <Info className="w-4 h-4 mt-0.5 shrink-0" />
-              <div>
-                改小组数会重建队伍槽位；改每组男女人数会进一步清空参赛者位置分配、账号绑定，并按新编制重置默认模板。
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="admin-page-main">

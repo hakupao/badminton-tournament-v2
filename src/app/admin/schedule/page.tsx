@@ -413,7 +413,6 @@ export default function AdminSchedulePage() {
       <div className="admin-page-shell">
         <AdminPageHeader
           title="赛程安排"
-          description="排程参数、模拟稿与正式赛程"
           icon={CalendarDays}
           iconClassName="w-5 h-5 text-amber-600"
         />
@@ -430,7 +429,6 @@ export default function AdminSchedulePage() {
     <div className="admin-page-shell">
       <AdminPageHeader
         title="赛程安排"
-        description="管理排程参数、模拟稿与正式赛程。单场详情归属本页，比分编辑仍从详情页进入比分录入二级页。"
         icon={CalendarDays}
         iconClassName="w-5 h-5 text-amber-600"
         actions={(
