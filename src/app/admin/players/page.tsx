@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { PositionBadge } from "@/components/player/position-label";
+import { AdminPageHeader } from "@/components/layout/admin-page-header";
 import { toast } from "sonner";
-import { Users, UserCheck, Link2, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { Users, UserCheck, Link2 } from "lucide-react";
 
 interface BoundUser {
   id: number;
@@ -49,7 +50,7 @@ interface UsersResponse {
 
 function PlayersContent() {
   const { currentId } = useTournament();
-  const tournamentId = currentId ? String(currentId) : "1";
+  const tournamentId = currentId ? String(currentId) : "";
   const [groups, setGroups] = useState<GroupWithPlayers[]>([]);
   const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +59,13 @@ function PlayersContent() {
   const [userEdits, setUserEdits] = useState<Record<number, number | null>>({});
 
   const fetchData = useCallback(async () => {
+    if (!tournamentId) {
+      setGroups([]);
+      setRegisteredUsers([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       const [groupsRes, usersRes] = await Promise.all([
         fetch(`/api/tournaments/${tournamentId}/groups`),
@@ -189,21 +197,20 @@ function PlayersContent() {
 
   if (groups.length === 0) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2.5">
-          <Link href="/admin">
-            <Button variant="ghost" size="sm" className="gap-1 text-gray-500">
-              <ArrowLeft className="w-4 h-4" /> 返回
-            </Button>
-          </Link>
-          <Users className="w-5 h-5 text-blue-600" />
-          <h1 className="text-xl sm:text-2xl font-bold text-green-900">人员管理</h1>
-        </div>
+      <div className="admin-page-shell">
+        <AdminPageHeader
+          title="运动员设置"
+          description="管理最终队伍槽位、姓名和账号绑定"
+          icon={Users}
+          iconClassName="w-5 h-5 text-sky-600"
+        />
         <Card className="border-dashed border-gray-200">
           <CardContent className="py-12 text-center">
             <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">暂无小组数据</p>
-            <p className="text-sm text-gray-400 mt-2">请先在管理后台创建赛事并生成小组</p>
+            <p className="text-gray-500">{currentId ? "暂无小组数据" : "尚未选择赛事"}</p>
+            <p className="text-sm text-gray-400 mt-2">
+              {currentId ? "请先在赛制设置中完成分组编制" : "请先回到管理后台选择一个赛事"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -224,44 +231,36 @@ function PlayersContent() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2.5">
-          <Link href="/admin">
-            <Button variant="ghost" size="sm" className="gap-1 text-gray-500">
-              <ArrowLeft className="w-4 h-4" /> 返回
+    <div className="admin-page-shell">
+      <AdminPageHeader
+        title="运动员设置"
+        description={`绑定账号 ${boundPlayers}/${totalPlayers} · 已命名 ${namedPlayers}/${totalPlayers}`}
+        icon={Users}
+        iconClassName="w-5 h-5 text-sky-600"
+        actions={(
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-200 text-gray-500 hover:text-red-500 hover:border-red-200"
+              onClick={handleClearAll}
+            >
+              清空所有
             </Button>
-          </Link>
-          <Users className="w-5 h-5 text-blue-600" />
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-green-900">人员管理</h1>
-            <p className="text-xs text-gray-400">
-              绑定账号 {boundPlayers}/{totalPlayers} · 已命名 {namedPlayers}/{totalPlayers}
-            </p>
+            <Button
+              size="sm"
+              className="bg-sky-600 hover:bg-sky-700 text-white shadow-md"
+              onClick={handleSave}
+              disabled={!hasChanges || saving}
+            >
+              {saving ? "保存中..." : `保存修改 ${hasChanges ? `(${Object.keys(nameEdits).length + Object.keys(userEdits).length})` : ""}`}
+            </Button>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-200 text-gray-500 hover:text-red-500 hover:border-red-200"
-            onClick={handleClearAll}
-          >
-            清空所有
-          </Button>
-          <Button
-            size="sm"
-            className="bg-green-600 hover:bg-green-700 text-white shadow-md"
-            onClick={handleSave}
-            disabled={!hasChanges || saving}
-          >
-            {saving ? "保存中..." : `保存修改 ${hasChanges ? `(${Object.keys(nameEdits).length + Object.keys(userEdits).length})` : ""}`}
-          </Button>
-        </div>
-      </div>
+        )}
+      />
 
       {/* Stats */}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <div className="flex items-center gap-1.5 text-sm text-gray-500">
           <Link2 className="w-4 h-4 text-blue-500" />
           <span>已注册运动员: {registeredUsers.length}</span>
@@ -271,6 +270,10 @@ function PlayersContent() {
           <span>已绑定: {boundPlayers}/{totalPlayers}</span>
         </div>
       </div>
+
+      <p className="text-xs text-gray-500">
+        可直接在中间输入姓名，账号绑定仅对已注册运动员可选；未注册账号的选手保留姓名即可。
+      </p>
 
       {/* Progress bar */}
       <div className="w-full bg-gray-100 rounded-full h-2">
@@ -299,44 +302,44 @@ function PlayersContent() {
               {group.players.map((player) => {
                 const currentUid = getCurrentUserId(player);
                 return (
-                  <div key={player.id} className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className={`h-8 w-16 shrink-0 justify-center text-xs leading-none ${
-                          player.gender === "M"
-                            ? "border-blue-200 text-blue-600 bg-blue-50"
-                            : "border-pink-200 text-pink-600 bg-pink-50"
-                        }`}
-                      >
-                        {player.gender === "M" ? "♂" : "♀"} {player.positionNumber}号
-                      </Badge>
-                      <Input
-                        placeholder={`${group.icon}${player.positionNumber}号位`}
-                        value={getDisplayName(player)}
-                        onChange={(e) => handleNameChange(player.id, e.target.value)}
-                        className="h-8 text-sm border-gray-200 focus:border-green-400 focus:ring-green-400"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 pl-[72px]">
+                  <div
+                    key={player.id}
+                    className="grid grid-cols-[auto_minmax(0,1fr)_minmax(120px,1fr)] items-center gap-2"
+                  >
+                    <PositionBadge
+                      gender={player.gender}
+                      positionNumber={player.positionNumber}
+                      className={`h-8 min-w-[60px] shrink-0 px-2 text-xs ${
+                        player.gender === "M"
+                          ? "border-blue-200 bg-blue-50 text-blue-600"
+                          : "border-pink-200 bg-pink-50 text-pink-600"
+                      }`}
+                    />
+                    <Input
+                      placeholder={`输入姓名（默认${group.icon}${player.positionNumber}号位）`}
+                      value={getDisplayName(player)}
+                      onChange={(e) => handleNameChange(player.id, e.target.value)}
+                      className="h-8 min-w-0 text-sm border-gray-200 focus:border-green-400 focus:ring-green-400"
+                    />
+                    <div className="min-w-0">
                       <Select
                         value={currentUid || "none"}
                         onValueChange={(v: string | null) => handleUserChange(player.id, v || "none")}
                       >
-                        <SelectTrigger className="h-7 text-xs">
-                          <span className="flex flex-1 text-left truncate">
+                        <SelectTrigger className="h-8 w-full min-w-0 border-gray-200 text-xs">
+                          <span className="flex min-w-0 flex-1 text-left truncate">
                             {currentUid ? (
-                              <span className="text-green-700 flex items-center gap-1">
+                              <span className="flex min-w-0 items-center gap-1 text-green-700">
                                 <UserCheck className="w-3 h-3" />
-                                {getCurrentUserLabel(player)}
+                                <span className="truncate">{getCurrentUserLabel(player)}</span>
                               </span>
                             ) : (
-                              <span className="text-gray-400">绑定账号...</span>
+                              <span className="truncate text-gray-400">绑定账号（可选）</span>
                             )}
                           </span>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">不绑定</SelectItem>
+                          <SelectItem value="none">手动填写姓名，不绑定账号</SelectItem>
                           {registeredUsers.map((u) => {
                             const isBound = boundUserIds.has(u.id) && String(u.id) !== currentUid;
                             return (

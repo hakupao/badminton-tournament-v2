@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { PositionBadge } from "@/components/player/position-label";
+import { AdminPageHeader } from "@/components/layout/admin-page-header";
 import { toast } from "sonner";
 import { useTournament } from "@/lib/tournament-context";
-import Link from "next/link";
-import { ArrowLeft, Shuffle, Users, UserPlus, Trash2, Dices } from "lucide-react";
+import { Shuffle, Users, UserPlus, Trash2, Dices } from "lucide-react";
 
 interface RegisteredUser {
   id: number;
@@ -34,8 +34,14 @@ interface LotteryResult {
   position: number;
 }
 
+interface ActionResponse {
+  error?: string;
+  message?: string;
+  assignments?: LotteryResult[];
+}
+
 export default function LotteryPage() {
-  const { currentId, currentName } = useTournament();
+  const { currentId } = useTournament();
   const tournamentId = currentId ? String(currentId) : "";
 
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -110,7 +116,7 @@ export default function LotteryPage() {
         setSelectedGender("");
         fetchData();
       } else {
-        const err: any = await res.json();
+        const err = await res.json() as ActionResponse;
         toast.error(err.error || "添加失败");
       }
     } catch {
@@ -142,7 +148,7 @@ export default function LotteryPage() {
       const res = await fetch(`/api/tournaments/${tournamentId}/lottery`, {
         method: "POST",
       });
-      const data: any = await res.json();
+      const data = await res.json() as ActionResponse;
       if (res.ok) {
         toast.success(data.message || "摇号完成！");
         setLotteryResults(data.assignments || []);
@@ -159,6 +165,24 @@ export default function LotteryPage() {
 
   if (loading) return <div className="text-center py-12 text-gray-400">加载中...</div>;
 
+  if (!currentId) {
+    return (
+      <div className="admin-page-shell">
+        <AdminPageHeader
+          title="摇号分组"
+          description="管理报名池、位置号池和抽签分配工具"
+          icon={Shuffle}
+          iconClassName="w-5 h-5 text-indigo-600"
+        />
+        <Card className="border-dashed border-gray-200">
+          <CardContent className="py-12 text-center text-gray-500">
+            请先回到管理后台选择一个赛事
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Group participants by position for display
   const byPosition = new Map<number, Participant[]>();
   for (const p of participants) {
@@ -168,30 +192,23 @@ export default function LotteryPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2.5">
-          <Link href="/admin">
-            <Button variant="ghost" size="sm" className="gap-1 text-gray-500">
-              <ArrowLeft className="w-4 h-4" /> 返回
-            </Button>
-          </Link>
-          <Shuffle className="w-5 h-5 text-indigo-600" />
-          <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-800">摇号分组</h1>
-            {currentName && <p className="text-xs text-gray-400">{currentName}</p>}
-          </div>
-        </div>
-        <Button
-          className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-md"
-          onClick={runLottery}
-          disabled={lotteryRunning || participants.length === 0}
-        >
-          <Dices className="w-4 h-4" />
-          {lotteryRunning ? "摇号中..." : "开始摇号"}
-        </Button>
-      </div>
+    <div className="admin-page-shell">
+      <AdminPageHeader
+        title="摇号分组"
+        description="管理报名池、位置号池和抽签分配工具"
+        icon={Shuffle}
+        iconClassName="w-5 h-5 text-indigo-600"
+        actions={(
+          <Button
+            className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-md"
+            onClick={runLottery}
+            disabled={lotteryRunning || participants.length === 0}
+          >
+            <Dices className="w-4 h-4" />
+            {lotteryRunning ? "摇号中..." : "开始摇号"}
+          </Button>
+        )}
+      />
 
       {/* Stats */}
       <div className="flex gap-4 flex-wrap text-sm text-gray-500">
@@ -316,9 +333,12 @@ export default function LotteryPage() {
                   <CardHeader className={`pb-2 ${isMale ? "bg-blue-50/50" : "bg-pink-50/50"} border-b ${isMale ? "border-blue-100" : "border-pink-100"}`}>
                     <CardTitle className="text-sm flex items-center justify-between">
                       <span className="flex items-center gap-2">
-                        <Badge variant="outline" className={`${isMale ? "border-blue-200 text-blue-600" : "border-pink-200 text-pink-600"}`}>
-                          {isMale ? "♂" : "♀"} {pos}号位
-                        </Badge>
+                        <PositionBadge
+                          gender={isMale ? "M" : "F"}
+                          positionNumber={pos}
+                          suffix="号位"
+                          className={isMale ? "border-blue-200 text-blue-600" : "border-pink-200 text-pink-600"}
+                        />
                       </span>
                       <span className="text-xs text-gray-400">
                         {posParticipants.length}/{groupCount}

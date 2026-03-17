@@ -7,12 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { toast } from "sonner";
-import Link from "next/link";
+import { AdminPageHeader } from "@/components/layout/admin-page-header";
 import { useTournament } from "@/lib/tournament-context";
 import { sanitizeIntegerInput } from "@/lib/utils";
 import {
   PenLine,
-  ArrowLeft,
   CheckCircle,
   Send,
   ChevronRight,
@@ -83,7 +82,7 @@ interface TournamentResponse {
 }
 
 export default function AdminScoringPage() {
-  const { currentId, currentName } = useTournament();
+  const { currentId } = useTournament();
   const tournamentId = currentId ? String(currentId) : "";
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [matches, setMatches] = useState<ScheduleMatch[]>([]);
@@ -298,45 +297,55 @@ export default function AdminScoringPage() {
 
   if (loading) return <div className="text-center py-12 text-muted-foreground">加载中...</div>;
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2.5">
-          <Link href="/admin">
-            <Button variant="ghost" size="sm" className="gap-1 text-gray-500">
-              <ArrowLeft className="w-4 h-4" /> 返回
-            </Button>
-          </Link>
-          <PenLine className="w-5 h-5 text-rose-500" />
-          <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-800">比分录入</h1>
-            {currentName && <p className="text-xs text-gray-400">{currentName}</p>}
-          </div>
-        </div>
-        {/* Status Filter + Batch Toggle */}
-        <div className="flex gap-1.5 flex-wrap">
-          {([["pending", "待录入"], ["finished", "已完成"], ["all", "全部"]] as const).map(([val, label]) => (
-            <Button
-              key={val}
-              variant={statusFilter === val ? "default" : "outline"}
-              size="sm"
-              className={statusFilter === val ? "bg-rose-600 hover:bg-rose-700 text-white" : "text-gray-500"}
-              onClick={() => setStatusFilter(val)}
-            >
-              {label}
-            </Button>
-          ))}
-          <Button
-            variant={batchMode ? "default" : "outline"}
-            size="sm"
-            className={batchMode ? "bg-amber-600 hover:bg-amber-700 text-white" : "text-amber-600 border-amber-200"}
-            onClick={() => { setBatchMode(!batchMode); setBatchScores({}); }}
-          >
-            {batchMode ? "退出批量" : "批量录入"}
-          </Button>
-        </div>
+  if (!currentId) {
+    return (
+      <div className="admin-page-shell">
+        <AdminPageHeader
+          title="比分录入"
+          description="支持待录入筛选、逐场录分和批量录分；单场详情与单场记分页继续保留"
+          icon={PenLine}
+          iconClassName="w-5 h-5 text-rose-500"
+        />
+        <Card className="border-dashed border-gray-200">
+          <CardContent className="py-12 text-center text-gray-500">
+            请先回到管理后台选择一个赛事
+          </CardContent>
+        </Card>
       </div>
+    );
+  }
+
+  return (
+    <div className="admin-page-shell">
+      <AdminPageHeader
+        title="比分录入"
+        description="支持待录入筛选、逐场录分和批量录分；单场详情与单场记分页继续保留"
+        icon={PenLine}
+        iconClassName="w-5 h-5 text-rose-500"
+        actions={(
+          <div className="flex gap-1.5 flex-wrap">
+            {([["pending", "待录入"], ["finished", "已完成"], ["all", "全部"]] as const).map(([val, label]) => (
+              <Button
+                key={val}
+                variant={statusFilter === val ? "default" : "outline"}
+                size="sm"
+                className={statusFilter === val ? "bg-rose-600 hover:bg-rose-700 text-white" : "text-gray-500"}
+                onClick={() => setStatusFilter(val)}
+              >
+                {label}
+              </Button>
+            ))}
+            <Button
+              variant={batchMode ? "default" : "outline"}
+              size="sm"
+              className={batchMode ? "bg-amber-600 hover:bg-amber-700 text-white" : "text-amber-600 border-amber-200"}
+              onClick={() => { setBatchMode(!batchMode); setBatchScores({}); }}
+            >
+              {batchMode ? "退出批量" : "批量录入"}
+            </Button>
+          </div>
+        )}
+      />
 
       {/* Match List */}
       {matches.length === 0 ? (
@@ -344,7 +353,7 @@ export default function AdminScoringPage() {
           <CardContent className="py-12 text-center">
             <PenLine className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-muted-foreground">暂无比赛</p>
-            <p className="text-sm text-muted-foreground mt-1">请先在「赛程管理」中生成赛程</p>
+            <p className="text-sm text-muted-foreground mt-1">请先在「赛程安排」中发布正式赛程</p>
           </CardContent>
         </Card>
       ) : filteredMatches.length === 0 ? (

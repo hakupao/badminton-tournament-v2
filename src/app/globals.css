@@ -94,6 +94,28 @@
   }
 }
 
+@layer components {
+  .admin-page-shell {
+    @apply mx-auto w-full max-w-7xl space-y-6;
+  }
+
+  .admin-page-grid {
+    @apply grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)];
+  }
+
+  .admin-page-sidebar {
+    @apply space-y-4;
+  }
+
+  .admin-page-main {
+    @apply space-y-4;
+  }
+
+  .admin-section-heading {
+    @apply flex items-center gap-2 text-lg font-bold text-gray-700;
+  }
+}
+
 /* Court diagonal pattern - subtle crosshatch */
 .court-bg {
   background-image:

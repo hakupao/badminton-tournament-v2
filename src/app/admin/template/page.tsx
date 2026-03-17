@@ -6,6 +6,7 @@ import { useTournament } from "@/lib/tournament-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PositionBadge, PositionLabel } from "@/components/player/position-label";
 import { toast } from "sonner";
 import { FileText, Plus, RotateCcw, Save, Trash2, Info, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -242,17 +243,17 @@ function TemplateContent() {
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {positions.map((pos) => (
-              <Badge
+              <PositionBadge
                 key={pos.positionNumber}
-                variant="outline"
                 className={`h-8 px-3 text-sm leading-none ${
                   pos.gender === "M"
                     ? "border-blue-200 text-blue-700 bg-blue-50"
                     : "border-pink-200 text-pink-700 bg-pink-50"
                 }`}
-              >
-                {pos.gender === "M" ? "♂" : "♀"} {pos.positionNumber}号位
-              </Badge>
+                gender={pos.gender}
+                positionNumber={pos.positionNumber}
+                suffix="号位"
+              />
             ))}
           </div>
           <div className="flex gap-4 mt-3 text-xs text-gray-500">
@@ -363,7 +364,12 @@ function TemplateContent() {
                       <SelectContent>
                         {(match.matchType === "XD" ? positions : validPositions).map((p) => (
                           <SelectItem key={p.positionNumber} value={String(p.positionNumber)}>
-                            {p.gender === "M" ? "♂" : "♀"}{p.positionNumber}
+                            <PositionLabel
+                              gender={p.gender}
+                              positionNumber={p.positionNumber}
+                              suffix=""
+                              className="gap-0.5"
+                            />
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -378,7 +384,12 @@ function TemplateContent() {
                       <SelectContent>
                         {(match.matchType === "XD" ? positions : validPositions).map((p) => (
                           <SelectItem key={p.positionNumber} value={String(p.positionNumber)}>
-                            {p.gender === "M" ? "♂" : "♀"}{p.positionNumber}
+                            <PositionLabel
+                              gender={p.gender}
+                              positionNumber={p.positionNumber}
+                              suffix=""
+                              className="gap-0.5"
+                            />
                           </SelectItem>
                         ))}
                       </SelectContent>

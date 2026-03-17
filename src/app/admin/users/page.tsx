@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import Link from "next/link";
-import { ArrowLeft, Users, Trash2, KeyRound, ShieldCheck, User } from "lucide-react";
+import { AdminPageHeader } from "@/components/layout/admin-page-header";
+import { useTournament } from "@/lib/tournament-context";
+import { Users, Trash2, KeyRound, ShieldCheck, User } from "lucide-react";
 
 interface UserItem {
   id: number;
@@ -26,6 +27,7 @@ interface UserMutationResponse {
 }
 
 export default function AdminUsersPage() {
+  const { currentName } = useTournament();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -136,20 +138,14 @@ export default function AdminUsersPage() {
   if (loading) return <div className="text-center py-12 text-gray-400">加载中...</div>;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-2.5">
-        <Link href="/admin">
-          <Button variant="ghost" size="sm" className="gap-1 text-gray-500">
-            <ArrowLeft className="w-4 h-4" /> 返回
-          </Button>
-        </Link>
-        <Users className="w-5 h-5 text-cyan-600" />
-        <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-gray-800">账号管理</h1>
-          <p className="text-xs text-gray-400">共 {users.length} 个账号 · {athletes.length} 名运动员 · {admins.length} 名管理员</p>
-        </div>
-      </div>
+    <div className="admin-page-shell">
+      <AdminPageHeader
+        title="账号管理"
+        description={`共 ${users.length} 个账号 · ${athletes.length} 名运动员 · ${admins.length} 名管理员${currentName ? " · 当前赛事上下文已保留" : ""}`}
+        icon={Users}
+        iconClassName="w-5 h-5 text-cyan-600"
+        extraBadge={currentName ? <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">全局账号</Badge> : undefined}
+      />
 
       {/* Create User */}
       <Card className="border-cyan-100">

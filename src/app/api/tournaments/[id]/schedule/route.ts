@@ -17,6 +17,19 @@ import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
 
+interface ProvidedScheduledMatch {
+  roundNumber?: unknown;
+  courtNumber?: unknown;
+  homeGroupIndex?: unknown;
+  awayGroupIndex?: unknown;
+  matchType?: unknown;
+  homePos1?: unknown;
+  homePos2?: unknown;
+  awayPos1?: unknown;
+  awayPos2?: unknown;
+  templateIndex?: unknown;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -83,7 +96,7 @@ export async function GET(
 }
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -126,11 +139,12 @@ export async function POST(
       .where(eq(players.tournamentId, tournamentId))
       .all();
 
-    const templates = await db
+    const templates = (await db
       .select()
       .from(templateMatches)
       .where(eq(templateMatches.tournamentId, tournamentId))
-      .all();
+      .all())
+      .sort((a, b) => a.sortOrder - b.sortOrder);
 
     if (tournamentGroups.length < 2) {
       return NextResponse.json(
@@ -144,6 +158,89 @@ export async function POST(
         { error: "No template matches defined" },
         { status: 400 }
       );
+    }
+
+    let providedSchedule: Array<{
+      roundNumber: number;
+      courtNumber: number;
+      homeGroupIndex: number;
+      awayGroupIndex: number;
+      matchType: "MD" | "WD" | "XD";
+      homePos1: number;
+      homePos2: number;
+      awayPos1: number;
+      awayPos2: number;
+      templateIndex: number;
+    }> | null = null;
+
+    const rawBody = await request.text();
+    if (rawBody.trim()) {
+      let body: { scheduledMatches?: ProvidedScheduledMatch[] };
+      try {
+        body = JSON.parse(rawBody) as { scheduledMatches?: ProvidedScheduledMatch[] };
+      } catch {
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      }
+
+      if (body.scheduledMatches !== undefined) {
+        if (!Array.isArray(body.scheduledMatches) || body.scheduledMatches.length === 0) {
+          return NextResponse.json(
+            { error: "scheduledMatches must be a non-empty array when provided" },
+            { status: 400 }
+          );
+        }
+
+        const validated: Array<{
+          roundNumber: number;
+          courtNumber: number;
+          homeGroupIndex: number;
+          awayGroupIndex: number;
+          matchType: "MD" | "WD" | "XD";
+          homePos1: number;
+          homePos2: number;
+          awayPos1: number;
+          awayPos2: number;
+          templateIndex: number;
+        }> = [];
+
+        for (const match of body.scheduledMatches) {
+          const validType =
+            match.matchType === "MD" || match.matchType === "WD" || match.matchType === "XD";
+          const numericFields = [
+            match.roundNumber,
+            match.courtNumber,
+            match.homeGroupIndex,
+            match.awayGroupIndex,
+            match.homePos1,
+            match.homePos2,
+            match.awayPos1,
+            match.awayPos2,
+            match.templateIndex,
+          ];
+
+          if (!validType || numericFields.some((value) => typeof value !== "number")) {
+            return NextResponse.json(
+              { error: "Each scheduled match needs round/court/group indexes, template index, type and positions" },
+              { status: 400 }
+            );
+          }
+
+          validated.push({
+            roundNumber: match.roundNumber as number,
+            courtNumber: match.courtNumber as number,
+            homeGroupIndex: match.homeGroupIndex as number,
+            awayGroupIndex: match.awayGroupIndex as number,
+            matchType: match.matchType as "MD" | "WD" | "XD",
+            homePos1: match.homePos1 as number,
+            homePos2: match.homePos2 as number,
+            awayPos1: match.awayPos1 as number,
+            awayPos2: match.awayPos2 as number,
+            templateIndex: match.templateIndex as number,
+          });
+        }
+
+        providedSchedule = validated;
+      }
     }
 
     // Delete existing matches and dependent records for this tournament
@@ -164,25 +261,27 @@ export async function POST(
       .run();
 
     // Generate and schedule matches
-    const simParams: SimulationParams = {
-      groupCount: tournamentGroups.length,
-      malesPerGroup: tournament.malesPerGroup,
-      femalesPerGroup: tournament.femalesPerGroup,
-      courtsCount: tournament.courtsCount,
-      roundDurationMinutes: tournament.roundDurationMinutes,
-      startTime: tournament.startTime || "09:00",
-      endTime: tournament.endTime || "19:00",
-      templateMatches: templates.map((t) => ({
-        matchType: t.matchType,
-        homePos1: t.homePos1,
-        homePos2: t.homePos2,
-        awayPos1: t.awayPos1,
-        awayPos2: t.awayPos2,
-      })),
-    };
+    const scheduled = providedSchedule ?? (() => {
+      const simParams: SimulationParams = {
+        groupCount: tournamentGroups.length,
+        malesPerGroup: tournament.malesPerGroup,
+        femalesPerGroup: tournament.femalesPerGroup,
+        courtsCount: tournament.courtsCount,
+        roundDurationMinutes: tournament.roundDurationMinutes,
+        startTime: tournament.startTime || "09:00",
+        endTime: tournament.endTime || "19:00",
+        templateMatches: templates.map((t) => ({
+          matchType: t.matchType,
+          homePos1: t.homePos1,
+          homePos2: t.homePos2,
+          awayPos1: t.awayPos1,
+          awayPos2: t.awayPos2,
+        })),
+      };
 
-    const generatedMatches = generateMatches(simParams);
-    const scheduled = scheduleMatches(generatedMatches, tournament.courtsCount);
+      const generatedMatches = generateMatches(simParams);
+      return scheduleMatches(generatedMatches, tournament.courtsCount);
+    })();
 
     // Helper: find player by groupIndex + positionNumber
     const findPlayer = (groupIndex: number, positionNumber: number) => {

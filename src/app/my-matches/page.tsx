@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PositionLabel } from "@/components/player/position-label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-context";
 import { useTournament } from "@/lib/tournament-context";
@@ -309,7 +310,11 @@ export default function MyMatchesPage() {
               <div className="flex items-center gap-2 mt-1 text-white/80 text-sm">
                 <span>{myGroup?.name}</span>
                 <span>·</span>
-                <span>{myPlayer.gender === "M" ? "♂" : "♀"} {myPlayer.positionNumber}号位</span>
+                <PositionLabel
+                  gender={myPlayer.gender === "M" ? "M" : "F"}
+                  positionNumber={myPlayer.positionNumber}
+                  suffix="号位"
+                />
               </div>
             </div>
           </div>

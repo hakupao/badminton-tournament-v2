@@ -12,6 +12,8 @@ interface TournamentContextType {
   tournaments: TournamentInfo[];
   currentId: number | null;
   currentName: string;
+  currentStatus: string;
+  currentTournament: TournamentInfo | null;
   loading: boolean;
   setCurrentId: (id: number) => void;
   refresh: () => Promise<void>;
@@ -21,6 +23,8 @@ const TournamentContext = createContext<TournamentContextType>({
   tournaments: [],
   currentId: null,
   currentName: "",
+  currentStatus: "",
+  currentTournament: null,
   loading: true,
   setCurrentId: () => {},
   refresh: async () => {},
@@ -74,10 +78,23 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, String(id));
   }, []);
 
-  const currentName = tournaments.find((t) => t.id === currentId)?.name || "";
+  const currentTournament = tournaments.find((t) => t.id === currentId) || null;
+  const currentName = currentTournament?.name || "";
+  const currentStatus = currentTournament?.status || "";
 
   return (
-    <TournamentContext.Provider value={{ tournaments, currentId, currentName, loading, setCurrentId, refresh }}>
+    <TournamentContext.Provider
+      value={{
+        tournaments,
+        currentId,
+        currentName,
+        currentStatus,
+        currentTournament,
+        loading,
+        setCurrentId,
+        refresh,
+      }}
+    >
       {children}
     </TournamentContext.Provider>
   );

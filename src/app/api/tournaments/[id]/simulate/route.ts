@@ -47,6 +47,7 @@ export async function POST(
       .from(templateMatches)
       .where(eq(templateMatches.tournamentId, tournamentId))
       .all();
+    const sortedTemplates = [...templates].sort((a, b) => a.sortOrder - b.sortOrder);
 
     let body: {
       maxConsecutivePlayingLimit?: number;
@@ -77,7 +78,7 @@ export async function POST(
         typeof body.maxConsecutiveRestingLimit === "number"
           ? body.maxConsecutiveRestingLimit
           : undefined,
-      templateMatches: templates.map((t) => ({
+      templateMatches: sortedTemplates.map((t) => ({
         matchType: t.matchType,
         homePos1: t.homePos1,
         homePos2: t.homePos2,

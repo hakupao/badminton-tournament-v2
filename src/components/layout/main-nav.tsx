@@ -149,7 +149,31 @@ export function MainNav() {
           </div>
         </nav>
 
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-2 min-w-0">
+          {!loading && user && (
+            <Link href={isAdmin ? "/admin" : "/my-matches"} className="min-w-0 max-w-[11rem]">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 max-w-full rounded-full border-green-200 bg-green-50 px-2.5 text-xs font-medium text-green-800 shadow-sm hover:bg-green-100"
+              >
+                {user.role === "admin" ? <Shield className="h-3.5 w-3.5 shrink-0" /> : <ShuttlecockIcon className="h-3.5 w-3.5 shrink-0" />}
+                <span className="truncate">{user.username}</span>
+              </Button>
+            </Link>
+          )}
+          {!loading && !user && (
+            <Link href="/login">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-full border-green-200 px-2.5 text-xs font-medium text-green-700 hover:bg-green-50"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                登录
+              </Button>
+            </Link>
+          )}
           <Button variant="ghost" size="sm" className="px-2 text-gray-600" onClick={() => setOpen(!open)}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
