@@ -71,7 +71,6 @@ export default function MyMatchesPage() {
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [myPlayer, setMyPlayer] = useState<PlayerInfo | null>(null);
-  const [tournamentName, setTournamentName] = useState("");
   const [loadedRequestKey, setLoadedRequestKey] = useState<string | null>(null);
 
   const requestKey = user && currentId ? `${currentId}:${user.id}:${user.playerId ?? "none"}` : null;
@@ -92,7 +91,6 @@ export default function MyMatchesPage() {
 
         if (cancelled) return;
 
-        setTournamentName(tournamentData.tournament?.name || "");
         setGroups(tournamentData.groups || []);
         setPlayers(tournamentData.players || []);
         setMatches(scheduleData.matches || []);
@@ -108,7 +106,6 @@ export default function MyMatchesPage() {
       } catch {
         if (cancelled) return;
 
-        setTournamentName("");
         setGroups([]);
         setPlayers([]);
         setMatches([]);

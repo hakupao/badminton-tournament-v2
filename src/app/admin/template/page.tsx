@@ -257,7 +257,7 @@ function TemplateContent() {
             <p className="text-xs text-gray-400">定义每次小组对抗的比赛场次和人员安排</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -338,7 +338,7 @@ function TemplateContent() {
 
       {/* Match List */}
       <Card className="border-green-100 shadow-sm">
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-base text-gray-800">对阵安排</CardTitle>
           <Button
             variant="outline"

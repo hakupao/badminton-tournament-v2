@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PositionBadge, PositionLabel } from "@/components/player/position-label";
 import {
   Select,
   SelectContent,
@@ -375,7 +376,7 @@ export default function AdminRulesPage() {
         icon={SlidersHorizontal}
         iconClassName="w-4.5 h-4.5 text-blue-600"
         actions={(
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -419,8 +420,8 @@ export default function AdminRulesPage() {
                   className="border-blue-200"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="min-w-0 space-y-2">
                   <Label className="text-gray-600 font-medium">每组男生</Label>
                   <Input
                     type="text"
@@ -431,7 +432,7 @@ export default function AdminRulesPage() {
                     className="border-blue-200"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <Label className="text-gray-600 font-medium">每组女生</Label>
                   <Input
                     type="text"
@@ -466,17 +467,17 @@ export default function AdminRulesPage() {
             <CardContent>
               <div className="flex flex-wrap gap-2">
                 {positions.map((position) => (
-                  <Badge
+                  <PositionBadge
                     key={position.positionNumber}
-                    variant="outline"
+                    gender={position.gender}
+                    positionNumber={position.positionNumber}
+                    suffix="号位"
                     className={`h-8 px-3 text-sm ${
                       position.gender === "M"
                         ? "border-blue-200 bg-blue-50 text-blue-700"
                         : "border-pink-200 bg-pink-50 text-pink-700"
                     }`}
-                  >
-                    {position.gender === "M" ? "♂" : "♀"} {position.positionNumber}号位
-                  </Badge>
+                  />
                 ))}
               </div>
             </CardContent>
@@ -510,7 +511,7 @@ export default function AdminRulesPage() {
           </div>
 
           <Card className="border-green-100 shadow-sm">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="text-base text-gray-800 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-green-500" />
                 比赛模板
@@ -584,7 +585,12 @@ export default function AdminRulesPage() {
                                 key={`home-1-${position.positionNumber}`}
                                 value={String(position.positionNumber)}
                               >
-                                {position.gender === "M" ? "♂" : "♀"}{position.positionNumber}
+                                <PositionLabel
+                                  gender={position.gender}
+                                  positionNumber={position.positionNumber}
+                                  suffix=""
+                                  className="gap-0.5"
+                                />
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -602,7 +608,12 @@ export default function AdminRulesPage() {
                                 key={`home-2-${position.positionNumber}`}
                                 value={String(position.positionNumber)}
                               >
-                                {position.gender === "M" ? "♂" : "♀"}{position.positionNumber}
+                                <PositionLabel
+                                  gender={position.gender}
+                                  positionNumber={position.positionNumber}
+                                  suffix=""
+                                  className="gap-0.5"
+                                />
                               </SelectItem>
                             ))}
                           </SelectContent>

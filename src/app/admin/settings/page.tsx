@@ -156,8 +156,8 @@ export default function AdminSettingsPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="min-w-0 space-y-1.5">
               <Label className="text-gray-600 text-sm">开始时间</Label>
               <Input
                 type="time"
@@ -165,7 +165,7 @@ export default function AdminSettingsPage() {
                 onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="min-w-0 space-y-1.5">
               <Label className="text-gray-600 text-sm">结束时间</Label>
               <Input
                 type="time"

@@ -566,8 +566,8 @@ export default function AdminScoringPage() {
               {/* Referee */}
               <div className="space-y-2">
                 <div className="text-sm font-medium text-gray-700">裁判 & 边裁（可选）</div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="min-w-0">
                     <label className="text-xs text-muted-foreground">裁判</label>
                     <Select value={refereeId} onValueChange={(v: string | null) => setRefereeId(v || "")}>
                       <SelectTrigger className="mt-1">
@@ -588,7 +588,7 @@ export default function AdminScoringPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="text-xs text-muted-foreground">边裁</label>
                     <Select value={lineJudgeId} onValueChange={(v: string | null) => setLineJudgeId(v || "")}>
                       <SelectTrigger className="mt-1">

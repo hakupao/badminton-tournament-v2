@@ -340,7 +340,7 @@ export default function ScoringPage() {
       <Card className="border-gray-100 shadow-sm">
         <CardContent className="pt-4 space-y-3">
           <div className="text-sm font-medium">裁判 & 边裁（可选）</div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Button
               variant={refereeId ? "default" : "outline"}
               className={refereeId

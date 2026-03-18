@@ -243,7 +243,7 @@ function PlayersContent() {
         iconClassName="w-4.5 h-4.5 text-sky-600"
         extraBadge={<span className="text-xs text-gray-400">绑定 {boundPlayers}/{totalPlayers} · 命名 {namedPlayers}/{totalPlayers}</span>}
         actions={(
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"

@@ -1,4 +1,5 @@
 import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
+import { Mars, Venus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -21,10 +22,6 @@ interface PositionBadgeProps extends Omit<ComponentPropsWithoutRef<typeof Badge>
   textClassName?: string;
 }
 
-function getGenderSymbol(gender: Gender) {
-  return gender === "M" ? "♂" : "♀";
-}
-
 export function PositionLabel({
   gender,
   positionNumber,
@@ -39,8 +36,8 @@ export function PositionLabel({
       className={cn("inline-flex min-w-0 items-center justify-center gap-1 leading-none", className)}
       {...props}
     >
-      <span className={cn("inline-flex items-center justify-center leading-none", symbolClassName)}>
-        {getGenderSymbol(gender)}
+      <span className={cn("inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center leading-none", symbolClassName)}>
+        {gender === "M" ? <Mars aria-hidden="true" strokeWidth={1.8} /> : <Venus aria-hidden="true" strokeWidth={1.8} />}
       </span>
       <span className={cn("inline-flex items-center justify-center leading-none tabular-nums", textClassName)}>
         {positionNumber}

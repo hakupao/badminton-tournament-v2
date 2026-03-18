@@ -438,7 +438,7 @@ export default function AdminSchedulePage() {
         icon={CalendarDays}
         iconClassName="w-5 h-5 text-amber-600"
         actions={(
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
