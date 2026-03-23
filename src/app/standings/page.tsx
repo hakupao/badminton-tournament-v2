@@ -73,37 +73,37 @@ interface StatsData {
 }
 
 type StandingsTab = "group" | "combo" | "player" | "referee";
-const REFEREE_LONG_PRESS_MS = 2000;
+const REFEREE_LONG_PRESS_MS = 1000;
 const EASTER_PARTICLES = [
-  { symbol: "🎉", tx: "-320px", ty: "-180px", rotate: "-52deg", scale: "1.4", delay: "0ms" },
-  { symbol: "✦", tx: "-250px", ty: "-240px", rotate: "-30deg", scale: "1.1", delay: "30ms" },
-  { symbol: "❀", tx: "-150px", ty: "-280px", rotate: "-18deg", scale: "1.25", delay: "60ms" },
-  { symbol: "✿", tx: "-40px", ty: "-320px", rotate: "8deg", scale: "1.2", delay: "90ms" },
-  { symbol: "🎊", tx: "86px", ty: "-300px", rotate: "22deg", scale: "1.35", delay: "120ms" },
-  { symbol: "✦", tx: "196px", ty: "-250px", rotate: "34deg", scale: "1.1", delay: "150ms" },
-  { symbol: "❀", tx: "308px", ty: "-160px", rotate: "48deg", scale: "1.2", delay: "180ms" },
-  { symbol: "✿", tx: "336px", ty: "-24px", rotate: "62deg", scale: "1.15", delay: "210ms" },
-  { symbol: "🎉", tx: "292px", ty: "120px", rotate: "44deg", scale: "1.35", delay: "240ms" },
-  { symbol: "✦", tx: "188px", ty: "208px", rotate: "28deg", scale: "1.05", delay: "270ms" },
-  { symbol: "❀", tx: "64px", ty: "260px", rotate: "18deg", scale: "1.15", delay: "300ms" },
-  { symbol: "✿", tx: "-66px", ty: "286px", rotate: "-16deg", scale: "1.2", delay: "330ms" },
-  { symbol: "🎊", tx: "-186px", ty: "232px", rotate: "-28deg", scale: "1.3", delay: "360ms" },
-  { symbol: "✦", tx: "-296px", ty: "136px", rotate: "-44deg", scale: "1.05", delay: "390ms" },
-  { symbol: "❀", tx: "-342px", ty: "10px", rotate: "-58deg", scale: "1.2", delay: "420ms" },
-  { symbol: "✿", tx: "-286px", ty: "-92px", rotate: "-40deg", scale: "1.15", delay: "450ms" },
+  { symbol: "🎉", tx: "-280px", ty: "-160px", rotate: "-52deg", scale: "1.4", delay: "80ms" },
+  { symbol: "✦", tx: "-210px", ty: "-220px", rotate: "-30deg", scale: "1.1", delay: "120ms" },
+  { symbol: "❀", tx: "-120px", ty: "-250px", rotate: "-18deg", scale: "1.25", delay: "160ms" },
+  { symbol: "✿", tx: "-30px", ty: "-270px", rotate: "8deg", scale: "1.2", delay: "200ms" },
+  { symbol: "🎊", tx: "80px", ty: "-260px", rotate: "22deg", scale: "1.35", delay: "240ms" },
+  { symbol: "✦", tx: "170px", ty: "-220px", rotate: "34deg", scale: "1.1", delay: "280ms" },
+  { symbol: "❀", tx: "260px", ty: "-140px", rotate: "48deg", scale: "1.2", delay: "320ms" },
+  { symbol: "✿", tx: "280px", ty: "-20px", rotate: "62deg", scale: "1.15", delay: "360ms" },
+  { symbol: "🎉", tx: "240px", ty: "100px", rotate: "44deg", scale: "1.35", delay: "400ms" },
+  { symbol: "✦", tx: "160px", ty: "180px", rotate: "28deg", scale: "1.05", delay: "440ms" },
+  { symbol: "❀", tx: "50px", ty: "220px", rotate: "18deg", scale: "1.15", delay: "480ms" },
+  { symbol: "✿", tx: "-56px", ty: "240px", rotate: "-16deg", scale: "1.2", delay: "520ms" },
+  { symbol: "🎊", tx: "-160px", ty: "200px", rotate: "-28deg", scale: "1.3", delay: "560ms" },
+  { symbol: "✦", tx: "-250px", ty: "120px", rotate: "-44deg", scale: "1.05", delay: "600ms" },
+  { symbol: "❀", tx: "-290px", ty: "10px", rotate: "-58deg", scale: "1.2", delay: "640ms" },
+  { symbol: "✿", tx: "-240px", ty: "-80px", rotate: "-40deg", scale: "1.15", delay: "680ms" },
 ];
 const EASTER_RIBBONS = [
-  { left: "5%", drift: "-60px", rotation: "-18deg", duration: "1650ms", delay: "0ms", color: "#22c55e" },
-  { left: "12%", drift: "54px", rotation: "16deg", duration: "1720ms", delay: "120ms", color: "#f59e0b" },
-  { left: "20%", drift: "-42px", rotation: "-12deg", duration: "1820ms", delay: "240ms", color: "#0ea5e9" },
-  { left: "29%", drift: "64px", rotation: "20deg", duration: "1760ms", delay: "80ms", color: "#ef4444" },
-  { left: "38%", drift: "-36px", rotation: "-15deg", duration: "1680ms", delay: "210ms", color: "#a855f7" },
-  { left: "47%", drift: "48px", rotation: "12deg", duration: "1880ms", delay: "160ms", color: "#14b8a6" },
-  { left: "56%", drift: "-52px", rotation: "-20deg", duration: "1700ms", delay: "300ms", color: "#fb7185" },
-  { left: "65%", drift: "44px", rotation: "14deg", duration: "1840ms", delay: "100ms", color: "#84cc16" },
-  { left: "74%", drift: "-34px", rotation: "-14deg", duration: "1740ms", delay: "260ms", color: "#f97316" },
-  { left: "83%", drift: "58px", rotation: "19deg", duration: "1800ms", delay: "140ms", color: "#38bdf8" },
-  { left: "91%", drift: "-46px", rotation: "-17deg", duration: "1660ms", delay: "320ms", color: "#f43f5e" },
+  { left: "5%", drift: "-60px", rotation: "-18deg", duration: "2200ms", delay: "100ms", color: "#22c55e" },
+  { left: "12%", drift: "54px", rotation: "16deg", duration: "2400ms", delay: "250ms", color: "#f59e0b" },
+  { left: "20%", drift: "-42px", rotation: "-12deg", duration: "2600ms", delay: "380ms", color: "#0ea5e9" },
+  { left: "29%", drift: "64px", rotation: "20deg", duration: "2350ms", delay: "180ms", color: "#ef4444" },
+  { left: "38%", drift: "-36px", rotation: "-15deg", duration: "2500ms", delay: "320ms", color: "#a855f7" },
+  { left: "47%", drift: "48px", rotation: "12deg", duration: "2700ms", delay: "220ms", color: "#14b8a6" },
+  { left: "56%", drift: "-52px", rotation: "-20deg", duration: "2300ms", delay: "440ms", color: "#fb7185" },
+  { left: "65%", drift: "44px", rotation: "14deg", duration: "2550ms", delay: "160ms", color: "#84cc16" },
+  { left: "74%", drift: "-34px", rotation: "-14deg", duration: "2450ms", delay: "360ms", color: "#f97316" },
+  { left: "83%", drift: "58px", rotation: "19deg", duration: "2650ms", delay: "280ms", color: "#38bdf8" },
+  { left: "91%", drift: "-46px", rotation: "-17deg", duration: "2200ms", delay: "500ms", color: "#f43f5e" },
 ];
 
 async function fetchJson<T>(input: RequestInfo | URL): Promise<T> {
@@ -149,6 +149,7 @@ function StandingsContent() {
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackTone, setFeedbackTone] = useState<"open" | "close">("open");
   const [effectBurstId, setEffectBurstId] = useState(0);
+  const [pressing, setPressing] = useState(false);
   const pageRef = useRef<HTMLDivElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const feedbackTimerRef = useRef<number | null>(null);
@@ -174,21 +175,22 @@ function StandingsContent() {
 
   const triggerHiddenTabFeedback = (next: boolean) => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate(next ? [26, 36, 22] : [16, 26, 16]);
+      navigator.vibrate(next ? [20, 30, 15, 25, 10] : [12, 20, 10]);
     }
 
     if (pageRef.current && typeof pageRef.current.animate === "function") {
       pageRef.current.animate(
         [
-          { transform: "translate3d(0, 0, 0) rotate(0deg)" },
-          { transform: "translate3d(-8px, 4px, 0) rotate(-0.35deg)" },
-          { transform: "translate3d(8px, -3px, 0) rotate(0.28deg)" },
-          { transform: "translate3d(-6px, 2px, 0) rotate(-0.18deg)" },
-          { transform: "translate3d(5px, -2px, 0) rotate(0.12deg)" },
-          { transform: "translate3d(0, 0, 0) rotate(0deg)" },
+          { transform: "translate3d(0, 0, 0) rotate(0deg)", offset: 0 },
+          { transform: "translate3d(-6px, 3px, 0) rotate(-0.3deg)", offset: 0.15 },
+          { transform: "translate3d(6px, -2px, 0) rotate(0.25deg)", offset: 0.3 },
+          { transform: "translate3d(-4px, 2px, 0) rotate(-0.15deg)", offset: 0.5 },
+          { transform: "translate3d(3px, -1px, 0) rotate(0.1deg)", offset: 0.7 },
+          { transform: "translate3d(-1px, 0, 0) rotate(-0.03deg)", offset: 0.85 },
+          { transform: "translate3d(0, 0, 0) rotate(0deg)", offset: 1 },
         ],
         {
-          duration: next ? 520 : 420,
+          duration: next ? 600 : 450,
           easing: "cubic-bezier(0.22, 1, 0.36, 1)",
         }
       );
@@ -203,12 +205,12 @@ function StandingsContent() {
       feedbackTimerRef.current = window.setTimeout(() => {
         setFeedbackVisible(false);
         feedbackTimerRef.current = null;
-      }, 1900);
+      }, 3200);
     }
 
     if (next) {
       toast.success("彩蛋已开启", {
-        description: "已进入裁判页，再长按标题 2 秒可收起",
+        description: "已进入裁判页，再长按标题可收起",
       });
     } else {
       toast("裁判页已收起", {
@@ -221,7 +223,9 @@ function StandingsContent() {
     if (typeof window === "undefined") return;
 
     clearLongPressTimer();
+    setPressing(true);
     longPressTimerRef.current = window.setTimeout(() => {
+      setPressing(false);
       setShowRefereeTab((current) => {
         const next = !current;
         setActiveTab(next ? "referee" : "group");
@@ -234,6 +238,7 @@ function StandingsContent() {
 
   const handleTitlePressEnd = () => {
     clearLongPressTimer();
+    setPressing(false);
   };
 
   useEffect(() => {
@@ -306,9 +311,28 @@ function StandingsContent() {
   return (
     <div ref={pageRef} className="space-y-6">
       <div className="relative flex items-center gap-2.5 overflow-visible">
-        <Trophy className="w-5 h-5 text-green-700" />
+        <div className="relative">
+          <Trophy className="w-5 h-5 text-green-700" />
+          {pressing && (
+            <svg className="easter-progress-ring absolute -inset-1.5" viewBox="0 0 32 32">
+              <circle
+                cx="16" cy="16" r="14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                className="text-emerald-400"
+                style={{
+                  strokeDasharray: "88",
+                  strokeDashoffset: "88",
+                  animation: `easter-progress ${REFEREE_LONG_PRESS_MS}ms linear forwards`,
+                }}
+              />
+            </svg>
+          )}
+        </div>
         <h1
-          className="text-2xl font-bold text-green-900 select-none"
+          className={`text-2xl font-bold select-none transition-colors duration-300 ${pressing ? "text-emerald-600" : "text-green-900"}`}
           onMouseDown={(event) => {
             if (event.button !== 0) return;
             event.preventDefault();
@@ -323,20 +347,33 @@ function StandingsContent() {
         >
           排名 & 统计
         </h1>
+        {pressing && (
+          <span className="text-xs text-emerald-500/80 animate-pulse ml-1 select-none">
+            长按中...
+          </span>
+        )}
       </div>
 
       {feedbackVisible && (
         <div key={effectBurstId} className="pointer-events-none fixed inset-0 z-[80] overflow-hidden">
+          {/* Soft backdrop glow */}
+          <div className="easter-backdrop fixed inset-0" />
+          {/* Floating banner */}
           <div
-            className={`easter-banner fixed left-1/2 top-14 rounded-full border px-4 py-2 text-sm font-semibold shadow-xl ${
+            className={`easter-banner fixed left-1/2 top-16 rounded-2xl border px-5 py-2.5 text-sm font-semibold shadow-2xl backdrop-blur-sm ${
               feedbackTone === "open"
-                ? "border-emerald-200 bg-emerald-50/95 text-emerald-700"
-                : "border-amber-200 bg-amber-50/95 text-amber-700"
+                ? "border-emerald-200/60 bg-emerald-50/90 text-emerald-700"
+                : "border-amber-200/60 bg-amber-50/90 text-amber-700"
             }`}
           >
+            <span className="easter-banner-icon inline-block mr-1.5">
+              {feedbackTone === "open" ? "✨" : "📦"}
+            </span>
             {feedbackText}
           </div>
+          {/* Central flash */}
           <div className="easter-flash fixed left-1/2 top-[28%]" />
+          {/* Particles & ribbons */}
           <div className="fixed inset-0">
             <div className="absolute left-1/2 top-[28%]">
               {EASTER_PARTICLES.map((particle, index) => (
