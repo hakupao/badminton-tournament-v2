@@ -352,7 +352,7 @@ export default function ScoringPage() {
                 } else if (user?.playerId) {
                   setRefereeId(String(user.playerId));
                 } else {
-                  toast.error("你的账号未绑定选手");
+                  toast.error("登录并绑定选手后才可登记裁判身份");
                 }
               }}
             >
@@ -369,7 +369,7 @@ export default function ScoringPage() {
                 } else if (user?.playerId) {
                   setLineJudgeId(String(user.playerId));
                 } else {
-                  toast.error("你的账号未绑定选手");
+                  toast.error("登录并绑定选手后才可登记裁判身份");
                 }
               }}
             >
@@ -533,7 +533,7 @@ export default function ScoringPage() {
       {!isAdmin && isEditingFinished && (
         <Card className="border-gray-100 shadow-sm">
           <CardContent className="py-4 text-center text-sm text-gray-500">
-            这场比赛的比分已经提交。普通用户可以记录新比分，但只能由管理员修改已提交结果。
+            这场比赛的比分已经提交。匿名用户和普通用户都不能修改已提交结果，只有管理员可以编辑。
           </CardContent>
         </Card>
       )}

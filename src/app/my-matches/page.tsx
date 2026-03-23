@@ -198,7 +198,7 @@ export default function MyMatchesPage() {
     const result = getResult(match);
 
     return (
-      <Link key={match.id} href={`/match/${match.id}`}>
+      <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
         <Card
           className={`border shadow-sm cursor-pointer transition-all hover:shadow-md ${
             result === "win"

@@ -864,7 +864,7 @@ export default function AdminSchedulePage() {
                                       : (MATCH_TYPE_COLORS[match.matchType] || "bg-white border-gray-100");
 
                                     return (
-                                      <Link key={match.id} href={`/match/${match.id}`}>
+                                      <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
                                         <div className={`rounded-lg border p-2.5 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer`}>
                                           <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center gap-1">
@@ -954,7 +954,7 @@ export default function AdminSchedulePage() {
 
                                       return (
                                         <td key={`desktop-match-${match.id}`} className="p-2">
-                                          <Link href={`/match/${match.id}`}>
+                                          <Link href={`/match/${match.id}`} prefetch={false}>
                                             <div className={`rounded-lg border p-3 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer`}>
                                               <div className="flex items-center justify-between mb-1.5">
                                                 <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${isFinished ? "text-gray-400 border-gray-300" : ""}`}>
@@ -1014,7 +1014,7 @@ export default function AdminSchedulePage() {
                               const isFinished = match.status === "finished";
 
                               return (
-                                <Link key={match.id} href={`/match/${match.id}`}>
+                                <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
                                   <Card className={`${isFinished ? "border-gray-200 opacity-70" : "border-gray-100"} hover:border-amber-300 hover:shadow-md transition-all cursor-pointer`}>
                                     <CardContent className="py-3 px-4">
                                       <div className="flex items-center justify-between mb-1.5">

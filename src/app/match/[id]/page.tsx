@@ -175,7 +175,7 @@ export default function MatchDetailPage() {
       {/* Actions */}
       {(!isFinished || isAdmin) && (
         <div className="flex gap-3">
-          <Link href={`/match/${match.id}/scoring`} className="flex-1">
+          <Link href={`/match/${match.id}/scoring`} prefetch={false} className="flex-1">
             <Button className={`w-full gap-2 ${isFinished ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"}`} size="lg">
               {isFinished ? <Edit3 className="w-4 h-4" /> : <PenLine className="w-4 h-4" />}
               {isFinished ? "编辑比分" : "进入记分"}

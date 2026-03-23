@@ -342,7 +342,7 @@ function ScheduleContent() {
                           const awayGroup = groupMap.get(match.awayGroupId);
 
                           return (
-                            <Link key={match.id} href={`/match/${match.id}`}>
+                            <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
                               <div className={`rounded-lg border p-2.5 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer relative`}>
                                 {isMine && !isFinished && (
                                   <Star className="w-3 h-3 text-yellow-500 fill-yellow-400 absolute top-1.5 right-1.5" />
@@ -427,7 +427,7 @@ function ScheduleContent() {
 
                             return (
                               <td key={courtIdx} className="p-2">
-                                <Link href={`/match/${match.id}`}>
+                                <Link href={`/match/${match.id}`} prefetch={false}>
                                   <div className={`rounded-lg border p-3 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer relative`}>
                                     {isMine && !isFinished && (
                                       <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400 absolute top-1.5 right-1.5" />
@@ -487,7 +487,7 @@ function ScheduleContent() {
                     const isFinished = match.status === "finished";
                     const isMine = isMyMatch(match);
                     return (
-                      <Link key={match.id} href={`/match/${match.id}`}>
+                      <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
                         <Card className={`${isFinished ? "border-gray-200 opacity-70" : isMine ? "border-yellow-300 ring-2 ring-yellow-200 bg-yellow-50/50" : "border-gray-100"} hover:border-green-300 hover:shadow-md transition-all cursor-pointer`}>
                           <CardContent className="py-3 px-4">
                             <div className="flex items-center justify-between mb-1.5">

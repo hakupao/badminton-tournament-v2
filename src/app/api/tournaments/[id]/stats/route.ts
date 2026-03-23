@@ -34,14 +34,17 @@ interface PlayerStat {
   playerName: string | null;
   groupId: number;
   groupName: string;
+  groupIcon: string;
   gender: string;
   positionNumber: number;
   wins: number;
   losses: number;
   draws: number;
   matchesPlayed: number;
+  netGames: number;
   pointsFor: number;
   pointsAgainst: number;
+  netPoints: number;
   winRate: number;
 }
 
@@ -58,6 +61,10 @@ interface CombinationStat {
   losses: number;
   draws: number;
   matchesPlayed: number;
+  netGames: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  netPoints: number;
 }
 
 interface MatchTypeStat {
@@ -78,11 +85,13 @@ interface RefereeStat {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const db = getDb();
+    const includeRefereeLeaderboard =
+      request.nextUrl.searchParams.get("includeReferee") === "1";
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
@@ -118,28 +127,26 @@ export async function GET(
       .all();
 
     const finishedMatches = allMatches.filter((m) => m.status === "finished");
-
-    // Fetch all games for finished matches
-    const allGames: Array<{ matchId: number; gameNumber: number; homeScore: number; awayScore: number; winner: string | null }> = [];
-    for (const m of finishedMatches) {
-      const games = await db
-        .select()
-        .from(matchGames)
-        .where(eq(matchGames.matchId, m.id))
-        .all();
-      allGames.push(...games);
-    }
-
-    const allRefereeRecords = await db
-      .select()
-      .from(refereeRecords)
-      .all();
-
-    // Filter referee records to this tournament's matches
     const matchIds = new Set(allMatches.map((m) => m.id));
-    const tournamentRefereeRecords = allRefereeRecords.filter((r) =>
+
+    // Fetch all games + referee records in ONE query each (not N+1)
+    const [allGamesRaw, allRefereeRecordsRaw] = await Promise.all([
+      db.select().from(matchGames).all(),
+      db.select().from(refereeRecords).all(),
+    ]);
+
+    const allGames = allGamesRaw.filter((g) => matchIds.has(g.matchId));
+    const tournamentRefereeRecords = allRefereeRecordsRaw.filter((r) =>
       matchIds.has(r.matchId)
     );
+
+    // Pre-index games by matchId for O(1) lookup
+    const gamesByMatch = new Map<number, typeof allGames>();
+    for (const g of allGames) {
+      const arr = gamesByMatch.get(g.matchId);
+      if (arr) arr.push(g);
+      else gamesByMatch.set(g.matchId, [g]);
+    }
 
     // ========== Group Standings ==========
     const groupMap = new Map(allGroups.map((g) => [g.id, g]));
@@ -172,7 +179,7 @@ export async function GET(
       awayStanding.matchesPlayed++;
 
       // Count games won/lost per match
-      const matchGamesList = allGames.filter((g) => g.matchId === m.id);
+      const matchGamesList = gamesByMatch.get(m.id) || [];
       let homeGamesWon = 0;
       let awayGamesWon = 0;
 
@@ -213,7 +220,7 @@ export async function GET(
 
     // Calculate net values
     for (const s of groupStandings) {
-      s.netGames = s.gamesWon - s.gamesLost;
+      s.netGames = s.wins - s.losses;
       s.netPoints = s.pointsFor - s.pointsAgainst;
     }
 
@@ -233,14 +240,17 @@ export async function GET(
         playerName: p.name,
         groupId: p.groupId,
         groupName: group?.name || "",
+        groupIcon: group?.icon || "",
         gender: p.gender,
         positionNumber: p.positionNumber,
         wins: 0,
         losses: 0,
         draws: 0,
         matchesPlayed: 0,
+        netGames: 0,
         pointsFor: 0,
         pointsAgainst: 0,
+        netPoints: 0,
         winRate: 0,
       });
     }
@@ -248,7 +258,7 @@ export async function GET(
     for (const m of finishedMatches) {
       const homePlayers = [m.homePlayer1Id, m.homePlayer2Id].filter(Boolean) as number[];
       const awayPlayers = [m.awayPlayer1Id, m.awayPlayer2Id].filter(Boolean) as number[];
-      const matchGamesList = allGames.filter((g) => g.matchId === m.id);
+      const matchGamesList = gamesByMatch.get(m.id) || [];
 
       const totalHomeScore = matchGamesList.reduce((sum, g) => sum + g.homeScore, 0);
       const totalAwayScore = matchGamesList.reduce((sum, g) => sum + g.awayScore, 0);
@@ -278,11 +288,17 @@ export async function GET(
 
     const playerStats = Array.from(playerStatsMap.values()).map((s) => ({
       ...s,
+      netGames: s.wins - s.losses,
+      netPoints: s.pointsFor - s.pointsAgainst,
       winRate: s.matchesPlayed > 0 ? Math.round((s.wins / s.matchesPlayed) * 100) / 100 : 0,
     }));
 
-    // Sort by wins desc, then winRate desc
-    playerStats.sort((a, b) => b.wins - a.wins || b.winRate - a.winRate);
+    playerStats.sort((a, b) =>
+      b.wins - a.wins ||
+      b.netGames - a.netGames ||
+      b.netPoints - a.netPoints ||
+      b.winRate - a.winRate
+    );
 
     // ========== Combination Stats ==========
     const comboMap = new Map<string, CombinationStat>();
@@ -323,10 +339,17 @@ export async function GET(
             losses: 0,
             draws: 0,
             matchesPlayed: 0,
+            netGames: 0,
+            pointsFor: 0,
+            pointsAgainst: 0,
+            netPoints: 0,
           });
         }
         const combo = comboMap.get(key)!;
+        const matchGamesList = gamesByMatch.get(m.id) || [];
         combo.matchesPlayed++;
+        combo.pointsFor += matchGamesList.reduce((sum, g) => sum + g.homeScore, 0);
+        combo.pointsAgainst += matchGamesList.reduce((sum, g) => sum + g.awayScore, 0);
         if (m.winner === "home") combo.wins++;
         else if (m.winner === "away") combo.losses++;
         else combo.draws++;
@@ -352,19 +375,36 @@ export async function GET(
             losses: 0,
             draws: 0,
             matchesPlayed: 0,
+            netGames: 0,
+            pointsFor: 0,
+            pointsAgainst: 0,
+            netPoints: 0,
           });
         }
         const combo = comboMap.get(key)!;
+        const matchGamesList = gamesByMatch.get(m.id) || [];
         combo.matchesPlayed++;
+        combo.pointsFor += matchGamesList.reduce((sum, g) => sum + g.awayScore, 0);
+        combo.pointsAgainst += matchGamesList.reduce((sum, g) => sum + g.homeScore, 0);
         if (m.winner === "away") combo.wins++;
         else if (m.winner === "home") combo.losses++;
         else combo.draws++;
       }
     }
 
-    const combinationStats = Array.from(comboMap.values()).sort(
-      (a, b) => b.wins - a.wins || b.matchesPlayed - a.matchesPlayed
-    );
+    const combinationStats = Array.from(comboMap.values())
+      .map((combo) => ({
+        ...combo,
+        netGames: combo.wins - combo.losses,
+        netPoints: combo.pointsFor - combo.pointsAgainst,
+      }))
+      .sort(
+        (a, b) =>
+          b.wins - a.wins ||
+          b.netGames - a.netGames ||
+          b.netPoints - a.netPoints ||
+          b.matchesPlayed - a.matchesPlayed
+      );
 
     // ========== Match Type Stats ==========
     const matchTypeMap = new Map<string, MatchTypeStat>();
@@ -393,28 +433,32 @@ export async function GET(
     const matchTypeStats = Array.from(matchTypeMap.values());
 
     // ========== Referee Leaderboard ==========
-    const refereeMap = new Map<number, RefereeStat>();
+    let refereeLeaderboard: RefereeStat[] = [];
 
-    for (const r of tournamentRefereeRecords) {
-      if (!refereeMap.has(r.playerId)) {
-        const player = playerMap.get(r.playerId);
-        refereeMap.set(r.playerId, {
-          playerId: r.playerId,
-          playerName: player?.name || null,
-          refereeCount: 0,
-          lineJudgeCount: 0,
-          totalCount: 0,
-        });
+    if (includeRefereeLeaderboard) {
+      const refereeMap = new Map<number, RefereeStat>();
+
+      for (const r of tournamentRefereeRecords) {
+        if (!refereeMap.has(r.playerId)) {
+          const player = playerMap.get(r.playerId);
+          refereeMap.set(r.playerId, {
+            playerId: r.playerId,
+            playerName: player?.name || null,
+            refereeCount: 0,
+            lineJudgeCount: 0,
+            totalCount: 0,
+          });
+        }
+        const stat = refereeMap.get(r.playerId)!;
+        if (r.role === "referee") stat.refereeCount++;
+        else if (r.role === "line_judge") stat.lineJudgeCount++;
+        stat.totalCount++;
       }
-      const stat = refereeMap.get(r.playerId)!;
-      if (r.role === "referee") stat.refereeCount++;
-      else if (r.role === "line_judge") stat.lineJudgeCount++;
-      stat.totalCount++;
-    }
 
-    const refereeLeaderboard = Array.from(refereeMap.values()).sort(
-      (a, b) => b.totalCount - a.totalCount
-    );
+      refereeLeaderboard = Array.from(refereeMap.values()).sort(
+        (a, b) => b.totalCount - a.totalCount
+      );
+    }
 
     return NextResponse.json({
       groupStandings,

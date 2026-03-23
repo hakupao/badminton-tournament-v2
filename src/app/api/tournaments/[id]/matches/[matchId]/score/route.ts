@@ -36,15 +36,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; matchId: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized: Login required" },
-      { status: 401 }
-    );
-  }
-
   try {
+    const user = await getCurrentUser();
     const db = getDb();
     const { id, matchId: matchIdStr } = await params;
     const tournamentId = parseInt(id, 10);
@@ -64,7 +57,7 @@ export async function POST(
       return NextResponse.json({ error: "Match not found" }, { status: 404 });
     }
 
-    const isAdmin = user.role === "admin";
+    const isAdmin = user?.role === "admin";
     if (match.status === "finished" && !isAdmin) {
       return NextResponse.json(
         { error: "比分已提交，如需修改请联系管理员" },
@@ -92,14 +85,21 @@ export async function POST(
         (playerId): playerId is number => typeof playerId === "number"
       );
 
-      if (claimedIds.length > 0 && !user.playerId) {
+      if (claimedIds.length > 0 && !user) {
+        return NextResponse.json(
+          { error: "匿名记分不能登记裁判身份，请先登录并绑定选手" },
+          { status: 401 }
+        );
+      }
+
+      if (claimedIds.length > 0 && !user?.playerId) {
         return NextResponse.json(
           { error: "你的账号未绑定选手，不能登记裁判身份" },
           { status: 400 }
         );
       }
 
-      if (claimedIds.some((playerId) => playerId !== user.playerId)) {
+      if (claimedIds.some((playerId) => playerId !== user?.playerId)) {
         return NextResponse.json(
           { error: "普通用户只能登记自己的裁判身份" },
           { status: 403 }
