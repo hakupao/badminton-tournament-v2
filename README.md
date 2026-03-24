@@ -172,13 +172,14 @@ npm run deploy:demo
 
 一次性配置 GitHub repository secret：
 
-- `WRANGLER_CONFIG_TOML`
+- `CLOUDFLARE_API_TOKEN`
 
-这个 secret 的值直接使用你本机 Wrangler 登录后的配置文件内容：
+这个 token 需要至少包含：
 
-`~/Library/Preferences/.wrangler/config/default.toml`
+- `Account -> Cloudflare Pages: Edit`
+- `Account -> D1: Edit`
 
-这个文件里包含 Wrangler 的 OAuth token + refresh token。仓库内的 workflow 会在 GitHub Actions 里恢复这份配置，然后自动执行 demo 的 D1 初始化、种子重置和 Pages 发布。
+配置完成后，仓库内的 workflow 会在 GitHub Actions 里直接使用这个 token，自动执行 demo 的 D1 初始化、种子重置和 Pages 发布。
 
 如果你只是更新了页面、接口逻辑或样式，发布 Demo：
 

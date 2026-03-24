@@ -18,7 +18,8 @@ jobs:
     permissions:
       contents: read
     env:
-      WRANGLER_CONFIG_TOML: ${{ secrets.WRANGLER_CONFIG_TOML }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 7e626eb7290ac1a1051857e1220709f2
       DEMO_DEPLOY_BRANCH: ${{ github.ref_name }}
     steps:
       - name: Checkout repository
@@ -30,15 +31,12 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Restore Wrangler auth
+      - name: Validate Cloudflare token
         run: |
-          if [ -z "$WRANGLER_CONFIG_TOML" ]; then
-            echo "Missing repository secret: WRANGLER_CONFIG_TOML"
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "Missing repository secret: CLOUDFLARE_API_TOKEN"
             exit 1
           fi
-
-          mkdir -p "$HOME/Library/Preferences/.wrangler/config"
-          printf '%s' "$WRANGLER_CONFIG_TOML" > "$HOME/Library/Preferences/.wrangler/config/default.toml"
 
       - name: Install dependencies
         run: npm ci
