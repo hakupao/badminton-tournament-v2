@@ -12,8 +12,11 @@
     "build:cf": "cross-env NEXT_TELEMETRY_DISABLED=1 VERCEL_TELEMETRY_DISABLED=1 npx @cloudflare/next-on-pages",
     "preview:cf": "npx wrangler pages dev .vercel/output/static",
     "deploy": "npm run build:cf && npx wrangler pages deploy .vercel/output/static",
+    "deploy:demo": "npm run build:cf && node scripts/deploy-demo.mjs",
     "d1:init": "npx wrangler d1 execute shuttle-arena-db --remote --file=schema.sql",
+    "d1:init:demo": "npx wrangler d1 execute shuttle-arena-demo-db --remote --file=schema.sql",
     "d1:init:local": "npx wrangler d1 execute shuttle-arena-db --local --file=schema.sql",
+    "d1:seed:demo": "npx wrangler d1 execute shuttle-arena-demo-db --remote --file=scripts/seed-demo.sql",
     "d1:seed:local": "npx wrangler d1 execute shuttle-arena-db --local --file=scripts/seed-local-d1.sql"
   },
   "dependencies": {

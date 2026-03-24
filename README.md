@@ -2,7 +2,9 @@
 
 混合双打羽毛球团体联赛管理系统。支持多赛事管理、摇号分组、赛程生成、实时计分。
 
-**线上体验**: https://game.bojiang.org
+**在线 Demo**: https://shuttle-arena-demo.pages.dev
+
+> 演示环境使用独立数据库，数据为示例内容，可能会定期重置。
 
 ---
 
@@ -131,7 +133,10 @@ src/
 | `npm run build` | 本地生产构建（Webpack） |
 | `npm run build:cf` | 编译为 Cloudflare Workers 格式 |
 | `npm run deploy` | 构建 + 部署到 Cloudflare Pages |
+| `npm run deploy:demo` | 构建并手动发布到公开 Demo（`shuttle-arena-demo`） |
 | `npm run d1:init` | 初始化线上 D1 数据库表结构（`--remote`） |
+| `npm run d1:init:demo` | 初始化 Demo 的 D1 数据库表结构（`--remote`） |
+| `npm run d1:seed:demo` | 重置并写入 Demo 示例数据 |
 | `npm run d1:init:local` | 初始化本地模拟 D1 |
 
 ---
@@ -150,3 +155,31 @@ src/
 - 它不是业务源码，不需要手动维护，也不需要提交到 GitHub
 - 如果你删除了 `.vercel/`，下次重新构建时会自动生成
 - GitHub -> Cloudflare Pages 自动部署时，Cloudflare 会在 CI 里自行生成对应产物
+
+---
+
+## Demo 环境维护
+
+公开 Demo 当前是一个独立的 Cloudflare Pages 项目：`shuttle-arena-demo`，并使用独立的 D1 数据库：`shuttle-arena-demo-db`。
+
+如果你只是更新了页面、接口逻辑或样式，发布 Demo：
+
+```bash
+npm run deploy:demo
+```
+
+如果你想把 Demo 数据恢复成一套干净的示例数据：
+
+```bash
+npm run d1:seed:demo
+```
+
+如果你改了数据库结构，再先执行一次 Demo 的 schema 初始化：
+
+```bash
+npm run d1:init:demo
+npm run d1:seed:demo
+npm run deploy:demo
+```
+
+> 注意：当前 Demo 是“手动直传部署”，不是 Git 自动部署项目。所以你 `git push` 后，正式站会自动更新，Demo 不会自动更新，需要你手动执行上面的命令。
