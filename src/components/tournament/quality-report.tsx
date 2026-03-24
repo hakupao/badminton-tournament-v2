@@ -45,9 +45,9 @@ export function QualityReport({
         <div className="flex items-center justify-between">
           <CardTitle className="text-base text-gray-700 flex items-center gap-1.5"><FileText className="w-4 h-4" /> 排布质量报告</CardTitle>
           {hasWarnings ? (
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600 border border-red-200">有异常</span>
+            <span className="text-xs font-bold px-2.5 py-1 squircle-pill bg-red-100 text-red-600 border border-red-200">有异常</span>
           ) : (
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-600 border border-green-200">质量良好</span>
+            <span className="text-xs font-bold px-2.5 py-1 squircle-pill bg-green-100 text-green-600 border border-green-200">质量良好</span>
           )}
         </div>
       </CardHeader>
@@ -95,7 +95,7 @@ export function QualityReport({
                       </span>
                     </td>
                     <td className="p-3 text-center">
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${stat.gender === "M" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}>
+                      <span className={`text-xs font-bold px-2 py-0.5 squircle-pill ${stat.gender === "M" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}>
                         {stat.gender === "M" ? "男" : "女"}
                       </span>
                     </td>

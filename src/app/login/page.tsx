@@ -172,7 +172,7 @@ export default function LoginPage() {
                   </div>
 
                   {loginError && (
-                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 squircle-lg p-3 text-center">
                       {loginError}
                     </div>
                   )}
@@ -197,7 +197,7 @@ export default function LoginPage() {
                   </div>
                 ) : (
                   <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="bg-teal-50 border border-teal-100 rounded-lg p-3 text-sm text-teal-700 flex items-start gap-2">
+                    <div className="bg-teal-50 border border-teal-100 squircle-lg p-3 text-sm text-teal-700 flex items-start gap-2">
                       <UserPlus className="w-4 h-4 mt-0.5 shrink-0" />
                       <span>运动员注册后可查看个人赛程、比赛记录。管理员稍后可将你绑定到具体参赛位置。</span>
                     </div>
@@ -239,7 +239,7 @@ export default function LoginPage() {
                     </div>
 
                     {regError && (
-                      <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                      <div className="text-sm text-red-600 bg-red-50 border border-red-200 squircle-lg p-3 text-center">
                         {regError}
                       </div>
                     )}

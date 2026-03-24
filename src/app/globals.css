@@ -80,6 +80,30 @@
   --sidebar-accent-foreground: oklch(0.22 0.02 240);
   --sidebar-border: oklch(0.91 0.01 155);
   --sidebar-ring: oklch(0.55 0.18 155);
+  --squircle-xs-radius: 0.6rem;
+  --squircle-xs-shape: superellipse(1.35);
+  --squircle-sm-radius: 0.78rem;
+  --squircle-sm-shape: superellipse(1.5);
+  --squircle-md-radius: 1rem;
+  --squircle-md-shape: superellipse(1.7);
+  --squircle-lg-radius: 1.2rem;
+  --squircle-lg-shape: superellipse(1.95);
+  --squircle-xl-radius: 1.45rem;
+  --squircle-xl-shape: superellipse(2.2);
+  --squircle-2xl-radius: 1.9rem;
+  --squircle-2xl-shape: superellipse(2.55);
+  --squircle-3xl-radius: 2.45rem;
+  --squircle-3xl-shape: superellipse(2.85);
+  --squircle-card-radius: 1.35rem;
+  --squircle-card-shape: superellipse(2.15);
+  --squircle-panel-radius: 1.75rem;
+  --squircle-panel-shape: superellipse(2.6);
+  --squircle-control-radius: 0.95rem;
+  --squircle-control-shape: superellipse(1.6);
+  --squircle-chip-radius: 0.85rem;
+  --squircle-chip-shape: superellipse(2.25);
+  --squircle-pill-radius: 999px;
+  --squircle-pill-shape: superellipse(3.4);
 }
 
 @layer base {
@@ -121,6 +145,222 @@
 
   .admin-section-heading {
     @apply flex items-center gap-2 text-base font-semibold text-gray-700;
+  }
+}
+
+@layer utilities {
+  .squircle-xs,
+  .squircle-sm,
+  .squircle-md,
+  .squircle-lg,
+  .squircle-xl,
+  .squircle-2xl,
+  .squircle-3xl,
+  .squircle-card,
+  .squircle-panel,
+  .squircle-control,
+  .squircle-chip,
+  .squircle-pill {
+    border-radius: var(--squircle-radius);
+  }
+
+  .squircle-xs {
+    --squircle-radius: var(--squircle-xs-radius);
+    --squircle-shape: var(--squircle-xs-shape);
+  }
+
+  .squircle-sm {
+    --squircle-radius: var(--squircle-sm-radius);
+    --squircle-shape: var(--squircle-sm-shape);
+  }
+
+  .squircle-md {
+    --squircle-radius: var(--squircle-md-radius);
+    --squircle-shape: var(--squircle-md-shape);
+  }
+
+  .squircle-lg {
+    --squircle-radius: var(--squircle-lg-radius);
+    --squircle-shape: var(--squircle-lg-shape);
+  }
+
+  .squircle-xl {
+    --squircle-radius: var(--squircle-xl-radius);
+    --squircle-shape: var(--squircle-xl-shape);
+  }
+
+  .squircle-2xl {
+    --squircle-radius: var(--squircle-2xl-radius);
+    --squircle-shape: var(--squircle-2xl-shape);
+  }
+
+  .squircle-3xl {
+    --squircle-radius: var(--squircle-3xl-radius);
+    --squircle-shape: var(--squircle-3xl-shape);
+  }
+
+  .squircle-card {
+    --squircle-radius: var(--squircle-card-radius);
+    --squircle-shape: var(--squircle-card-shape);
+  }
+
+  .squircle-panel {
+    --squircle-radius: var(--squircle-panel-radius);
+    --squircle-shape: var(--squircle-panel-shape);
+  }
+
+  .squircle-control {
+    --squircle-radius: var(--squircle-control-radius);
+    --squircle-shape: var(--squircle-control-shape);
+  }
+
+  .squircle-chip {
+    --squircle-radius: var(--squircle-chip-radius);
+    --squircle-shape: var(--squircle-chip-shape);
+  }
+
+  .squircle-pill {
+    --squircle-radius: var(--squircle-pill-radius);
+    --squircle-shape: var(--squircle-pill-shape);
+  }
+
+  .squircle-t-sm,
+  .squircle-t-md,
+  .squircle-t-lg,
+  .squircle-t-xl,
+  .squircle-t-card,
+  .squircle-t-panel {
+    border-top-left-radius: var(--squircle-top-radius);
+    border-top-right-radius: var(--squircle-top-radius);
+  }
+
+  .squircle-b-sm,
+  .squircle-b-md,
+  .squircle-b-lg,
+  .squircle-b-xl,
+  .squircle-b-card,
+  .squircle-b-panel {
+    border-bottom-right-radius: var(--squircle-bottom-radius);
+    border-bottom-left-radius: var(--squircle-bottom-radius);
+  }
+
+  .squircle-t-sm {
+    --squircle-top-radius: var(--squircle-sm-radius);
+    --squircle-top-shape: var(--squircle-sm-shape);
+  }
+
+  .squircle-t-md {
+    --squircle-top-radius: var(--squircle-md-radius);
+    --squircle-top-shape: var(--squircle-md-shape);
+  }
+
+  .squircle-t-lg {
+    --squircle-top-radius: var(--squircle-lg-radius);
+    --squircle-top-shape: var(--squircle-lg-shape);
+  }
+
+  .squircle-t-xl {
+    --squircle-top-radius: var(--squircle-xl-radius);
+    --squircle-top-shape: var(--squircle-xl-shape);
+  }
+
+  .squircle-t-card {
+    --squircle-top-radius: var(--squircle-card-radius);
+    --squircle-top-shape: var(--squircle-card-shape);
+  }
+
+  .squircle-t-panel {
+    --squircle-top-radius: var(--squircle-panel-radius);
+    --squircle-top-shape: var(--squircle-panel-shape);
+  }
+
+  .squircle-b-sm {
+    --squircle-bottom-radius: var(--squircle-sm-radius);
+    --squircle-bottom-shape: var(--squircle-sm-shape);
+  }
+
+  .squircle-b-md {
+    --squircle-bottom-radius: var(--squircle-md-radius);
+    --squircle-bottom-shape: var(--squircle-md-shape);
+  }
+
+  .squircle-b-lg {
+    --squircle-bottom-radius: var(--squircle-lg-radius);
+    --squircle-bottom-shape: var(--squircle-lg-shape);
+  }
+
+  .squircle-b-xl {
+    --squircle-bottom-radius: var(--squircle-xl-radius);
+    --squircle-bottom-shape: var(--squircle-xl-shape);
+  }
+
+  .squircle-b-card {
+    --squircle-bottom-radius: var(--squircle-card-radius);
+    --squircle-bottom-shape: var(--squircle-card-shape);
+  }
+
+  .squircle-b-panel {
+    --squircle-bottom-radius: var(--squircle-panel-radius);
+    --squircle-bottom-shape: var(--squircle-panel-shape);
+  }
+
+  @supports (corner-shape: superellipse(1)) {
+    .squircle-xs,
+    .squircle-sm,
+    .squircle-md,
+    .squircle-lg,
+    .squircle-xl,
+    .squircle-2xl,
+    .squircle-3xl,
+    .squircle-card,
+    .squircle-panel,
+    .squircle-control,
+    .squircle-chip,
+    .squircle-pill {
+      corner-shape: var(--squircle-shape);
+    }
+
+    .squircle-t-sm,
+    .squircle-t-md,
+    .squircle-t-lg,
+    .squircle-t-xl,
+    .squircle-t-card,
+    .squircle-t-panel {
+      corner-top-left-shape: var(--squircle-top-shape);
+      corner-top-right-shape: var(--squircle-top-shape);
+    }
+
+    .squircle-b-sm,
+    .squircle-b-md,
+    .squircle-b-lg,
+    .squircle-b-xl,
+    .squircle-b-card,
+    .squircle-b-panel {
+      corner-bottom-right-shape: var(--squircle-bottom-shape);
+      corner-bottom-left-shape: var(--squircle-bottom-shape);
+    }
+  }
+
+  [data-slot="card"] > img:first-child {
+    border-top-left-radius: var(--squircle-radius, var(--squircle-card-radius));
+    border-top-right-radius: var(--squircle-radius, var(--squircle-card-radius));
+  }
+
+  [data-slot="card"] > img:last-child {
+    border-bottom-right-radius: var(--squircle-radius, var(--squircle-card-radius));
+    border-bottom-left-radius: var(--squircle-radius, var(--squircle-card-radius));
+  }
+
+  @supports (corner-shape: superellipse(1)) {
+    [data-slot="card"] > img:first-child {
+      corner-top-left-shape: var(--squircle-shape, var(--squircle-card-shape));
+      corner-top-right-shape: var(--squircle-shape, var(--squircle-card-shape));
+    }
+
+    [data-slot="card"] > img:last-child {
+      corner-bottom-right-shape: var(--squircle-shape, var(--squircle-card-shape));
+      corner-bottom-left-shape: var(--squircle-shape, var(--squircle-card-shape));
+    }
   }
 }
 

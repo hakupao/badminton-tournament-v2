@@ -51,13 +51,13 @@ export default function HomePage() {
   return (
     <div className="space-y-10">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-600 via-emerald-500 to-teal-500 p-8 md:p-12 shadow-2xl shadow-green-200/40">
+      <div className="relative overflow-hidden squircle-panel [--squircle-radius:2.5rem] [--squircle-shape:superellipse(3)] bg-gradient-to-br from-green-600 via-emerald-500 to-teal-500 p-8 md:p-12 shadow-2xl shadow-green-200/40">
         {/* Court lines decoration */}
         <div className="absolute inset-0 opacity-[0.07]">
           <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-white" />
           <div className="absolute top-0 bottom-0 left-1/2 w-[2px] bg-white" />
-          <div className="absolute top-[15%] left-[10%] right-[10%] bottom-[15%] border-2 border-white rounded-sm" />
-          <div className="absolute top-[30%] left-[25%] right-[25%] bottom-[30%] border border-white rounded-sm" />
+          <div className="absolute top-[15%] left-[10%] right-[10%] bottom-[15%] border-2 border-white squircle-xs" />
+          <div className="absolute top-[30%] left-[25%] right-[25%] bottom-[30%] border border-white squircle-xs" />
           <div className="absolute top-1/2 left-[10%] w-1 h-6 bg-white -translate-y-1/2" />
           <div className="absolute top-1/2 right-[10%] w-1 h-6 bg-white -translate-y-1/2" />
         </div>
@@ -107,7 +107,7 @@ export default function HomePage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-1 h-6 rounded-full bg-gradient-to-b from-green-500 to-emerald-400" />
+            <div className="w-1 h-6 squircle-pill bg-gradient-to-b from-green-500 to-emerald-400" />
             <h2 className="text-xl font-bold text-gray-800">进行中的赛事</h2>
           </div>
           {!user && (
@@ -125,8 +125,8 @@ export default function HomePage() {
             {[1, 2].map((i) => (
               <Card key={i} className="border-gray-100 animate-pulse">
                 <CardContent className="py-8">
-                  <div className="h-4 bg-gray-100 rounded w-2/3 mb-3" />
-                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-4 bg-gray-100 squircle-xs w-2/3 mb-3" />
+                  <div className="h-3 bg-gray-100 squircle-xs w-1/2" />
                 </CardContent>
               </Card>
             ))}
@@ -190,7 +190,7 @@ export default function HomePage() {
       {finishedTournaments.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-1 h-6 rounded-full bg-gradient-to-b from-gray-400 to-gray-300" />
+            <div className="w-1 h-6 squircle-pill bg-gradient-to-b from-gray-400 to-gray-300" />
             <h2 className="text-xl font-bold text-gray-600">历史赛事</h2>
             <Badge variant="outline" className="text-xs text-gray-400 border-gray-200 font-medium">
               {finishedTournaments.length}

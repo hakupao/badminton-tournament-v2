@@ -108,9 +108,9 @@ export function ScheduleMatrix({
 
                       return (
                         <td key={courtIdx} className="p-2">
-                          <div className={`rounded-xl border p-2.5 ${cellStyle} transition-shadow hover:shadow-md`}>
+                          <div className={`squircle-card border p-2.5 ${cellStyle} transition-shadow hover:shadow-md`}>
                             <div className="flex items-center justify-center gap-1 text-xs mb-1.5">
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${badgeStyle}`}>
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 squircle-pill border ${badgeStyle}`}>
                                 {MATCH_TYPE_LABELS[match.matchType] || match.matchType}
                               </span>
                             </div>

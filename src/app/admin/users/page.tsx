@@ -206,7 +206,7 @@ export default function AdminUsersPage() {
           </h2>
           <div className="space-y-1">
             {athletes.map((u) => (
-              <div key={u.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-3 py-2">
+              <div key={u.id} className="flex items-center justify-between squircle-lg border border-gray-100 bg-white px-3 py-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-800">{u.username}</span>
                   {u.playerId && (
@@ -262,7 +262,7 @@ export default function AdminUsersPage() {
           </h2>
           <div className="space-y-1">
             {admins.map((u) => (
-              <div key={u.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-3 py-2">
+              <div key={u.id} className="flex items-center justify-between squircle-lg border border-gray-100 bg-white px-3 py-2">
                 <span className="text-sm font-medium text-gray-800">{u.username}</span>
                 <div className="flex items-center gap-1">
                   {resetUserId === u.id ? (

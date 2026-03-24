@@ -200,7 +200,7 @@ export default function MyMatchesPage() {
     return (
       <Link key={match.id} href={`/match/${match.id}`} prefetch={false} className="block">
         <div
-          className={`rounded-lg border px-3.5 py-3.5 cursor-pointer transition-all hover:shadow-sm ${
+          className={`squircle-lg border px-3.5 py-3.5 cursor-pointer transition-all hover:shadow-sm ${
             result === "win"
               ? "border-green-200 bg-green-50/40"
               : result === "loss"
@@ -255,7 +255,7 @@ export default function MyMatchesPage() {
             <LogIn className="w-8 h-8 text-amber-400 mx-auto mb-2" />
             <p className="text-sm text-gray-700 font-medium">请先登录查看个人赛程</p>
             <Link href="/login">
-              <button className="mt-3 px-5 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
+              <button className="mt-3 px-5 py-1.5 bg-green-600 text-white squircle-sm hover:bg-green-700 text-sm font-medium">
                 去登录
               </button>
             </Link>
@@ -299,7 +299,7 @@ export default function MyMatchesPage() {
 
         {matches.length > 0 && (
           <Link href="/schedule">
-            <button className="px-4 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
+            <button className="px-4 py-1.5 bg-green-600 text-white squircle-sm hover:bg-green-700 text-sm font-medium">
               查看完整赛程
             </button>
           </Link>

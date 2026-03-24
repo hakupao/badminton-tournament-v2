@@ -241,7 +241,7 @@ function ScheduleContent() {
       </div>
 
       {myPlayerId && (
-        <div className="flex items-center gap-1.5 text-xs text-yellow-700 bg-yellow-50/80 border border-yellow-200 rounded-md px-2.5 py-1">
+        <div className="flex items-center gap-1.5 text-xs text-yellow-700 bg-yellow-50/80 border border-yellow-200 squircle-sm px-2.5 py-1">
           <Star className="w-3 h-3 fill-yellow-400 text-yellow-500 shrink-0" />
           <span>黄色高亮 = 你的比赛</span>
         </div>
@@ -251,7 +251,7 @@ function ScheduleContent() {
         <>
           {/* Mobile: compact mini-matrix */}
           <div className="md:hidden">
-            <div className="rounded-lg border border-green-100 overflow-hidden">
+            <div className="squircle-lg border border-green-100 overflow-hidden">
               {/* Mini matrix header */}
               <div className="grid bg-green-50/60 border-b border-green-100" style={{ gridTemplateColumns: `2.5rem repeat(${maxCourt}, 1fr)` }}>
                 <div className="p-1.5 text-[10px] font-semibold text-green-700 text-center"></div>
@@ -305,7 +305,7 @@ function ScheduleContent() {
 
                         return (
                           <div key={courtIdx} className="p-1 flex items-center justify-center">
-                            <div className={`rounded border px-1 py-0.5 text-center leading-tight ${bgClass} ${isFinished ? "opacity-60" : ""}`}>
+                            <div className={`squircle-xs border px-1 py-0.5 text-center leading-tight ${bgClass} ${isFinished ? "opacity-60" : ""}`}>
                               <div className="text-xs whitespace-nowrap">
                                 {homeGroup?.icon || "?"}<span className="text-gray-300 mx-0.5 text-[9px]">v</span>{awayGroup?.icon || "?"}
                               </div>
@@ -343,13 +343,13 @@ function ScheduleContent() {
 
                           return (
                             <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
-                              <div className={`rounded-lg border p-2.5 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer relative`}>
+                              <div className={`squircle-lg border p-2.5 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer relative`}>
                                 {isMine && !isFinished && (
                                   <Star className="w-3 h-3 text-yellow-500 fill-yellow-400 absolute top-1.5 right-1.5" />
                                 )}
                                 <div className="flex items-center justify-between mb-1">
                                   <div className="flex items-center gap-1">
-                                    <span className="text-[10px] font-semibold text-green-700 bg-green-100 px-1 py-0.5 rounded">场地{match.courtNumber}</span>
+                                    <span className="text-[10px] font-semibold text-green-700 bg-green-100 px-1 py-0.5 squircle-xs">场地{match.courtNumber}</span>
                                     <Badge variant="outline" className={`text-[9px] px-1 py-0 ${isFinished ? "text-gray-400 border-gray-300" : ""}`}>
                                       {MATCH_TYPE_LABELS[match.matchType]}
                                     </Badge>
@@ -428,7 +428,7 @@ function ScheduleContent() {
                             return (
                               <td key={courtIdx} className="p-2">
                                 <Link href={`/match/${match.id}`} prefetch={false}>
-                                  <div className={`rounded-lg border p-3 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer relative`}>
+                                  <div className={`squircle-lg border p-3 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer relative`}>
                                     {isMine && !isFinished && (
                                       <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400 absolute top-1.5 right-1.5" />
                                     )}

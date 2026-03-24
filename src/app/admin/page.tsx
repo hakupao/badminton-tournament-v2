@@ -177,7 +177,7 @@ export default function AdminPage() {
           {tournaments.map((t) => (
             <div
               key={t.id}
-              className={`rounded-xl border px-4 py-3 cursor-pointer transition-all ${
+              className={`squircle-card border px-4 py-3 cursor-pointer transition-all ${
                 selectedId === t.id
                   ? "border-green-400 bg-green-50/60 ring-1 ring-green-200"
                   : "border-gray-200 bg-white hover:border-green-300"
@@ -194,7 +194,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2 overflow-x-auto whitespace-nowrap sm:overflow-visible">
-                  <span className={`inline-flex whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[t.status] || ""}`}>
+                  <span className={`inline-flex whitespace-nowrap squircle-pill border px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[t.status] || ""}`}>
                     {STATUS_LABELS[t.status] || t.status}
                   </span>
 
@@ -253,7 +253,7 @@ export default function AdminPage() {
             const Icon = section.icon;
             return (
               <Link key={section.title} href={section.href}>
-                <div className={`flex flex-col items-center gap-2.5 rounded-xl border bg-white p-5 transition-all cursor-pointer ${section.accent}`}>
+                <div className={`flex flex-col items-center gap-2.5 squircle-card border bg-white p-5 transition-all cursor-pointer ${section.accent}`}>
                   <Icon className={`w-6 h-6 ${section.color}`} />
                   <span className="text-sm font-medium text-gray-700">{section.title}</span>
                 </div>
@@ -264,7 +264,7 @@ export default function AdminPage() {
       )}
 
       {!loading && tournaments.length === 0 && (
-        <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 py-12 text-center">
+        <div className="squircle-card border-2 border-dashed border-gray-200 bg-gray-50/50 py-12 text-center">
           <p className="text-gray-400 text-sm">还没有赛事，点击「新建赛事」开始</p>
         </div>
       )}

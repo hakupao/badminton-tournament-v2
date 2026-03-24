@@ -540,7 +540,7 @@ export default function AdminSchedulePage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-xs text-blue-900">
+              <div className="squircle-card border border-blue-100 bg-blue-50/60 p-3 text-xs text-blue-900">
                 比赛时段来自“赛事设置”：当前窗口 {tournament.startTime || "09:00"} - {tournament.endTime || "19:00"}。
               </div>
             </CardContent>
@@ -775,7 +775,7 @@ export default function AdminSchedulePage() {
                 {officialViewMode === "matrix" ? (
                   <>
                     <div className="md:hidden">
-                      <div className="rounded-lg border border-amber-100 overflow-hidden">
+                      <div className="squircle-lg border border-amber-100 overflow-hidden">
                         <div
                           className="grid bg-amber-50/60 border-b border-amber-100"
                           style={{ gridTemplateColumns: `2.5rem repeat(${maxCourt}, 1fr)` }}
@@ -833,7 +833,7 @@ export default function AdminSchedulePage() {
 
                                   return (
                                     <div key={`mobile-match-${match.id}`} className="p-1 flex items-center justify-center">
-                                      <div className={`rounded border px-1 py-0.5 text-center leading-tight ${bgClass} ${isFinished ? "opacity-60" : ""}`}>
+                                      <div className={`squircle-xs border px-1 py-0.5 text-center leading-tight ${bgClass} ${isFinished ? "opacity-60" : ""}`}>
                                         <div className="text-xs whitespace-nowrap">
                                           {homeGroup?.icon || "?"}<span className="text-gray-300 mx-0.5 text-[9px]">v</span>{awayGroup?.icon || "?"}
                                         </div>
@@ -865,10 +865,10 @@ export default function AdminSchedulePage() {
 
                                     return (
                                       <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
-                                        <div className={`rounded-lg border p-2.5 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer`}>
+                                        <div className={`squircle-lg border p-2.5 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer`}>
                                           <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center gap-1">
-                                              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1 py-0.5 rounded">
+                                              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1 py-0.5 squircle-xs">
                                                 场地{match.courtNumber}
                                               </span>
                                               <Badge variant="outline" className={`text-[9px] px-1 py-0 ${isFinished ? "text-gray-400 border-gray-300" : ""}`}>
@@ -955,7 +955,7 @@ export default function AdminSchedulePage() {
                                       return (
                                         <td key={`desktop-match-${match.id}`} className="p-2">
                                           <Link href={`/match/${match.id}`} prefetch={false}>
-                                            <div className={`rounded-lg border p-3 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer`}>
+                                            <div className={`squircle-lg border p-3 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer`}>
                                               <div className="flex items-center justify-between mb-1.5">
                                                 <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${isFinished ? "text-gray-400 border-gray-300" : ""}`}>
                                                   {MATCH_TYPE_LABELS[match.matchType]}

@@ -16,21 +16,21 @@ interface SiteLogoProps {
 
 const sizeMap = {
   nav: {
-    mark: "h-9 w-9 rounded-xl",
+    mark: "h-9 w-9 squircle-lg",
     icon: "h-5 w-5",
     title: "text-xl",
     subtitle: "text-xs",
     gap: "gap-2.5",
   },
   hero: {
-    mark: "h-14 w-14 rounded-2xl",
+    mark: "h-14 w-14 squircle-panel",
     icon: "h-8 w-8",
     title: "text-3xl md:text-4xl",
     subtitle: "text-sm",
     gap: "gap-3.5",
   },
   login: {
-    mark: "h-20 w-20 rounded-[1.75rem]",
+    mark: "h-20 w-20 squircle-panel [--squircle-radius:2.25rem] [--squircle-shape:superellipse(2.9)]",
     icon: "h-10 w-10",
     title: "text-2xl",
     subtitle: "text-sm",

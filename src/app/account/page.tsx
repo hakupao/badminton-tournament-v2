@@ -129,10 +129,10 @@ export default function AccountPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-5 py-4">
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-green-500 to-teal-500 px-5 py-5 text-white shadow-md shadow-green-200/30">
+      <section className="relative overflow-hidden squircle-panel bg-gradient-to-br from-emerald-600 via-green-500 to-teal-500 px-5 py-5 text-white shadow-md shadow-green-200/30">
         <div className="absolute inset-0 opacity-[0.06]">
           <div className="absolute left-0 right-0 top-1/2 h-[2px] bg-white" />
-          <div className="absolute bottom-[18%] left-[12%] right-[12%] top-[18%] rounded-xl border-2 border-white" />
+          <div className="absolute bottom-[18%] left-[12%] right-[12%] top-[18%] squircle-lg border-2 border-white" />
         </div>
         <div className="relative z-10">
           <div className="flex items-center justify-between">

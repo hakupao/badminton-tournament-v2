@@ -88,7 +88,7 @@ export function ScoreTimelineCard({
       </CardHeader>
       <CardContent>
         {normalizedEvents.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
+          <div className="squircle-card border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
             {emptyMessage}
           </div>
         ) : (

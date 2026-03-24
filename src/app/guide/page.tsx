@@ -53,7 +53,7 @@ function SectionDivider({
 }) {
   return (
     <div className="flex items-center gap-3 mb-5">
-      <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-green-600 text-white text-xs font-bold shadow-sm">
+      <div className="flex items-center justify-center w-7 h-7 squircle-control bg-green-600 text-white text-xs font-bold shadow-sm">
         {number}
       </div>
       <div className="flex items-center gap-2">
@@ -93,7 +93,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   return (
     <button
       onClick={handleCopy}
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all duration-200 ${
+      className={`inline-flex items-center gap-1 px-2 py-1 squircle-chip text-[11px] font-medium transition-all duration-200 ${
         copied
           ? "bg-green-100 text-green-700 border border-green-200"
           : "bg-gray-50 text-gray-400 border border-gray-150 hover:bg-gray-100 hover:text-gray-600"
@@ -202,7 +202,7 @@ export default function GuidePage() {
           返回首页
         </Link>
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center shadow-md">
+          <div className="w-10 h-10 squircle-card bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center shadow-md">
             <Info className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -226,7 +226,7 @@ export default function GuidePage() {
           <Card className="border-green-100/80 shadow-sm">
             <CardContent className="p-0">
               {/* Date highlight strip */}
-              <div className="bg-gradient-to-r from-green-600 to-emerald-500 rounded-t-xl px-5 py-3">
+              <div className="bg-gradient-to-r from-green-600 to-emerald-500 squircle-t-card px-5 py-3">
                 <div className="flex items-center gap-2 text-white/80 text-xs font-medium mb-0.5">
                   <CalendarDays className="w-3.5 h-3.5" />
                   比赛日期
@@ -288,7 +288,7 @@ export default function GuidePage() {
           <Card className="border-green-100/80 shadow-sm">
             <CardContent className="p-0">
               {/* Map */}
-              <div className="rounded-t-xl overflow-hidden">
+              <div className="squircle-t-card overflow-hidden">
                 <iframe
                   src={VENUE_EMBED_URL}
                   className="w-full h-40 lg:h-44"
@@ -324,7 +324,7 @@ export default function GuidePage() {
                       href={VENUE_MAP_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors mt-1"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 squircle-control text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors mt-1"
                     >
                       <Navigation className="w-3 h-3" />
                       在地图中打开导航
@@ -401,7 +401,7 @@ export default function GuidePage() {
                     ].map((item) => (
                       <span
                         key={item.label}
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${item.color}`}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 squircle-pill text-[11px] font-medium border ${item.color}`}
                       >
                         {item.label} ×{item.count}
                       </span>
@@ -442,7 +442,7 @@ export default function GuidePage() {
                 计分规则
               </div>
               <div className="space-y-3 text-xs text-gray-500 leading-relaxed">
-                <div className="p-3 rounded-lg bg-amber-50/60 border border-amber-100">
+                <div className="p-3 squircle-lg bg-amber-50/60 border border-amber-100">
                   <div className="text-xs font-semibold text-amber-800 mb-1">
                     单场计分
                   </div>
@@ -456,7 +456,7 @@ export default function GuidePage() {
                   </p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="p-3 squircle-lg bg-gray-50 border border-gray-100">
                   <div className="text-xs font-semibold text-gray-700 mb-2">
                     团体积分
                   </div>
@@ -464,16 +464,16 @@ export default function GuidePage() {
                     大比分（5 局中的胜场数）多的一方为团体赛胜者：
                   </p>
                   <div className="flex gap-2">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 squircle-control text-xs font-bold bg-green-100 text-green-700 border border-green-200">
                       胜 → +3 分
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 squircle-control text-xs font-bold bg-red-50 text-red-600 border border-red-200">
                       负 → +0 分
                     </span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="p-3 squircle-lg bg-gray-50 border border-gray-100">
                   <div className="text-xs font-semibold text-gray-700 mb-1">
                     同分排序
                   </div>
@@ -522,7 +522,7 @@ export default function GuidePage() {
           ].map((prize) => (
             <div
               key={prize.rank}
-              className={`rounded-xl p-3 sm:p-4 ${prize.gradient} relative overflow-hidden`}
+              className={`squircle-card p-3 sm:p-4 ${prize.gradient} relative overflow-hidden`}
             >
               <div className="absolute top-1 right-2 text-2xl sm:text-3xl opacity-25">
                 {prize.emoji}
@@ -550,14 +550,14 @@ export default function GuidePage() {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
+          <div className="flex items-center gap-2.5 px-4 py-3 squircle-card bg-gray-50 border border-gray-100">
             <span className="text-base">🎖️</span>
             <div className="text-sm text-gray-600">
               <span className="font-medium text-gray-700">第 4 — 6 名</span>
               <span className="text-gray-400 ml-2">Victor 袜子 + YONEX 手胶</span>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
+          <div className="flex items-center gap-2.5 px-4 py-3 squircle-card bg-gray-50 border border-gray-100">
             <span className="text-base">🎁</span>
             <div className="text-sm text-gray-600">
               <span className="font-medium text-gray-700">参与奖</span>
@@ -572,7 +572,7 @@ export default function GuidePage() {
         <SectionDivider number="03" title="赞助支持" icon={Heart} />
 
         {/* Sponsor card — understated community style */}
-        <div className="relative rounded-2xl overflow-hidden bg-[#fafaf9] border border-gray-100/80">
+        <div className="relative squircle-panel overflow-hidden bg-[#fafaf9] border border-gray-100/80">
           {/* SVG defs for squircle clip */}
           <svg className="absolute" width="0" height="0" aria-hidden="true">
             <defs>
@@ -647,7 +647,7 @@ export default function GuidePage() {
                     — 展开每场比赛详细信息
                   </span>
                 </div>
-                <div className="text-[11px] text-green-600 bg-green-50 rounded-md px-2.5 py-1.5 mt-2">
+                <div className="text-[11px] text-green-600 bg-green-50 squircle-sm px-2.5 py-1.5 mt-2">
                   💡 登录后，你参与的比赛会以黄色高亮显示
                 </div>
               </div>
@@ -721,7 +721,7 @@ export default function GuidePage() {
           ].map((tip, i) => (
             <div
               key={i}
-              className="flex items-start gap-2.5 px-4 py-2.5 rounded-lg bg-green-50/50 border border-green-100/60"
+              className="flex items-start gap-2.5 px-4 py-2.5 squircle-lg bg-green-50/50 border border-green-100/60"
             >
               <ChevronRight className="w-3.5 h-3.5 text-green-400 mt-0.5 flex-shrink-0" />
               <span className="text-xs text-gray-600 leading-relaxed">

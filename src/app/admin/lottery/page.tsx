@@ -375,9 +375,9 @@ export default function LotteryPage() {
                       </div>
                     )}
                     {/* Fill indicator */}
-                    <div className="mt-2 w-full bg-gray-100 rounded-full h-1">
+                    <div className="mt-2 w-full bg-gray-100 squircle-pill h-1">
                       <div
-                        className={`h-1 rounded-full transition-all ${isMale ? "bg-blue-400" : "bg-pink-400"}`}
+                        className={`h-1 squircle-pill transition-all ${isMale ? "bg-blue-400" : "bg-pink-400"}`}
                         style={{ width: `${groupCount > 0 ? (posParticipants.length / groupCount) * 100 : 0}%` }}
                       />
                     </div>
@@ -403,7 +403,7 @@ export default function LotteryPage() {
               {lotteryResults.map((r, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between bg-white rounded-lg border border-indigo-100 px-3 py-2"
+                  className="flex items-center justify-between bg-white squircle-lg border border-indigo-100 px-3 py-2"
                 >
                   <span className="font-medium text-gray-800">{r.username}</span>
                   <span className="text-sm text-indigo-600">

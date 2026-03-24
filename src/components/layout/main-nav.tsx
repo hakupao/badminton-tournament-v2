@@ -64,13 +64,13 @@ export function MainNav() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setTournamentDropdown(!tournamentDropdown)}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-green-200/80 hover:border-green-400 transition-colors text-sm font-semibold text-green-800 shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1 squircle-pill bg-white/80 border border-green-200/80 hover:border-green-400 transition-colors text-sm font-semibold text-green-800 shadow-sm"
               >
                 {currentName || "选择赛事"}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${tournamentDropdown ? "rotate-180" : ""}`} />
               </button>
               {tournamentDropdown && (
-                <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[200px] z-[60]">
+                <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-white squircle-lg shadow-lg border border-gray-200 py-1 min-w-[200px] z-[60]">
                   {tournaments.map((t) => (
                     <button
                       key={t.id}
@@ -123,7 +123,7 @@ export function MainNav() {
           <div className="ml-2 pl-2 border-l border-gray-200">
             {loading ? null : user ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 bg-green-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <span className="text-xs text-gray-500 bg-green-50 px-2.5 py-1 squircle-pill flex items-center gap-1">
                   {user.role === "admin" ? <Shield className="w-3 h-3" /> : <ShuttlecockIcon className="w-3 h-3" />}
                   {user.username}
                 </span>
@@ -158,7 +158,7 @@ export function MainNav() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 max-w-full rounded-full border-green-200 bg-green-50 px-2.5 text-xs font-medium text-green-800 shadow-sm hover:bg-green-100"
+                className="h-8 max-w-full squircle-pill border-green-200 bg-green-50 px-2.5 text-xs font-medium text-green-800 shadow-sm hover:bg-green-100"
               >
                 {user.role === "admin" ? <Shield className="h-3.5 w-3.5 shrink-0" /> : <ShuttlecockIcon className="h-3.5 w-3.5 shrink-0" />}
                 <span className="truncate">{user.username}</span>
@@ -170,7 +170,7 @@ export function MainNav() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 rounded-full border-green-200 px-2.5 text-xs font-medium text-green-700 hover:bg-green-50"
+                className="h-8 squircle-pill border-green-200 px-2.5 text-xs font-medium text-green-700 hover:bg-green-50"
               >
                 <LogIn className="h-3.5 w-3.5" />
                 登录

@@ -444,7 +444,7 @@ export default function AdminRulesPage() {
                   />
                 </div>
               </div>
-              <div className="rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 p-3 text-sm border border-blue-100">
+              <div className="squircle-card bg-gradient-to-r from-blue-50 to-cyan-50 p-3 text-sm border border-blue-100">
                 <div className="flex justify-between">
                   <span className="text-gray-500">每组人数</span>
                   <span className="font-bold text-gray-700">{parsedMalesPerGroup + parsedFemalesPerGroup} 人</span>
@@ -532,7 +532,7 @@ export default function AdminRulesPage() {
                 return (
                   <div
                     key={`${match.matchType}-${index}`}
-                    className="border border-gray-100 rounded-lg p-4 hover:border-green-200 transition-colors"
+                    className="border border-gray-100 squircle-lg p-4 hover:border-green-200 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -619,7 +619,7 @@ export default function AdminRulesPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                      <div className="squircle-sm bg-gray-50 px-3 py-2 text-xs text-gray-500">
                         客队自动镜像：A组 {match.homePos1} + {match.homePos2} vs B组 {match.homePos1} + {match.homePos2}
                       </div>
                     </div>

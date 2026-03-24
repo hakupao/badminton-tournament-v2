@@ -360,7 +360,7 @@ function StandingsContent() {
           <div className="easter-backdrop fixed inset-0" />
           {/* Floating banner */}
           <div
-            className={`easter-banner fixed left-1/2 top-16 rounded-2xl border px-5 py-2.5 text-sm font-semibold shadow-2xl backdrop-blur-sm ${
+            className={`easter-banner fixed left-1/2 top-16 squircle-panel border px-5 py-2.5 text-sm font-semibold shadow-2xl backdrop-blur-sm ${
               feedbackTone === "open"
                 ? "border-emerald-200/60 bg-emerald-50/90 text-emerald-700"
                 : "border-amber-200/60 bg-amber-50/90 text-amber-700"

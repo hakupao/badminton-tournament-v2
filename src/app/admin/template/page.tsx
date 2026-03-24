@@ -357,7 +357,7 @@ function TemplateContent() {
             return (
               <div
                 key={idx}
-                className="border border-gray-100 rounded-lg p-4 hover:border-green-200 transition-colors"
+                className="border border-gray-100 squircle-lg p-4 hover:border-green-200 transition-colors"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -439,7 +439,7 @@ function TemplateContent() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                  <div className="squircle-sm bg-gray-50 px-3 py-2 text-xs text-gray-500">
                     主客队自动镜像：A组 {match.homePos1} + {match.homePos2} vs B组 {match.homePos1} + {match.homePos2}
                   </div>
                 </div>
