@@ -301,8 +301,8 @@ function TemplateContent() {
             ))}
           </div>
           <div className="flex gap-4 mt-3 text-xs text-gray-500">
-            <span>♂ 男选手 × {malePositions.length}</span>
-            <span>♀ 女选手 × {femalePositions.length}</span>
+            <span className="inline-flex items-center gap-0.5"><span>♂</span><span>男选手 × {malePositions.length}</span></span>
+            <span className="inline-flex items-center gap-0.5"><span>♀</span><span>女选手 × {femalePositions.length}</span></span>
             <span>共 {positions.length} 人/组</span>
           </div>
         </CardContent>
@@ -462,7 +462,7 @@ function TemplateContent() {
             <Info className="w-4 h-4 mt-0.5 shrink-0" />
             <div>
               <strong>说明：</strong>
-              每次两个小组对抗时，将按照此模板进行 {matches.length} 场比赛。位置号对应小组内的选手编号（如 ♂1号 = 男1号位选手）。主队和客队使用相同位置号意味着{"\u201C"}镜像对阵{"\u201D"}——即双方派出相同位置的选手。
+              每次两个小组对抗时，将按照此模板进行 {matches.length} 场比赛。位置号对应小组内的选手编号（如 <span className="inline-flex items-center"><span>♂</span><span>1号</span></span> = 男1号位选手）。主队和客队使用相同位置号意味着{"\u201C"}镜像对阵{"\u201D"}——即双方派出相同位置的选手。
             </div>
           </div>
         </CardContent>

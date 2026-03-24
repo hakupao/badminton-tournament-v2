@@ -265,11 +265,11 @@ export default function LotteryPage() {
                 setSelectedPosition(""); // reset position when gender changes
               }}>
                 <SelectTrigger className="h-9">
-                  <span>{selectedGender === "M" ? "♂ 男" : selectedGender === "F" ? "♀ 女" : "选择"}</span>
+                  <span className="inline-flex items-center gap-0.5">{selectedGender === "M" ? <><span>♂</span><span>男</span></> : selectedGender === "F" ? <><span>♀</span><span>女</span></> : "选择"}</span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="M">♂ 男</SelectItem>
-                  <SelectItem value="F">♀ 女</SelectItem>
+                  <SelectItem value="M"><span className="inline-flex items-center gap-0.5"><span>♂</span><span>男</span></span></SelectItem>
+                  <SelectItem value="F"><span className="inline-flex items-center gap-0.5"><span>♀</span><span>女</span></span></SelectItem>
                 </SelectContent>
               </Select>
             </div>
