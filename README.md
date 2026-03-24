@@ -162,6 +162,24 @@ src/
 
 公开 Demo 当前是一个独立的 Cloudflare Pages 项目：`shuttle-arena-demo`，并使用独立的 D1 数据库：`shuttle-arena-demo-db`。
 
+仓库内已经提供自动同步 workflow：[deploy-demo.yml](/Users/bojiangzhang/MyProject/badminton-tournament-v2/.github/workflows/deploy-demo.yml)。完成下面这个一次性配置后，每次 `git push` 到 `master`，正式站会继续走 Cloudflare 的 Git 自动部署，Demo 则会由 GitHub Actions 自动执行：
+
+```bash
+npm run d1:init:demo
+npm run d1:seed:demo
+npm run deploy:demo
+```
+
+一次性配置 GitHub repository secret：
+
+- `WRANGLER_CONFIG_TOML`
+
+这个 secret 的值直接使用你本机 Wrangler 登录后的配置文件内容：
+
+`~/Library/Preferences/.wrangler/config/default.toml`
+
+这个文件里包含 Wrangler 的 OAuth token + refresh token。仓库内的 workflow 会在 GitHub Actions 里恢复这份配置，然后自动执行 demo 的 D1 初始化、种子重置和 Pages 发布。
+
 如果你只是更新了页面、接口逻辑或样式，发布 Demo：
 
 ```bash
@@ -182,4 +200,4 @@ npm run d1:seed:demo
 npm run deploy:demo
 ```
 
-> 注意：当前 Demo 是“手动直传部署”，不是 Git 自动部署项目。所以你 `git push` 后，正式站会自动更新，Demo 不会自动更新，需要你手动执行上面的命令。
+> 说明：Cloudflare 官方文档说明，Direct Upload 项目不能直接切换成 Git integration。这里采用的是“保留现有 demo 项目 + GitHub Actions 自动直传”的方式，所以你仍然只需要 `git push`，但 demo 的自动更新是由 GitHub Actions 完成的，而不是 Cloudflare Pages 自己的 Git integration。

@@ -1,0 +1,52 @@
+name: Deploy Demo
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-demo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-demo:
+    name: Refresh and Deploy Demo
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      WRANGLER_CONFIG_TOML: ${{ secrets.WRANGLER_CONFIG_TOML }}
+      DEMO_DEPLOY_BRANCH: ${{ github.ref_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Restore Wrangler auth
+        run: |
+          if [ -z "$WRANGLER_CONFIG_TOML" ]; then
+            echo "Missing repository secret: WRANGLER_CONFIG_TOML"
+            exit 1
+          fi
+
+          mkdir -p "$HOME/Library/Preferences/.wrangler/config"
+          printf '%s' "$WRANGLER_CONFIG_TOML" > "$HOME/Library/Preferences/.wrangler/config/default.toml"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Refresh demo database
+        run: |
+          npm run d1:init:demo
+          npm run d1:seed:demo
+
+      - name: Deploy demo site
+        run: npm run deploy:demo
