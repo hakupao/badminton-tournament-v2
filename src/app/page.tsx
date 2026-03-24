@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useTournament } from "@/lib/tournament-context";
-import { CalendarDays, Trophy, LogIn } from "lucide-react";
+import { CalendarDays, Trophy, LogIn, Info } from "lucide-react";
 import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
 import { SiteLogo } from "@/components/brand/site-logo";
 
@@ -83,6 +83,12 @@ export default function HomePage() {
               <Button size="lg" variant="outline" className="border-2 border-white/50 bg-transparent text-white hover:bg-white/15 hover:text-white font-bold h-12 px-6 backdrop-blur-sm gap-2">
                 <Trophy className="w-4 h-4" />
                 积分排名
+              </Button>
+            </Link>
+            <Link href="/guide">
+              <Button size="lg" variant="outline" className="border-2 border-white/50 bg-transparent text-white hover:bg-white/15 hover:text-white font-bold h-12 px-6 backdrop-blur-sm gap-2">
+                <Info className="w-4 h-4" />
+                赛事介绍
               </Button>
             </Link>
             {user && (
