@@ -407,6 +407,7 @@ export default function AdminSchedulePage() {
 
   const maxRound = matches.length > 0 ? Math.max(...matches.map((match) => match.roundNumber)) : 0;
   const maxCourt = matches.length > 0 ? Math.max(...matches.map((match) => match.courtNumber)) : 0;
+  const mobileMatrixGridTemplate = `3.35rem repeat(${maxCourt}, minmax(0, 1fr))`;
   const totalFinished = matches.filter((match) => match.status === "finished").length;
   const totalPending = matches.filter((match) => match.status === "pending").length;
 
@@ -778,13 +779,13 @@ export default function AdminSchedulePage() {
                       <div className="squircle-lg border border-amber-100 overflow-hidden">
                         <div
                           className="grid bg-amber-50/60 border-b border-amber-100"
-                          style={{ gridTemplateColumns: `2.5rem repeat(${maxCourt}, 1fr)` }}
+                          style={{ gridTemplateColumns: mobileMatrixGridTemplate }}
                         >
-                          <div className="p-1.5 text-[10px] font-semibold text-amber-700 text-center" />
+                          <div className="px-1.5 py-2 text-[10px] font-semibold text-amber-700 text-center" />
                           {Array.from({ length: maxCourt }, (_, index) => (
                             <div
                               key={`court-head-${index + 1}`}
-                              className="p-1.5 text-[10px] font-semibold text-amber-700 text-center"
+                              className="px-1 py-2 text-[10px] font-semibold tracking-tight text-amber-700 text-center whitespace-nowrap"
                             >
                               场地{index + 1}
                             </div>
@@ -803,10 +804,10 @@ export default function AdminSchedulePage() {
                                 className={`grid cursor-pointer transition-colors ${
                                   isExpanded ? "bg-amber-50" : allDone ? "bg-gray-50/50" : "hover:bg-amber-50/30"
                                 } ${roundIndex < maxRound - 1 || isExpanded ? "border-b border-gray-100" : ""}`}
-                                style={{ gridTemplateColumns: `2.5rem repeat(${maxCourt}, 1fr)` }}
+                                style={{ gridTemplateColumns: mobileMatrixGridTemplate }}
                                 onClick={() => setExpandedRound(isExpanded ? null : roundNumber)}
                               >
-                                <div className={`p-1.5 text-[11px] font-bold text-center flex items-center justify-center ${allDone ? "text-green-600" : "text-amber-700"}`}>
+                                <div className={`px-1 py-2 text-[11px] leading-none font-bold text-center flex items-center justify-center whitespace-nowrap ${allDone ? "text-green-600" : "text-amber-700"}`}>
                                   第{roundNumber}轮
                                 </div>
                                 {Array.from({ length: maxCourt }, (_, courtIndex) => {
@@ -832,17 +833,17 @@ export default function AdminSchedulePage() {
                                         : "bg-purple-50 border-purple-200";
 
                                   return (
-                                    <div key={`mobile-match-${match.id}`} className="p-1 flex items-center justify-center">
-                                      <div className={`squircle-xs border px-1 py-0.5 text-center leading-tight ${bgClass} ${isFinished ? "opacity-60" : ""}`}>
-                                        <div className="text-xs whitespace-nowrap">
+                                    <div key={`mobile-match-${match.id}`} className="p-1.5 flex items-center justify-center">
+                                      <div className={`w-full squircle-sm border px-1.5 py-1 text-center leading-tight shadow-[0_1px_0_rgba(255,255,255,0.55)_inset] ${bgClass} ${isFinished ? "opacity-60" : ""}`}>
+                                        <div className="text-[13px] font-medium whitespace-nowrap">
                                           {homeGroup?.icon || "?"}<span className="text-gray-300 mx-0.5 text-[9px]">v</span>{awayGroup?.icon || "?"}
                                         </div>
                                         {isFinished && match.games && match.games.length > 0 ? (
-                                          <div className="text-[8px] text-gray-500 font-medium">
+                                          <div className="mt-0.5 text-[8px] text-gray-500 font-medium whitespace-nowrap">
                                             {match.games.map((game) => `${game.homeScore}:${game.awayScore}`).join(" ")}
                                           </div>
                                         ) : (
-                                          <div className="text-[8px] text-gray-400">
+                                          <div className="mt-0.5 text-[8px] text-gray-400 whitespace-nowrap">
                                             {MATCH_TYPE_LABELS[match.matchType]}
                                           </div>
                                         )}
@@ -853,46 +854,47 @@ export default function AdminSchedulePage() {
                               </div>
 
                               {isExpanded && (
-                                <div className="bg-amber-50/50 border-b border-amber-100 px-2 py-2 space-y-1.5">
+                                <div className="bg-amber-50/50 border-b border-amber-100 px-2.5 py-2 space-y-2">
                                   {roundMatches.map((match) => {
                                     const isFinished = match.status === "finished";
                                     const statusInfo = STATUS_MAP[match.status as keyof typeof STATUS_MAP] || STATUS_MAP.pending;
                                     const homeGroup = groupMap.get(match.homeGroupId);
                                     const awayGroup = groupMap.get(match.awayGroupId);
                                     const colorClass = isFinished
-                                      ? "bg-white border-gray-200 opacity-70"
-                                      : (MATCH_TYPE_COLORS[match.matchType] || "bg-white border-gray-100");
+                                      ? "bg-white/90 opacity-72"
+                                      : match.matchType === "MD"
+                                        ? "bg-blue-50/90"
+                                        : match.matchType === "WD"
+                                          ? "bg-pink-50/90"
+                                          : match.matchType === "XD"
+                                            ? "bg-purple-50/90"
+                                            : "bg-white/90";
 
                                     return (
-                                      <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
-                                        <div className={`squircle-lg border p-2.5 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer`}>
-                                          <div className="flex items-center justify-between mb-1">
-                                            <div className="flex items-center gap-1">
-                                              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1 py-0.5 squircle-xs">
-                                                场地{match.courtNumber}
-                                              </span>
-                                              <Badge variant="outline" className={`text-[9px] px-1 py-0 ${isFinished ? "text-gray-400 border-gray-300" : ""}`}>
-                                                {MATCH_TYPE_LABELS[match.matchType]}
-                                              </Badge>
+                                      <Link key={match.id} href={`/match/${match.id}`} prefetch={false} className="block">
+                                        <div className={`squircle-lg border border-transparent px-3 py-2.5 ${colorClass} hover:shadow-sm transition-all cursor-pointer`}>
+                                          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2.5">
+                                            <span className="min-w-0 self-start pt-0.5 text-[10px] font-medium leading-none text-gray-500 whitespace-nowrap truncate">
+                                              {MATCH_TYPE_LABELS[match.matchType]} · 场地{match.courtNumber}
+                                            </span>
+                                            <div className="flex min-h-8 self-start items-start justify-center gap-3 font-medium leading-none whitespace-nowrap">
+                                              <span className="text-[18px] leading-none">{homeGroup?.icon || "?"}</span>
+                                              {isFinished && match.games && match.games.length > 0 ? (
+                                                <span className="font-bold text-gray-700 text-[17px] tracking-tight leading-none">
+                                                  {match.games.map((game) => `${game.homeScore}:${game.awayScore}`).join(" / ")}
+                                                </span>
+                                              ) : (
+                                                <span className="text-gray-400 text-[12px] font-medium tracking-[0.16em] leading-none">VS</span>
+                                              )}
+                                              <span className="text-[18px] leading-none">{awayGroup?.icon || "?"}</span>
                                             </div>
-                                            <span className={`text-[10px] ${statusInfo.color}`}>{statusInfo.label}</span>
+                                            <span className={`justify-self-end self-start pt-0.5 text-[10px] font-medium leading-none whitespace-nowrap ${statusInfo.color}`}>{statusInfo.label}</span>
                                           </div>
-                                          <div className="text-center font-medium text-sm">
-                                            <span>{homeGroup?.icon || "?"}</span>
-                                            {isFinished && match.games && match.games.length > 0 ? (
-                                              <span className="mx-1.5 font-bold text-gray-600 text-xs">
-                                                {match.games.map((game) => `${game.homeScore}:${game.awayScore}`).join(" / ")}
-                                              </span>
-                                            ) : (
-                                              <span className="text-gray-400 mx-1.5 text-xs">vs</span>
-                                            )}
-                                            <span>{awayGroup?.icon || "?"}</span>
-                                          </div>
-                                          <div className="flex justify-between gap-1 mt-0.5 text-center">
-                                            <span className="text-[10px] text-gray-500 flex-1">
+                                          <div className="mt-1.5 grid grid-cols-2 gap-1.5 text-center">
+                                            <span className="text-[10px] text-gray-500 min-w-0 squircle-xs bg-white/36 px-2 py-1.5 leading-[1.45]">
                                               {formatPlayer(match.homePlayer1Id)} + {formatPlayer(match.homePlayer2Id)}
                                             </span>
-                                            <span className="text-[10px] text-gray-500 flex-1">
+                                            <span className="text-[10px] text-gray-500 min-w-0 squircle-xs bg-white/36 px-2 py-1.5 leading-[1.45]">
                                               {formatPlayer(match.awayPlayer1Id)} + {formatPlayer(match.awayPlayer2Id)}
                                             </span>
                                           </div>
@@ -914,7 +916,7 @@ export default function AdminSchedulePage() {
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="border-b border-amber-100 bg-amber-50/60">
-                                <th className="p-3 text-left font-semibold text-amber-800 sticky left-0 bg-amber-50/60 z-10">
+                                <th className="p-3 text-left font-semibold text-amber-800 sticky left-0 bg-amber-50/60 z-10 min-w-[84px] whitespace-nowrap">
                                   轮次
                                 </th>
                                 {Array.from({ length: maxCourt }, (_, index) => (
@@ -931,7 +933,7 @@ export default function AdminSchedulePage() {
 
                                 return (
                                   <tr key={`desktop-round-${roundNumber}`} className="border-b border-gray-100 hover:bg-amber-50/20">
-                                    <td className="p-3 sticky left-0 bg-white z-10 font-semibold text-amber-700">
+                                    <td className="p-3 sticky left-0 bg-white z-10 font-semibold text-amber-700 whitespace-nowrap">
                                       第{roundNumber}轮
                                     </td>
                                     {Array.from({ length: maxCourt }, (_, courtIndex) => {
@@ -998,47 +1000,56 @@ export default function AdminSchedulePage() {
                     </Card>
                   </>
                 ) : (
-        <div className="admin-page-main">
+        <div className="admin-page-main space-y-4">
                     {Array.from({ length: maxRound }, (_, roundIndex) => {
                       const roundNumber = roundIndex + 1;
                       const roundMatches = matches.filter((match) => match.roundNumber === roundNumber);
 
                       return (
                         <div key={`list-round-${roundNumber}`}>
-                          <h3 className="text-sm font-semibold text-amber-700 mb-2">第 {roundNumber} 轮</h3>
-                          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                          <h3 className="text-sm font-semibold text-amber-700 mb-2.5">第 {roundNumber} 轮</h3>
+                          <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-3">
                             {roundMatches.map((match) => {
                               const homeGroup = groupMap.get(match.homeGroupId);
                               const awayGroup = groupMap.get(match.awayGroupId);
                               const statusInfo = STATUS_MAP[match.status as keyof typeof STATUS_MAP] || STATUS_MAP.pending;
                               const isFinished = match.status === "finished";
+                              const colorClass = isFinished
+                                ? "bg-white/90 opacity-72"
+                                : match.matchType === "MD"
+                                  ? "bg-blue-50/90"
+                                  : match.matchType === "WD"
+                                    ? "bg-pink-50/90"
+                                    : match.matchType === "XD"
+                                      ? "bg-purple-50/90"
+                                      : "bg-white/90";
 
                               return (
                                 <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
-                                  <Card className={`${isFinished ? "border-gray-200 opacity-70" : "border-gray-100"} hover:border-amber-300 hover:shadow-md transition-all cursor-pointer`}>
-                                    <CardContent className="py-3 px-4">
-                                      <div className="flex items-center justify-between mb-1.5">
-                                        <Badge variant="outline" className={`text-xs ${isFinished ? "text-gray-400 border-gray-300" : ""}`}>
+                                  <Card className={`cursor-pointer border-transparent ring-0 hover:shadow-sm transition-all ${colorClass}`}>
+                                    <CardContent className="px-3 py-2.5">
+                                      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2.5">
+                                        <span className="min-w-0 self-start pt-0.5 text-[10px] font-medium leading-none text-gray-500 whitespace-nowrap truncate">
                                           {MATCH_TYPE_LABELS[match.matchType]} · 场地{match.courtNumber}
-                                        </Badge>
-                                        <span className={`text-xs ${statusInfo.color}`}>{statusInfo.label}</span>
+                                        </span>
+                                        <div className="flex min-h-8 self-start items-start justify-center gap-3 font-medium leading-none whitespace-nowrap">
+                                          <span className="text-[18px] leading-none">{homeGroup?.icon || "?"}</span>
+                                          {isFinished && match.games && match.games.length > 0 ? (
+                                            <span className="font-bold text-gray-700 text-[17px] tracking-tight leading-none">
+                                              {match.games.map((game) => `${game.homeScore}:${game.awayScore}`).join(" / ")}
+                                            </span>
+                                          ) : (
+                                            <span className="text-gray-400 text-[12px] font-medium tracking-[0.16em] leading-none">VS</span>
+                                          )}
+                                          <span className="text-[18px] leading-none">{awayGroup?.icon || "?"}</span>
+                                        </div>
+                                        <span className={`justify-self-end self-start pt-0.5 text-[10px] font-medium leading-none whitespace-nowrap ${statusInfo.color}`}>{statusInfo.label}</span>
                                       </div>
-                                      <div className="text-center font-medium mb-1">
-                                        {homeGroup?.icon || "?"} {homeGroup?.name}
-                                        {isFinished && match.games && match.games.length > 0 ? (
-                                          <span className="mx-2 text-sm font-bold text-gray-600">
-                                            {match.games.map((game) => `${game.homeScore}:${game.awayScore}`).join(" / ")}
-                                          </span>
-                                        ) : (
-                                          <span className="text-gray-400 mx-1">vs</span>
-                                        )}
-                                        {awayGroup?.icon || "?"} {awayGroup?.name}
-                                      </div>
-                                      <div className="flex justify-between text-center">
-                                        <span className="text-[10px] text-gray-500 flex-1">
+                                      <div className="mt-1.5 grid grid-cols-2 gap-1.5 text-center">
+                                        <span className="text-[10px] text-gray-500 min-w-0 squircle-xs bg-white/36 px-2 py-1.5 leading-[1.45]">
                                           {formatPlayer(match.homePlayer1Id)} + {formatPlayer(match.homePlayer2Id)}
                                         </span>
-                                        <span className="text-[10px] text-gray-500 flex-1">
+                                        <span className="text-[10px] text-gray-500 min-w-0 squircle-xs bg-white/36 px-2 py-1.5 leading-[1.45]">
                                           {formatPlayer(match.awayPlayer1Id)} + {formatPlayer(match.awayPlayer2Id)}
                                         </span>
                                       </div>
