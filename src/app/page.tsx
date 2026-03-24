@@ -86,7 +86,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <Link href="/guide">
-              <Button size="lg" variant="outline" className="border-2 border-white/50 bg-transparent text-white hover:bg-white/15 hover:text-white font-bold h-12 px-6 backdrop-blur-sm gap-2">
+              <Button size="lg" className="bg-orange-400 text-white hover:bg-orange-500 font-extrabold shadow-lg shadow-black/10 h-12 px-6 gap-2">
                 <Info className="w-4 h-4" />
                 赛事介绍
               </Button>

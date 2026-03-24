@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,80 +20,167 @@ import {
   MapPin,
   Clock,
   Users,
-  Medal,
-  Gift,
   Heart,
   Star,
   Swords,
   Info,
+  ExternalLink,
+  Navigation,
+  Copy,
+  Check,
 } from "lucide-react";
 import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
 
-/* ─── Shared sub-components ─── */
+/* ─── Constants ─── */
 
-function SectionTitle({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+const VENUE_NAME = "横浜市中スポーツセンター";
+const VENUE_ADDRESS = "〒231-0801 神奈川県横浜市中区新山下３丁目１５−４";
+const VENUE_MAP_URL = "https://maps.app.goo.gl/htG9mnukuM19Rbje7";
+const VENUE_EMBED_URL =
+  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3250.763169474074!2d139.65905507622304!3d35.43589634341119!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60185d3b3ddcec75%3A0xa4faa20ce7049b75!2z5qiq5rWc5biC5Lit44K544Od44O844OE44K744Oz44K_44O8!5e0!3m2!1sja!2sjp!4v1774331877827!5m2!1sja!2sjp";
+
+/* ─── Sub-components ─── */
+
+function SectionDivider({
+  number,
+  title,
+  icon: Icon,
+}: {
+  number: string;
+  title: string;
+  icon: React.ElementType;
+}) {
   return (
-    <h2 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
-      <Icon className="w-5 h-5 text-green-600" />
-      {title}
-    </h2>
+    <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-green-600 text-white text-xs font-bold shadow-sm">
+        {number}
+      </div>
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4 text-green-600" />
+        <h2 className="text-base font-bold text-gray-800 tracking-tight">
+          {title}
+        </h2>
+      </div>
+      <div className="flex-1 h-px bg-gradient-to-r from-green-200 to-transparent" />
+    </div>
   );
 }
 
-function StepNumber({ n }: { n: number }) {
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [text]);
+
   return (
-    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-400 text-white font-bold text-sm flex items-center justify-center shadow-sm">
-      {n}
+    <button
+      onClick={handleCopy}
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all duration-200 ${
+        copied
+          ? "bg-green-100 text-green-700 border border-green-200"
+          : "bg-gray-50 text-gray-400 border border-gray-150 hover:bg-gray-100 hover:text-gray-600"
+      }`}
+      title={`复制${label}`}
+    >
+      {copied ? (
+        <>
+          <Check className="w-3 h-3" />
+          已复制
+        </>
+      ) : (
+        <>
+          <Copy className="w-3 h-3" />
+          复制
+        </>
+      )}
+    </button>
+  );
+}
+
+function StatBlock({
+  value,
+  label,
+  icon,
+}: {
+  value: string;
+  label: string;
+  icon: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-0.5 px-3 py-2">
+      <span className="text-base">{icon}</span>
+      <span className="text-lg font-bold text-gray-800 leading-none">
+        {value}
+      </span>
+      <span className="text-[11px] text-gray-400 font-medium">{label}</span>
+    </div>
+  );
+}
+
+function StepItem({
+  n,
+  title,
+  subtitle,
+  children,
+  isLast = false,
+}: {
+  n: number;
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+  isLast?: boolean;
+}) {
+  return (
+    <div className="relative flex gap-4">
+      {/* Timeline */}
+      <div className="flex flex-col items-center">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-400 text-white font-bold text-sm flex items-center justify-center shadow-sm">
+          {n}
+        </div>
+        {!isLast && (
+          <div className="w-px flex-1 bg-gradient-to-b from-green-200 to-transparent mt-2" />
+        )}
+      </div>
+      {/* Content */}
+      <div className="flex-1 pb-6">
+        <div className="font-bold text-gray-800 text-sm">{title}</div>
+        <div className="text-xs text-gray-400 mb-2">{subtitle}</div>
+        {children}
+      </div>
     </div>
   );
 }
 
 function QAItem({ q, a }: { q: string; a: string }) {
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-start gap-2">
-        <span className="text-green-600 font-bold text-sm mt-0.5">Q</span>
-        <span className="text-sm font-medium text-gray-800">{q}</span>
+    <div className="py-3 first:pt-0 last:pb-0">
+      <div className="flex items-start gap-2 mb-1.5">
+        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 text-green-700 text-[11px] font-bold flex items-center justify-center mt-0.5">
+          Q
+        </span>
+        <span className="text-sm font-medium text-gray-800 leading-snug">
+          {q}
+        </span>
       </div>
-      <div className="flex items-start gap-2">
-        <span className="text-blue-500 font-bold text-sm mt-0.5">A</span>
+      <div className="flex items-start gap-2 ml-7">
         <span className="text-xs text-gray-500 leading-relaxed">{a}</span>
-      </div>
-    </div>
-  );
-}
-
-function InfoRow({ icon: Icon, label, value, iconColor = "text-green-500" }: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  iconColor?: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconColor}`} />
-      <div>
-        <div className="text-xs text-gray-400">{label}</div>
-        <div className="text-sm font-medium text-gray-700">{value}</div>
-      </div>
-    </div>
-  );
-}
-
-function PrizeCard({ rank, title, desc, gradient, emoji }: {
-  rank: string;
-  title: string;
-  desc: string;
-  gradient: string;
-  emoji: string;
-}) {
-  return (
-    <div className={`rounded-xl p-4 ${gradient} relative overflow-hidden`}>
-      <div className="absolute top-2 right-3 text-3xl opacity-30">{emoji}</div>
-      <div className="relative z-10">
-        <div className="text-xs font-bold text-white/80 mb-0.5">{rank}</div>
-        <div className="text-base font-bold text-white mb-1">{title}</div>
-        <div className="text-xs text-white/70 leading-relaxed">{desc}</div>
       </div>
     </div>
   );
@@ -102,367 +190,500 @@ function PrizeCard({ rank, title, desc, gradient, emoji }: {
 
 export default function GuidePage() {
   return (
-    <div className="space-y-10 pb-8">
+    <div className="pb-10">
       {/* Header */}
-      <div>
-        <Link href="/" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-green-600 transition-colors mb-4">
+      <div className="mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-green-600 transition-colors mb-5"
+        >
           <ArrowLeft className="w-4 h-4" />
           返回首页
         </Link>
-        <div className="flex items-center gap-3 mb-3">
-          <Info className="w-7 h-7 text-green-600" />
-          <h1 className="text-2xl font-bold text-gray-800">赛事介绍</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center shadow-md">
+            <Info className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-800 tracking-tight">
+              赛事介绍
+            </h1>
+            <p className="text-xs text-gray-400">
+              赛制 · 规则 · 奖品 · 系统使用说明
+            </p>
+          </div>
         </div>
-        <p className="text-sm text-gray-500 leading-relaxed">
-          了解本次比赛的赛制规则、奖品设置和赞助信息，以及如何使用 ShuttleArena 系统。
-        </p>
       </div>
 
-      {/* ════════════════════════════════════════════ */}
-      {/* Section 1: 比赛说明 */}
-      {/* ════════════════════════════════════════════ */}
-      <section>
-        <SectionTitle icon={ShuttlecockIcon} title="比赛说明" />
-        <p className="text-xs text-gray-400 mb-4">本次羽毛球团体循环赛的基本信息</p>
+      {/* ═══ Section 1: 比赛说明 ═══ */}
+      <section className="mb-10">
+        <SectionDivider number="01" title="比赛说明" icon={ShuttlecockIcon} />
 
-        {/* Overview card */}
-        <Card className="border-green-100 bg-gradient-to-br from-green-50/60 to-white mb-4">
-          <CardContent className="py-5 px-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <InfoRow icon={CalendarDays} label="比赛日期" value="待定（以实际通知为准）" />
-            <InfoRow icon={Clock} label="比赛时间" value="09:00 — 19:00" />
-            <InfoRow icon={MapPin} label="比赛场地" value="待定（以实际通知为准）" iconColor="text-red-400" />
-            <InfoRow icon={Users} label="参赛规模" value="每队 5 人（3 男 2 女），多队循环" iconColor="text-blue-500" />
+        {/* Desktop: 2-column / Mobile: stacked */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          {/* Left: Date/Time/Scale */}
+          <Card className="border-green-100/80 shadow-sm">
+            <CardContent className="p-0">
+              {/* Date highlight strip */}
+              <div className="bg-gradient-to-r from-green-600 to-emerald-500 rounded-t-xl px-5 py-3">
+                <div className="flex items-center gap-2 text-white/80 text-xs font-medium mb-0.5">
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  比赛日期
+                </div>
+                <div className="text-white font-bold text-lg tracking-tight">
+                  2026 年 3 月 29 日
+                  <span className="text-white/70 font-medium text-sm ml-1.5">
+                    星期日
+                  </span>
+                </div>
+              </div>
+              <div className="px-5 py-4 space-y-3.5">
+                <div className="flex items-start gap-3">
+                  <Clock className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-xs text-gray-400">比赛时间</div>
+                    <div className="text-sm font-semibold text-gray-700">
+                      11:00 — 19:00
+                    </div>
+                    <div className="text-[11px] text-gray-400">
+                      前 30 分钟热身
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Users className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-xs text-gray-400">参赛规模</div>
+                    <div className="text-sm font-semibold text-gray-700">
+                      6 组 × 5 人（3 男 2 女）
+                    </div>
+                    <div className="text-[11px] text-gray-400">共 30 人</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right: Venue + Map */}
+          <Card className="border-green-100/80 shadow-sm">
+            <CardContent className="p-0">
+              {/* Map */}
+              <div className="rounded-t-xl overflow-hidden">
+                <iframe
+                  src={VENUE_EMBED_URL}
+                  className="w-full h-40 lg:h-44"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="比赛场地地图"
+                />
+              </div>
+              <div className="px-5 py-4">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-gray-700">
+                          {VENUE_NAME}
+                        </span>
+                        <CopyButton text={VENUE_NAME} label="场馆名称" />
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        二楼 第二体育室（电梯 / 楼梯上楼后右手边）
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-gray-400 break-all">
+                        {VENUE_ADDRESS}
+                      </span>
+                      <CopyButton text={VENUE_ADDRESS} label="地址" />
+                    </div>
+                    <a
+                      href={VENUE_MAP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors mt-1"
+                    >
+                      <Navigation className="w-3 h-3" />
+                      在地图中打开导航
+                      <ExternalLink className="w-3 h-3 opacity-40" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Stat bar */}
+        <Card className="border-gray-100 shadow-sm mb-4">
+          <CardContent className="py-0 px-0">
+            <div className="flex items-center justify-around divide-x divide-gray-100">
+              <StatBlock value="10" label="每人出场" icon="👤" />
+              <StatBlock value="75" label="总比赛数" icon="🏸" />
+              <StatBlock value="3" label="比赛场地" icon="🏟️" />
+            </div>
           </CardContent>
         </Card>
 
-        {/* Format details */}
-        <Card className="border-gray-100">
-          <CardContent className="py-4 px-5 space-y-4">
-            <div>
-              <div className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                <Swords className="w-4 h-4 text-green-500" />
-                赛制说明
-              </div>
-              <div className="space-y-2 text-xs text-gray-500 leading-relaxed ml-6">
-                <p>
-                  采用<span className="font-semibold text-gray-700">团体循环赛</span>赛制，所有队伍两两对阵，不设淘汰。
-                  每支队伍由 <span className="font-semibold text-gray-700">3 名男选手</span>和 <span className="font-semibold text-gray-700">2 名女选手</span>组成。
-                </p>
-                <p>
-                  每轮对阵包含 <span className="font-semibold text-gray-700">5 场双打</span>比赛：
-                </p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {[
-                    { label: "男双", count: 2, color: "bg-blue-50 text-blue-700 border-blue-200" },
-                    { label: "女双", count: 1, color: "bg-pink-50 text-pink-700 border-pink-200" },
-                    { label: "混双", count: 2, color: "bg-purple-50 text-purple-700 border-purple-200" },
-                  ].map((item) => (
-                    <span key={item.label} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${item.color}`}>
-                      {item.label} ×{item.count}
+        {/* Format + Rules — Desktop: 2 cols / Mobile: stacked */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left: 赛制 + 分组 */}
+          <Card className="border-gray-100 shadow-sm">
+            <CardContent className="py-4 px-5 space-y-4">
+              <div>
+                <div className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <Swords className="w-4 h-4 text-green-500" />
+                  赛制说明
+                </div>
+                <div className="space-y-2 text-xs text-gray-500 leading-relaxed">
+                  <p>
+                    采用
+                    <span className="font-semibold text-gray-700">
+                      团体循环赛
                     </span>
-                  ))}
+                    赛制，所有队伍两两对阵，不设淘汰。每支队伍由{" "}
+                    <span className="font-semibold text-gray-700">
+                      3 名男选手
+                    </span>
+                    和{" "}
+                    <span className="font-semibold text-gray-700">
+                      2 名女选手
+                    </span>
+                    组成。
+                  </p>
+                  <p>
+                    每轮对阵包含{" "}
+                    <span className="font-semibold text-gray-700">
+                      5 场双打
+                    </span>
+                    ：
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {[
+                      {
+                        label: "男双",
+                        count: 2,
+                        color: "bg-blue-50 text-blue-700 border-blue-200",
+                      },
+                      {
+                        label: "女双",
+                        count: 1,
+                        color: "bg-pink-50 text-pink-700 border-pink-200",
+                      },
+                      {
+                        label: "混双",
+                        count: 2,
+                        color: "bg-purple-50 text-purple-700 border-purple-200",
+                      },
+                    ].map((item) => (
+                      <span
+                        key={item.label}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${item.color}`}
+                      >
+                        {item.label} ×{item.count}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <hr className="border-gray-100" />
+              <hr className="border-gray-100" />
 
-            <div>
-              <div className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+              <div>
+                <div className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-green-500" />
+                  分组与抽签
+                </div>
+                <div className="space-y-1 text-xs text-gray-500 leading-relaxed">
+                  <p>
+                    赛前通过
+                    <span className="font-semibold text-gray-700">
+                      随机抽签
+                    </span>
+                    决定各选手所在的队伍。
+                  </p>
+                  <p>
+                    抽签前，每位选手只有代号编号（如「男 1」「女
+                    2」），抽签后方公布真实姓名和队伍归属。
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right: 计分规则 */}
+          <Card className="border-gray-100 shadow-sm">
+            <CardContent className="py-4 px-5">
+              <div className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                 <Star className="w-4 h-4 text-amber-500" />
                 计分规则
               </div>
-              <div className="space-y-1.5 text-xs text-gray-500 leading-relaxed ml-6">
-                <p>每场比赛采用 <span className="font-semibold text-gray-700">一局 21 分制</span>（可根据实际设置调整）。</p>
-                <p>团体对阵中，每场双打的胜者为该队赢得 1 分。最终以团体总积分排名。</p>
-                <p>积分相同时，依次比较：<span className="font-semibold text-gray-700">净胜场 → 净胜分</span>。</p>
-              </div>
-            </div>
+              <div className="space-y-3 text-xs text-gray-500 leading-relaxed">
+                <div className="p-3 rounded-lg bg-amber-50/60 border border-amber-100">
+                  <div className="text-xs font-semibold text-amber-800 mb-1">
+                    单场计分
+                  </div>
+                  <p className="text-amber-700/80">
+                    每场比赛采用{" "}
+                    <span className="font-bold text-amber-800">
+                      一局 21 分制
+                    </span>
+                    ，先到 21 分获胜，
+                    <span className="font-bold text-amber-800">不追分</span>。
+                  </p>
+                </div>
 
-            <hr className="border-gray-100" />
-
-            <div>
-              <div className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                <Users className="w-4 h-4 text-green-500" />
-                分组与抽签
-              </div>
-              <div className="space-y-1.5 text-xs text-gray-500 leading-relaxed ml-6">
-                <p>赛前通过<span className="font-semibold text-gray-700">随机抽签</span>决定各选手所在的队伍。</p>
-                <p>抽签前，每位选手只有代号编号（如「男 1」「女 2」），抽签后方公布真实姓名和队伍归属。</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* ════════════════════════════════════════════ */}
-      {/* Section 2: 奖品设置 */}
-      {/* ════════════════════════════════════════════ */}
-      <section>
-        <SectionTitle icon={Trophy} title="奖品设置" />
-        <p className="text-xs text-gray-400 mb-4">为优秀团队和个人准备的奖励</p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          <PrizeCard
-            rank="冠军"
-            title="待公布"
-            desc="团体积分第一名"
-            gradient="bg-gradient-to-br from-amber-500 to-yellow-400"
-            emoji="🏆"
-          />
-          <PrizeCard
-            rank="亚军"
-            title="待公布"
-            desc="团体积分第二名"
-            gradient="bg-gradient-to-br from-gray-400 to-gray-300"
-            emoji="🥈"
-          />
-          <PrizeCard
-            rank="季军"
-            title="待公布"
-            desc="团体积分第三名"
-            gradient="bg-gradient-to-br from-amber-700 to-amber-600"
-            emoji="🥉"
-          />
-        </div>
-
-        <Card className="border-gray-100">
-          <CardContent className="py-4 px-5">
-            <div className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-              <Medal className="w-4 h-4 text-purple-500" />
-              个人单项奖
-            </div>
-            <div className="space-y-2.5 ml-6">
-              {[
-                { title: "最佳男选手", desc: "男选手中个人胜率最高者", icon: "🏸" },
-                { title: "最佳女选手", desc: "女选手中个人胜率最高者", icon: "🏸" },
-                { title: "最佳搭档", desc: "所有双打组合中胜率最高的一对", icon: "🤝" },
-              ].map((award) => (
-                <div key={award.title} className="flex items-start gap-2.5">
-                  <span className="text-base mt-0.5">{award.icon}</span>
-                  <div>
-                    <div className="text-sm font-medium text-gray-700">{award.title}</div>
-                    <div className="text-xs text-gray-400">{award.desc}</div>
+                <div className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+                  <div className="text-xs font-semibold text-gray-700 mb-2">
+                    团体积分
+                  </div>
+                  <p className="text-gray-500 mb-2">
+                    大比分（5 局中的胜场数）多的一方为团体赛胜者：
+                  </p>
+                  <div className="flex gap-2">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                      胜 → +3 分
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200">
+                      负 → +0 分
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="mt-3 border-dashed border-green-200 bg-gradient-to-br from-green-50/50 to-white">
-          <CardContent className="py-3 px-5">
-            <div className="flex items-start gap-2">
-              <Gift className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-              <div className="text-xs text-gray-500 leading-relaxed">
-                <span className="font-medium text-green-700">参与奖：</span>
-                所有参赛选手均可获得参与纪念奖品。重在参与，享受比赛！
+                <div className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+                  <div className="text-xs font-semibold text-gray-700 mb-1">
+                    同分排序
+                  </div>
+                  <p className="text-gray-500">
+                    积分相同时依次比较：
+                    <span className="font-semibold text-gray-700">
+                      净胜场 → 净胜分
+                    </span>
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </section>
 
-      {/* ════════════════════════════════════════════ */}
-      {/* Section 3: 赞助商 */}
-      {/* ════════════════════════════════════════════ */}
-      <section>
-        <SectionTitle icon={Heart} title="赞助支持" />
-        <p className="text-xs text-gray-400 mb-4">感谢以下赞助商的大力支持</p>
+      {/* ═══ Section 2: 奖品设置 ═══ */}
+      <section className="mb-10">
+        <SectionDivider number="02" title="奖品设置" icon={Trophy} />
 
-        <Card className="border-gray-100">
-          <CardContent className="py-6 px-5">
-            <div className="text-center text-sm text-gray-400 py-4">
-              <Heart className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-              <p className="font-medium text-gray-500 mb-1">赞助商信息即将公布</p>
-              <p className="text-xs text-gray-400">
-                如果您有意赞助本次赛事，欢迎联系赛事组织者
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* ════════════════════════════════════════════ */}
-      {/* Section 4: 使用说明（原有内容） */}
-      {/* ════════════════════════════════════════════ */}
-      <section>
-        <SectionTitle icon={BookOpen} title="系统使用说明" />
-        <p className="text-xs text-gray-400 mb-4">作为运动员如何使用 ShuttleArena 系统</p>
-
-        <div className="space-y-6">
-          {/* Step 1 — Schedule */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <StepNumber n={1} />
-              <div>
-                <div className="font-bold text-gray-800">赛程页面</div>
-                <div className="text-xs text-gray-400">查看所有比赛的时间和对阵安排</div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
+          {[
+            {
+              rank: "冠军",
+              desc: "第一名",
+              gradient:
+                "bg-gradient-to-br from-amber-500 to-yellow-400",
+              emoji: "🏆",
+            },
+            {
+              rank: "亚军",
+              desc: "第二名",
+              gradient: "bg-gradient-to-br from-gray-400 to-gray-300",
+              emoji: "🥈",
+            },
+            {
+              rank: "季军",
+              desc: "第三名",
+              gradient:
+                "bg-gradient-to-br from-amber-700 to-amber-600",
+              emoji: "🥉",
+            },
+          ].map((prize) => (
+            <div
+              key={prize.rank}
+              className={`rounded-xl p-3 sm:p-4 ${prize.gradient} relative overflow-hidden`}
+            >
+              <div className="absolute top-1 right-2 text-2xl sm:text-3xl opacity-25">
+                {prize.emoji}
+              </div>
+              <div className="relative z-10">
+                <div className="text-[11px] font-bold text-white/70">
+                  {prize.rank}
+                </div>
+                <div className="text-sm sm:text-base font-bold text-white mt-0.5">
+                  待公布
+                </div>
+                <div className="text-[10px] sm:text-[11px] text-white/60 mt-0.5">
+                  {prize.desc}
+                </div>
               </div>
             </div>
-            <Card className="ml-11 border-gray-100">
-              <CardContent className="py-3 px-4 space-y-2.5">
-                <div className="flex items-start gap-2.5 text-sm">
-                  <Grid3X3 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600 text-xs leading-relaxed">
-                    <span className="font-medium text-gray-700">矩阵视图</span> — 按场地×轮次的表格，快速定位你的比赛在哪个场地
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5 text-sm">
-                  <LayoutList className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600 text-xs leading-relaxed">
-                    <span className="font-medium text-gray-700">列表视图</span> — 展开每场比赛的详细信息，包括队伍、选手和比分
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="ml-11 border-green-100 bg-gradient-to-br from-green-50/50 to-white">
-              <CardContent className="py-2.5 px-4">
-                <div className="text-xs text-gray-500 leading-relaxed">
-                  <span className="font-medium text-green-700">提示：</span>登录后，你参与的比赛会以黄色高亮显示，方便快速找到
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          ))}
+        </div>
 
-          <div className="ml-4 border-l-2 border-dashed border-green-200 h-4" />
-
-          {/* Step 2 — Standings */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <StepNumber n={2} />
-              <div>
-                <div className="font-bold text-gray-800">排名 & 统计页面</div>
-                <div className="text-xs text-gray-400">查看积分排名和各维度数据</div>
-              </div>
-            </div>
-            <Card className="ml-11 border-gray-100">
-              <CardContent className="py-3 px-4 space-y-2.5">
-                <div className="flex items-start gap-2.5 text-sm">
-                  <Trophy className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600 text-xs leading-relaxed">
-                    <span className="font-medium text-gray-700">团体排名</span> — 各队伍的积分、胜场和净胜分
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5 text-sm">
-                  <BarChart3 className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600 text-xs leading-relaxed">
-                    <span className="font-medium text-gray-700">组合统计</span> — 每对搭档的胜率和得分数据
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5 text-sm">
-                  <BarChart3 className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600 text-xs leading-relaxed">
-                    <span className="font-medium text-gray-700">个人统计</span> — 你的个人胜率、参赛次数等数据
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="ml-4 border-l-2 border-dashed border-green-200 h-4" />
-
-          {/* Step 3 — My Matches */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <StepNumber n={3} />
-              <div>
-                <div className="font-bold text-gray-800">我的比赛</div>
-                <div className="text-xs text-gray-400">快速查看与你相关的比赛</div>
-              </div>
-            </div>
-            <Card className="ml-11 border-gray-100">
-              <CardContent className="py-3 px-4 space-y-2.5">
-                <div className="flex items-start gap-2.5 text-sm">
-                  <UserCheck className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600 text-xs leading-relaxed">
-                    注册账号并由管理员绑定后，你可以在这里只看自己的比赛，按状态分类显示（待开始 / 进行中 / 已结束）
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="ml-4 border-l-2 border-dashed border-green-200 h-4" />
-
-          {/* Step 4 — Scoring */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <StepNumber n={4} />
-              <div>
-                <div className="font-bold text-gray-800">在线记分</div>
-                <div className="text-xs text-gray-400">在比赛进行中实时记录比分</div>
-              </div>
-            </div>
-            <Card className="ml-11 border-gray-100">
-              <CardContent className="py-3 px-4">
-                <div className="flex items-start gap-2.5 text-sm">
-                  <PenLine className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600 text-xs leading-relaxed">
-                    在赛程中点击你的比赛，进入记分页面。每得一分点击 <span className="font-medium text-blue-600">+1</span>，支持撤销。比分实时同步，所有人都能看到
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
+          <span className="text-base">🎖️</span>
+          <div className="text-sm text-gray-600">
+            <span className="font-medium text-gray-700">第 4 — 6 名</span>
+            <span className="text-gray-400 ml-2">奖品待公布</span>
           </div>
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════ */}
-      {/* Section 5: 小贴士 */}
-      {/* ════════════════════════════════════════════ */}
-      <section>
-        <SectionTitle icon={Lightbulb} title="小贴士" />
-        <div className="space-y-2.5 mt-3">
+      {/* ═══ Section 3: 赞助支持 ═══ */}
+      <section className="mb-10">
+        <SectionDivider number="03" title="赞助支持" icon={Heart} />
+        <div className="text-center py-8 px-4 rounded-xl border border-dashed border-gray-200 bg-gray-50/50">
+          <Heart className="w-7 h-7 text-gray-200 mx-auto mb-2" />
+          <p className="text-sm font-medium text-gray-400 mb-1">
+            赞助商信息即将公布
+          </p>
+          <p className="text-xs text-gray-300">
+            如果您有意赞助本次赛事，欢迎联系赛事组织者
+          </p>
+        </div>
+      </section>
+
+      {/* ═══ Section 4: 系统使用说明 ═══ */}
+      <section className="mb-10">
+        <SectionDivider number="04" title="系统使用说明" icon={BookOpen} />
+
+        <Card className="border-gray-100 shadow-sm">
+          <CardContent className="py-5 px-5">
+            <StepItem n={1} title="赛程页面" subtitle="查看比赛时间和对阵安排">
+              <div className="space-y-1.5">
+                <div className="flex items-start gap-2 text-xs text-gray-500">
+                  <Grid3X3 className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <span className="font-medium text-gray-700">矩阵视图</span>{" "}
+                    — 按场地×轮次表格，快速定位比赛场地
+                  </span>
+                </div>
+                <div className="flex items-start gap-2 text-xs text-gray-500">
+                  <LayoutList className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <span className="font-medium text-gray-700">列表视图</span>{" "}
+                    — 展开每场比赛详细信息
+                  </span>
+                </div>
+                <div className="text-[11px] text-green-600 bg-green-50 rounded-md px-2.5 py-1.5 mt-2">
+                  💡 登录后，你参与的比赛会以黄色高亮显示
+                </div>
+              </div>
+            </StepItem>
+
+            <StepItem
+              n={2}
+              title="排名 & 统计"
+              subtitle="查看积分排名和各维度数据"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-start gap-2 text-xs text-gray-500">
+                  <Trophy className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <span className="font-medium text-gray-700">团体排名</span>{" "}
+                    — 积分、胜场和净胜分
+                  </span>
+                </div>
+                <div className="flex items-start gap-2 text-xs text-gray-500">
+                  <BarChart3 className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <span className="font-medium text-gray-700">
+                      组合 & 个人统计
+                    </span>{" "}
+                    — 搭档胜率和个人数据
+                  </span>
+                </div>
+              </div>
+            </StepItem>
+
+            <StepItem
+              n={3}
+              title="我的比赛"
+              subtitle="快速查看与你相关的场次"
+            >
+              <div className="flex items-start gap-2 text-xs text-gray-500">
+                <UserCheck className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>
+                  注册账号并由管理员绑定后，按状态分类显示你的比赛
+                </span>
+              </div>
+            </StepItem>
+
+            <StepItem
+              n={4}
+              title="在线记分"
+              subtitle="实时记录比分"
+              isLast
+            >
+              <div className="flex items-start gap-2 text-xs text-gray-500">
+                <PenLine className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                <span>
+                  点击比赛进入记分页面，每得一分点
+                  <span className="font-medium text-blue-600"> +1 </span>
+                  ，支持撤销，比分实时同步
+                </span>
+              </div>
+            </StepItem>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* ═══ Section 5: 小贴士 ═══ */}
+      <section className="mb-10">
+        <SectionDivider number="05" title="小贴士" icon={Lightbulb} />
+        <div className="space-y-2">
           {[
             "无需注册即可查看赛程和排名，把网址分享给队友就能一起看",
             "注册账号并绑定后，可以在「我的比赛」中快速找到自己的场次",
             "赛程页面支持「矩阵」和「列表」两种视图，可按喜好切换",
           ].map((tip, i) => (
-            <div key={i} className="flex items-start gap-2.5 text-sm">
-              <ChevronRight className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-600 text-xs leading-relaxed">{tip}</span>
+            <div
+              key={i}
+              className="flex items-start gap-2.5 px-4 py-2.5 rounded-lg bg-green-50/50 border border-green-100/60"
+            >
+              <ChevronRight className="w-3.5 h-3.5 text-green-400 mt-0.5 flex-shrink-0" />
+              <span className="text-xs text-gray-600 leading-relaxed">
+                {tip}
+              </span>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════ */}
-      {/* Section 6: 常见问题 */}
-      {/* ════════════════════════════════════════════ */}
-      <section>
-        <SectionTitle icon={MessageCircleQuestion} title="常见问题" />
-        <div className="space-y-5 mt-4">
-          <QAItem
-            q="不注册也能用吗？"
-            a="可以。查看赛程和排名不需要登录。但如果你想使用「我的比赛」功能，需要注册一个账号并让管理员帮你绑定。"
-          />
-          <hr className="border-gray-100" />
-          <QAItem
-            q="我注册了账号，但看不到「我的比赛」？"
-            a="你需要让赛事管理员在后台将你的账号绑定到对应的运动员位置上。绑定完成后就能看到了。"
-          />
-          <hr className="border-gray-100" />
-          <QAItem
-            q="比赛记分是管理员录入还是我自己来？"
-            a="都可以。管理员可以统一录入比分，运动员也可以自己在比赛时通过手机点击 +1 实时记分，看你们赛事的安排。"
-          />
-          <hr className="border-gray-100" />
-          <QAItem
-            q="我的比分录错了怎么办？"
-            a="记分过程中可以随时点击撤销。如果比赛已结束且提交了，可以联系管理员修改。"
-          />
-          <hr className="border-gray-100" />
-          <QAItem
-            q="怎么知道我下一场比赛什么时候打？"
-            a="在赛程页面登录后，你的比赛会以黄色高亮显示。也可以在「我的比赛」页面查看待开始的场次。"
-          />
-          <hr className="border-gray-100" />
-          <QAItem
-            q="可以在电脑上用吗？"
-            a="可以。本系统支持手机和电脑浏览器访问，在电脑上显示效果也很好。"
-          />
-        </div>
+      {/* ═══ Section 6: 常见问题 ═══ */}
+      <section className="mb-8">
+        <SectionDivider
+          number="06"
+          title="常见问题"
+          icon={MessageCircleQuestion}
+        />
+        <Card className="border-gray-100 shadow-sm">
+          <CardContent className="py-4 px-5 divide-y divide-gray-100">
+            <QAItem
+              q="不注册也能用吗？"
+              a="可以。查看赛程和排名不需要登录。但如果你想使用「我的比赛」功能，需要注册一个账号并让管理员帮你绑定。"
+            />
+            <QAItem
+              q="我注册了账号，但看不到「我的比赛」？"
+              a="你需要让赛事管理员在后台将你的账号绑定到对应的运动员位置上。绑定完成后就能看到了。"
+            />
+            <QAItem
+              q="比赛记分是管理员录入还是我自己来？"
+              a="都可以。管理员可以统一录入比分，运动员也可以自己在比赛时通过手机点击 +1 实时记分。"
+            />
+            <QAItem
+              q="我的比分录错了怎么办？"
+              a="记分过程中可以随时点击撤销。如果比赛已结束且提交了，可以联系管理员修改。"
+            />
+            <QAItem
+              q="怎么知道我下一场比赛什么时候打？"
+              a="在赛程页面登录后，你的比赛会以黄色高亮显示。也可以在「我的比赛」页面查看待开始的场次。"
+            />
+            <QAItem
+              q="可以在电脑上用吗？"
+              a="可以。本系统支持手机和电脑浏览器访问，在电脑上显示效果也很好。"
+            />
+          </CardContent>
+        </Card>
       </section>
 
       {/* CTA */}
