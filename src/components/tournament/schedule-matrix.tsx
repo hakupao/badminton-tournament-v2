@@ -86,7 +86,7 @@ export function ScheduleMatrix({
                 return (
                   <tr key={roundNum} className="border-b border-gray-100 hover:bg-green-50/20 transition-colors">
                     <td className="p-3 sticky left-0 bg-white/90 backdrop-blur-sm">
-                      <div className="font-bold text-gray-700">R{roundNum}</div>
+                      <div className="font-bold text-gray-700">第{roundNum}轮</div>
                       <div className="text-xs text-gray-400 font-medium">
                         {getTimeSlot(startTime, roundIdx, roundDurationMinutes)}
                       </div>

@@ -278,7 +278,7 @@ function ScheduleContent() {
                       onClick={() => setExpandedRound(isExpanded ? null : roundNum)}
                     >
                       <div className={`p-1.5 text-[11px] font-bold text-center flex items-center justify-center ${allDone ? "text-green-600" : "text-green-700"}`}>
-                        R{roundNum}
+                        第{roundNum}轮
                       </div>
                       {Array.from({ length: maxCourt }, (_, courtIdx) => {
                         const match = roundMatches.find((m) => m.courtNumber === courtIdx + 1);
@@ -409,7 +409,7 @@ function ScheduleContent() {
 
                       return (
                         <tr key={roundNum} className="border-b border-gray-100/80 hover:bg-green-50/20">
-                          <td className="p-3 sticky left-0 bg-white z-10 font-semibold text-green-700">R{roundNum}</td>
+                          <td className="p-3 sticky left-0 bg-white z-10 font-semibold text-green-700">第{roundNum}轮</td>
                           {Array.from({ length: maxCourt }, (_, courtIdx) => {
                             const match = roundMatches.find((m) => m.courtNumber === courtIdx + 1);
                             if (!match) return <td key={courtIdx} className="p-2 text-center text-gray-300">—</td>;

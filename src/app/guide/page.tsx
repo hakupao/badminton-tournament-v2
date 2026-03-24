@@ -28,6 +28,7 @@ import {
   Navigation,
   Copy,
   Check,
+  BadgeJapaneseYen,
 } from "lucide-react";
 import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
 
@@ -124,7 +125,7 @@ function StatBlock({
   icon: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-0.5 px-3 py-2">
+    <div className="flex-1 flex flex-col items-center gap-0.5 px-3 py-2.5">
       <span className="text-base">{icon}</span>
       <span className="text-lg font-bold text-gray-800 leading-none">
         {value}
@@ -243,10 +244,10 @@ export default function GuidePage() {
                   <div>
                     <div className="text-xs text-gray-400">比赛时间</div>
                     <div className="text-sm font-semibold text-gray-700">
-                      11:00 — 19:00
+                      12:00 - 18:30
                     </div>
                     <div className="text-[11px] text-gray-400">
-                      前 30 分钟热身
+                      11:30 - 12:00 热身
                     </div>
                   </div>
                 </div>
@@ -258,6 +259,25 @@ export default function GuidePage() {
                       6 组 × 5 人（3 男 2 女）
                     </div>
                     <div className="text-[11px] text-gray-400">共 30 人</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <ShuttlecockIcon className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-xs text-gray-400">比赛用球</div>
+                    <div className="text-sm font-semibold text-gray-700">
+                      YONEX エアロセンサ500
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <BadgeJapaneseYen className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-xs text-gray-400">参赛费用</div>
+                    <div className="text-sm font-semibold text-gray-700">
+                      ¥1,500
+                      <span className="text-[11px] font-normal text-gray-400 ml-1">/ 人</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -320,7 +340,7 @@ export default function GuidePage() {
         {/* Stat bar */}
         <Card className="border-gray-100 shadow-sm mb-4">
           <CardContent className="py-0 px-0">
-            <div className="flex items-center justify-around divide-x divide-gray-100">
+            <div className="flex items-stretch divide-x divide-gray-100">
               <StatBlock value="10" label="每人出场" icon="👤" />
               <StatBlock value="75" label="总比赛数" icon="🏸" />
               <StatBlock value="3" label="比赛场地" icon="🏟️" />
@@ -478,23 +498,26 @@ export default function GuidePage() {
           {[
             {
               rank: "冠军",
-              desc: "第一名",
+              desc: "第 1 名",
               gradient:
                 "bg-gradient-to-br from-amber-500 to-yellow-400",
               emoji: "🏆",
+              prizes: ["YONEX 全尺寸毛巾", "YONEX 袜子", "YONEX 手胶"],
             },
             {
               rank: "亚军",
-              desc: "第二名",
+              desc: "第 2 名",
               gradient: "bg-gradient-to-br from-gray-400 to-gray-300",
               emoji: "🥈",
+              prizes: ["YONEX 全尺寸毛巾", "YONEX 袜子"],
             },
             {
               rank: "季军",
-              desc: "第三名",
+              desc: "第 3 名",
               gradient:
                 "bg-gradient-to-br from-amber-700 to-amber-600",
               emoji: "🥉",
+              prizes: ["YONEX 全尺寸毛巾", "YONEX 手胶"],
             },
           ].map((prize) => (
             <div
@@ -508,10 +531,17 @@ export default function GuidePage() {
                 <div className="text-[11px] font-bold text-white/70">
                   {prize.rank}
                 </div>
-                <div className="text-sm sm:text-base font-bold text-white mt-0.5">
-                  待公布
+                <div className="mt-1.5 space-y-0.5">
+                  {prize.prizes.map((item) => (
+                    <div
+                      key={item}
+                      className="text-[10px] sm:text-[11px] font-medium text-white/90 leading-snug"
+                    >
+                      {item}
+                    </div>
+                  ))}
                 </div>
-                <div className="text-[10px] sm:text-[11px] text-white/60 mt-0.5">
+                <div className="text-[10px] text-white/50 mt-1.5">
                   {prize.desc}
                 </div>
               </div>
@@ -519,11 +549,20 @@ export default function GuidePage() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
-          <span className="text-base">🎖️</span>
-          <div className="text-sm text-gray-600">
-            <span className="font-medium text-gray-700">第 4 — 6 名</span>
-            <span className="text-gray-400 ml-2">奖品待公布</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
+            <span className="text-base">🎖️</span>
+            <div className="text-sm text-gray-600">
+              <span className="font-medium text-gray-700">第 4 — 6 名</span>
+              <span className="text-gray-400 ml-2">Victor 袜子 + YONEX 手胶</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
+            <span className="text-base">🎁</span>
+            <div className="text-sm text-gray-600">
+              <span className="font-medium text-gray-700">参与奖</span>
+              <span className="text-gray-400 ml-2">紙おしぼり アロマプレミアム</span>
+            </div>
           </div>
         </div>
       </section>
@@ -531,14 +570,58 @@ export default function GuidePage() {
       {/* ═══ Section 3: 赞助支持 ═══ */}
       <section className="mb-10">
         <SectionDivider number="03" title="赞助支持" icon={Heart} />
-        <div className="text-center py-8 px-4 rounded-xl border border-dashed border-gray-200 bg-gray-50/50">
-          <Heart className="w-7 h-7 text-gray-200 mx-auto mb-2" />
-          <p className="text-sm font-medium text-gray-400 mb-1">
-            赞助商信息即将公布
-          </p>
-          <p className="text-xs text-gray-300">
-            如果您有意赞助本次赛事，欢迎联系赛事组织者
-          </p>
+
+        {/* Sponsor card — understated community style */}
+        <div className="relative rounded-2xl overflow-hidden bg-[#fafaf9] border border-gray-100/80">
+          {/* SVG defs for squircle clip */}
+          <svg className="absolute" width="0" height="0" aria-hidden="true">
+            <defs>
+              <clipPath id="squircle-clip" clipPathUnits="objectBoundingBox">
+                <path d="M 0.5,0 C 0.83,0 1,0.17 1,0.5 C 1,0.83 0.83,1 0.5,1 C 0.17,1 0,0.83 0,0.5 C 0,0.17 0.17,0 0.5,0 Z" />
+              </clipPath>
+            </defs>
+          </svg>
+
+          <div className="px-5 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5">
+            {/* Club name — primary identity */}
+            <div className="flex items-center gap-2 mb-4">
+              <ShuttlecockIcon className="w-3.5 h-3.5 text-green-600/70" />
+              <span className="text-[13px] sm:text-sm font-semibold text-gray-700 tracking-tight">
+                華為技術 羽毛球俱乐部
+              </span>
+            </div>
+
+            {/* Person row */}
+            <div className="flex items-center gap-3.5">
+              {/* Superellipse avatar */}
+              <div
+                className="flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 overflow-hidden bg-gray-200"
+                style={{ clipPath: "url(#squircle-clip)" }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/sponsor-avatar.jpg"
+                  alt="小吴会长"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-gray-700 leading-tight">
+                  小吴会长
+                </div>
+                <div className="text-[11px] text-gray-400 mt-0.5">
+                  赞助全部比赛用球以及奖品
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="px-5 py-2.5 sm:px-6 border-t border-gray-100/60 bg-[#f7f7f5]">
+            <p className="text-[10px] text-gray-300 tracking-[0.02em]">
+              感谢对赛事的大力支持
+            </p>
+          </div>
         </div>
       </section>
 

@@ -510,7 +510,7 @@ export default function AdminScoringPage() {
               {/* Match Info */}
               <div className="text-center">
                 <Badge variant="outline" className="mb-2">
-                  R{scoringMatch.roundNumber} · 场地{scoringMatch.courtNumber} ·{" "}
+                  第{scoringMatch.roundNumber}轮 · 场地{scoringMatch.courtNumber} ·{" "}
                   {MATCH_TYPE_LABELS[scoringMatch.matchType]}
                 </Badge>
                 <div className="flex items-center justify-center gap-3 mt-2 text-lg font-semibold">

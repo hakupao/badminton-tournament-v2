@@ -321,7 +321,7 @@ export default function ScoringPage() {
       {/* Match Info */}
       <div className="text-center">
         <Badge variant="outline" className="mb-2">
-          R{match.roundNumber} · 场地{match.courtNumber} · {MATCH_TYPE_LABELS[match.matchType]}
+          第{match.roundNumber}轮 · 场地{match.courtNumber} · {MATCH_TYPE_LABELS[match.matchType]}
         </Badge>
         {isAdmin && (
           <Badge className="ml-2 bg-amber-100 text-amber-700 text-xs">管理员模式</Badge>

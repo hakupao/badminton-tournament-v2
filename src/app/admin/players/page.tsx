@@ -359,30 +359,26 @@ function PlayersContent() {
 
       {/* Sticky save bar */}
       {hasChanges && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
-          <Card className="border-green-200 shadow-xl bg-white/95 backdrop-blur-sm">
-            <CardContent className="py-3 px-6 flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                {Object.keys(nameEdits).length + Object.keys(userEdits).length} 项修改待保存
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-gray-200"
-                onClick={() => { setNameEdits({}); setUserEdits({}); }}
-              >
-                撤销
-              </Button>
-              <Button
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? "保存中..." : "保存"}
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-2rem)]">
+          <div className="flex items-center gap-2 whitespace-nowrap rounded-full border border-green-200 bg-white/95 backdrop-blur-sm shadow-xl pl-4 pr-1.5 py-1.5">
+            <span className="text-xs font-medium text-gray-600">
+              {Object.keys(nameEdits).length + Object.keys(userEdits).length} 项修改
+            </span>
+            <button
+              className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded-full transition-colors"
+              onClick={() => { setNameEdits({}); setUserEdits({}); }}
+            >
+              撤销
+            </button>
+            <Button
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white rounded-full h-7 px-4 text-xs"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "保存中..." : "保存"}
+            </Button>
+          </div>
         </div>
       )}
     </div>

@@ -198,53 +198,46 @@ export default function MyMatchesPage() {
     const result = getResult(match);
 
     return (
-      <Link key={match.id} href={`/match/${match.id}`} prefetch={false}>
-        <Card
-          className={`border shadow-sm cursor-pointer transition-all hover:shadow-md ${
+      <Link key={match.id} href={`/match/${match.id}`} prefetch={false} className="block">
+        <div
+          className={`rounded-lg border px-3.5 py-3.5 cursor-pointer transition-all hover:shadow-sm ${
             result === "win"
-              ? "border-green-200 bg-green-50/30"
+              ? "border-green-200 bg-green-50/40"
               : result === "loss"
-                ? "border-red-200 bg-red-50/30"
+                ? "border-red-200 bg-red-50/40"
                 : match.status === "in_progress"
-                  ? "border-amber-200 bg-amber-50/30"
-                  : "border-gray-100"
+                  ? "border-amber-200 bg-amber-50/40"
+                  : "border-gray-100 bg-white"
           }`}
         >
-          <CardContent className="py-3 px-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Badge className={`${MATCH_TYPE_COLORS[match.matchType]} border text-xs`}>
-                  {MATCH_TYPE_LABELS[match.matchType]}
-                </Badge>
-                <span className="text-xs text-gray-400">
-                  R{match.roundNumber} · 场地{match.courtNumber}
-                </span>
-              </div>
-              {result === "win" && (
-                <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">胜</Badge>
-              )}
-              {result === "loss" && (
-                <Badge className="bg-red-100 text-red-600 border-red-200 text-xs">负</Badge>
-              )}
-              {match.status === "in_progress" && (
-                <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">进行中</Badge>
-              )}
-              {match.status === "pending" && (
-                <Badge variant="outline" className="text-xs text-gray-400">待开始</Badge>
-              )}
-            </div>
-
-            <div className="flex items-center justify-center gap-2 text-base">
-              {homeGroup?.icon}
-              <span className="text-xs text-gray-400">vs</span>
-              {awayGroup?.icon}
-            </div>
-            <div className="flex justify-between text-xs mt-1.5">
-              <span className="text-gray-500">搭档 <span className="font-medium text-gray-700">{formatPlayerName(partner)}</span></span>
-              <span className="text-gray-500">对手 <span className="font-medium text-gray-700">{opponents.map((o) => formatPlayerName(o as PlayerInfo | undefined)).join("+")}</span></span>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Row 1: type + meta + status */}
+          <div className="flex items-center gap-2">
+            <Badge className={`${MATCH_TYPE_COLORS[match.matchType]} border text-[10px] px-1.5 py-0`}>
+              {MATCH_TYPE_LABELS[match.matchType]}
+            </Badge>
+            <span className="text-[11px] text-gray-400">
+              第{match.roundNumber}轮 · 场地{match.courtNumber}
+            </span>
+            <span className="ml-auto text-[11px] font-medium">
+              {result === "win" && <span className="text-green-600">胜</span>}
+              {result === "loss" && <span className="text-red-500">负</span>}
+              {match.status === "in_progress" && <span className="text-amber-600">进行中</span>}
+              {match.status === "pending" && <span className="text-gray-400">待开始</span>}
+            </span>
+          </div>
+          {/* Row 2: teams + partner/opponent */}
+          <div className="flex items-center mt-2.5 text-xs text-gray-500">
+            <span className="flex items-center gap-1">
+              <span className="text-sm">{homeGroup?.icon}</span>
+              <span className="text-[10px] text-gray-300 mx-0.5">vs</span>
+              <span className="text-sm">{awayGroup?.icon}</span>
+            </span>
+            <span className="mx-2 w-px h-3 bg-gray-200" />
+            <span>搭档 <span className="font-medium text-gray-700">{formatPlayerName(partner)}</span></span>
+            <span className="mx-1.5 text-gray-300">·</span>
+            <span>对手 <span className="font-medium text-gray-700">{opponents.map((o) => formatPlayerName(o as PlayerInfo | undefined)).join("+")}</span></span>
+          </div>
+        </div>
       </Link>
     );
   };
@@ -387,7 +380,7 @@ export default function MyMatchesPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="upcoming" className="mt-4 space-y-2">
+        <TabsContent value="upcoming" className="mt-4 space-y-1.25">
           {pendingMatches.length > 0 ? (
             pendingMatches
               .sort((a, b) => a.roundNumber - b.roundNumber)
@@ -401,7 +394,7 @@ export default function MyMatchesPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="active" className="mt-4 space-y-2">
+        <TabsContent value="active" className="mt-4 space-y-1.25">
           {activeMatches.length > 0 ? (
             activeMatches.map(renderMatchCard)
           ) : (
@@ -413,7 +406,7 @@ export default function MyMatchesPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="finished" className="mt-4 space-y-2">
+        <TabsContent value="finished" className="mt-4 space-y-1.25">
           {finishedMatches.length > 0 ? (
             finishedMatches
               .sort((a, b) => b.roundNumber - a.roundNumber)

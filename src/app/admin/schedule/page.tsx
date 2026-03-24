@@ -807,7 +807,7 @@ export default function AdminSchedulePage() {
                                 onClick={() => setExpandedRound(isExpanded ? null : roundNumber)}
                               >
                                 <div className={`p-1.5 text-[11px] font-bold text-center flex items-center justify-center ${allDone ? "text-green-600" : "text-amber-700"}`}>
-                                  R{roundNumber}
+                                  第{roundNumber}轮
                                 </div>
                                 {Array.from({ length: maxCourt }, (_, courtIndex) => {
                                   const match = roundMatches.find((item) => item.courtNumber === courtIndex + 1);
@@ -932,7 +932,7 @@ export default function AdminSchedulePage() {
                                 return (
                                   <tr key={`desktop-round-${roundNumber}`} className="border-b border-gray-100 hover:bg-amber-50/20">
                                     <td className="p-3 sticky left-0 bg-white z-10 font-semibold text-amber-700">
-                                      R{roundNumber}
+                                      第{roundNumber}轮
                                     </td>
                                     {Array.from({ length: maxCourt }, (_, courtIndex) => {
                                       const match = roundMatches.find((item) => item.courtNumber === courtIndex + 1);
