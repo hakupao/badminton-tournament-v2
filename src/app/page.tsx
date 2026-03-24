@@ -63,20 +63,14 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-6">
             <SiteLogo
               size="hero"
-              showSubtitle
               markClassName="bg-white/15 shadow-inner shadow-white/10 ring-white/20"
               iconClassName="text-white"
               titleClassName="text-white"
-              subtitleClassName="text-green-100/80"
             />
           </div>
-
-          <p className="text-green-50/90 text-base md:text-lg mb-8 max-w-lg leading-relaxed">
-            自动排赛 · 智能编排 · 实时记分 · 数据统计
-          </p>
 
           <div className="flex flex-wrap gap-3">
             <Link href="/schedule">

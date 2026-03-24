@@ -8,7 +8,7 @@ import { PositionBadge } from "@/components/player/position-label";
 import { AdminPageHeader } from "@/components/layout/admin-page-header";
 import { toast } from "sonner";
 import { useTournament } from "@/lib/tournament-context";
-import { Shuffle, Users, UserPlus, Trash2, Dices } from "lucide-react";
+import { Shuffle, Users, UserPlus, Trash2, Dices, Mars, Venus } from "lucide-react";
 
 interface RegisteredUser {
   id: number;
@@ -236,8 +236,8 @@ export default function LotteryPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-3 items-end">
-            <div className="flex-1 min-w-[160px]">
+          <div className="grid grid-cols-[1fr_1fr] gap-3 items-end sm:grid-cols-[1fr_auto_auto_auto]">
+            <div>
               <label className="text-xs text-gray-500 mb-1 block">运动员</label>
               <Select value={selectedUserId} onValueChange={(v: string | null) => setSelectedUserId(v || "")}>
                 <SelectTrigger className="h-9">
@@ -258,22 +258,22 @@ export default function LotteryPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-24">
+            <div>
               <label className="text-xs text-gray-500 mb-1 block">性别</label>
               <Select value={selectedGender} onValueChange={(v: string | null) => {
                 setSelectedGender(v || "");
                 setSelectedPosition(""); // reset position when gender changes
               }}>
                 <SelectTrigger className="h-9">
-                  <span className="inline-flex items-center gap-0.5">{selectedGender === "M" ? <><span>♂</span><span>男</span></> : selectedGender === "F" ? <><span>♀</span><span>女</span></> : "选择"}</span>
+                  <span className="inline-flex items-center gap-1">{selectedGender === "M" ? <><Mars className="w-3.5 h-3.5 shrink-0" />男</> : selectedGender === "F" ? <><Venus className="w-3.5 h-3.5 shrink-0" />女</> : "选择"}</span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="M"><span className="inline-flex items-center gap-0.5"><span>♂</span><span>男</span></span></SelectItem>
-                  <SelectItem value="F"><span className="inline-flex items-center gap-0.5"><span>♀</span><span>女</span></span></SelectItem>
+                  <SelectItem value="M"><span className="inline-flex items-center gap-1"><Mars className="w-3.5 h-3.5 shrink-0" />男</span></SelectItem>
+                  <SelectItem value="F"><span className="inline-flex items-center gap-1"><Venus className="w-3.5 h-3.5 shrink-0" />女</span></SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-28">
+            <div>
               <label className="text-xs text-gray-500 mb-1 block">位置号</label>
               <Select value={selectedPosition} onValueChange={(v: string | null) => setSelectedPosition(v || "")}>
                 <SelectTrigger className="h-9">
