@@ -51,7 +51,7 @@ export default function HomePage() {
   return (
     <div className="space-y-10">
       {/* Hero */}
-      <div className="relative overflow-hidden squircle-panel [--squircle-radius:2.5rem] [--squircle-shape:superellipse(3)] bg-gradient-to-br from-green-600 via-emerald-500 to-teal-500 p-8 md:p-12 shadow-2xl shadow-green-200/40">
+      <div className="relative overflow-hidden squircle-panel [--squircle-radius:2.5rem] [--squircle-shape:superellipse(2.1)] bg-gradient-to-br from-green-600 via-emerald-500 to-teal-500 p-8 md:p-12 shadow-2xl shadow-green-200/40">
         {/* Court lines decoration */}
         <div className="absolute inset-0 opacity-[0.07]">
           <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-white" />

@@ -24,14 +24,14 @@ const buttonVariants = cva(
       size: {
         default:
           "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 px-2 text-xs [--squircle-radius:var(--squircle-xs-radius)] [--squircle-shape:var(--squircle-xs-shape)] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 px-2.5 text-[0.8rem] [--squircle-radius:var(--squircle-sm-radius)] [--squircle-shape:var(--squircle-sm-shape)] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        xs: "h-6 gap-1 px-2 text-xs [--squircle-radius:var(--squircle-xs-radius)] [--squircle-shape:var(--squircle-xs-shape)] in-data-[slot=button-group]:[--squircle-radius:var(--squircle-lg-radius)] in-data-[slot=button-group]:[--squircle-shape:var(--squircle-lg-shape)] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-7 gap-1 px-2.5 text-[0.8rem] [--squircle-radius:var(--squircle-sm-radius)] [--squircle-shape:var(--squircle-sm-shape)] in-data-[slot=button-group]:[--squircle-radius:var(--squircle-lg-radius)] in-data-[slot=button-group]:[--squircle-shape:var(--squircle-lg-shape)] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
         icon: "size-8",
         "icon-xs":
-          "size-6 [--squircle-radius:var(--squircle-xs-radius)] [--squircle-shape:var(--squircle-xs-shape)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+          "size-6 [--squircle-radius:var(--squircle-xs-radius)] [--squircle-shape:var(--squircle-xs-shape)] in-data-[slot=button-group]:[--squircle-radius:var(--squircle-lg-radius)] in-data-[slot=button-group]:[--squircle-shape:var(--squircle-lg-shape)] [&_svg:not([class*='size-'])]:size-3",
         "icon-sm":
-          "size-7 [--squircle-radius:var(--squircle-sm-radius)] [--squircle-shape:var(--squircle-sm-shape)] in-data-[slot=button-group]:rounded-lg",
+          "size-7 [--squircle-radius:var(--squircle-sm-radius)] [--squircle-shape:var(--squircle-sm-shape)] in-data-[slot=button-group]:[--squircle-radius:var(--squircle-lg-radius)] in-data-[slot=button-group]:[--squircle-shape:var(--squircle-lg-shape)]",
         "icon-lg": "size-9",
       },
     },

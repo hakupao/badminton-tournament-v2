@@ -30,7 +30,7 @@ const sizeMap = {
     gap: "gap-3.5",
   },
   login: {
-    mark: "h-20 w-20 squircle-panel [--squircle-radius:2.25rem] [--squircle-shape:superellipse(2.9)]",
+    mark: "h-20 w-20 squircle-panel [--squircle-radius:2.25rem] [--squircle-shape:superellipse(2.02)]",
     icon: "h-10 w-10",
     title: "text-2xl",
     subtitle: "text-sm",
