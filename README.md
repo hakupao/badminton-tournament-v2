@@ -1,199 +1,193 @@
 # ShuttleArena 羽球竞技场
 
-混合双打羽毛球团体联赛管理系统。支持多赛事管理、摇号分组、赛程生成、实时计分。
+面向羽毛球团体赛/联赛的管理系统，覆盖多赛事管理、报名与摇号、赛程编排、在线记分、排名统计和运动员账号体系。
 
-**在线 Demo**: https://shuttle-arena-demo.pages.dev
+在线 Demo: https://shuttle-arena-demo.pages.dev
 
-> 演示环境使用独立数据库，数据为示例内容，可能会定期重置。
+> Demo 使用独立的 Cloudflare D1 数据库，并会通过 GitHub Actions 定期重置为示例数据。
 
----
+## 当前能力
 
-## 功能
+- 多赛事管理：支持同时维护多个赛事，并在前台切换当前查看的赛事。
+- 公共页面：首页、赛事介绍、赛程、比赛详情、排名与统计均可公开访问。
+- 运动员账号：支持注册/登录、查看“我的比赛”、修改用户名和密码。
+- 位置绑定：管理员可把注册账号绑定到具体参赛位置，运动员即可看到自己的场次。
+- 报名与摇号：先按技术位置分配报名，再按队伍进行摇号落位。
+- 候补与换人：同一位置支持主选手/候补双槽，未开赛场次可一键换人。
+- 赛制配置：可调整每组男女人数、比赛模板、计分模式、比赛时段和场地数。
+- 赛程编排：支持赛程模拟、质量评估、正式发布，生成时会考虑连续上场/连续轮空限制。
+- 记分体系：支持管理员录分，也支持运动员在手机端实时逐分记分。
+- 数据统计：提供队伍、组合、个人、位置维度统计，并支持裁判/边裁记录。
 
-- **赛事管理** — 创建比赛、配置小组数/人数、自定义队伍名称
-- **摇号分组** — 随机分配参赛者到各队位置
-- **人员管理** — 绑定注册账号到队伍位置
-- **赛程生成** — 自动排期，支持多场地并行
-- **实时计分** — 逐局计分，自动计算胜负
-- **排名统计** — 积分榜、个人参赛统计
-- **用户系统** — admin / athlete 双角色，JWT 鉴权
+## 典型使用流程
 
----
+1. 管理员创建赛事，配置比赛日期、时段、场地数、每组人数和计分模式。
+2. 设置队伍名称/图标，维护比赛模板，并录入或绑定运动员。
+3. 给已注册账号分配技术位置，必要时为位置添加候补。
+4. 在“摇号分组”里执行随机分配，把报名者落到各队各位置。
+5. 在“赛程安排”里模拟赛程、查看质量报告，并发布正式赛程。
+6. 比赛当天通过后台或手机端录入比分，系统自动更新赛果、统计和排行榜。
 
 ## 技术栈
 
 | 层 | 技术 |
-|----|------|
-| 框架 | Next.js 16 (App Router, Edge Runtime) |
-| 数据库 | Cloudflare D1（Cloudflare/本地 Edge 调试）/ better-sqlite3（Node 侧兜底） |
+| --- | --- |
+| 框架 | Next.js 16 + React 19 + App Router |
+| 运行时 | Edge Runtime |
+| 数据库 | Cloudflare D1（应用运行时）+ better-sqlite3（Node-only 兜底） |
 | ORM | Drizzle ORM |
-| UI | Tailwind CSS v4 + shadcn/ui |
-| 部署 | Cloudflare Pages + @cloudflare/next-on-pages |
-| 认证 | JWT (jose) + bcryptjs |
-
----
+| UI | Tailwind CSS v4 + shadcn/ui + Sonner |
+| 认证 | JWT (`jose`) + `bcryptjs` |
+| 部署 | Cloudflare Pages + `@cloudflare/next-on-pages` |
 
 ## 本地开发
+
+要求：
+
+- Node.js 20+
+- npm
+
+安装依赖：
 
 ```bash
 git clone https://github.com/hakupao/badminton-tournament-v2.git
 cd badminton-tournament-v2
-npm install --legacy-peer-deps
+npm install
 ```
 
-初始化本地 D1 数据库并创建 admin 账号：
+> 仓库根目录已经通过 `.npmrc` 配置了 `legacy-peer-deps=true`，不需要手动再加 `--legacy-peer-deps`。
 
-```bash
-npm run d1:init:local
-npm run d1:seed:local
-```
-
-启动开发服务器：
+启动开发环境：
 
 ```bash
 npm run dev
 ```
 
-`npm run dev` 会先自动执行本地 D1 的建表和 admin 种子，然后以 Cloudflare 本地绑定模式启动。
+这会自动执行：
 
-访问 http://localhost:3000，使用 `admin` / `admin123` 登录。
+- `npm run d1:init:local`
+- `npm run d1:seed:local`
+- `next dev`（带本地 Cloudflare D1 绑定）
 
-Windows 和 macOS 上的 `npm run dev` 都会连接各自机器上的本地 D1。
+默认本地管理员账号：
 
-如需在推送前按 Cloudflare 运行时做一次本地验收：
+- 用户名：`admin`
+- 密码：`admin123`
+
+访问 http://localhost:3000 即可。
+
+如果你只想快速重启开发服务器，跳过本地 D1 初始化：
+
+```bash
+npm run dev:fast
+```
+
+如果你想在推送前按 Cloudflare Pages 的方式做一次本地验收：
 
 ```bash
 npm run build:cf
 npm run preview:cf
 ```
 
-> 注意：`@cloudflare/next-on-pages` 在原生 Windows 上的本地 `build:cf` 存在上游兼容性问题。如果你要在 Windows 机器上做 Cloudflare 风格预览，请优先使用 WSL；普通本地联调直接用 `npm run dev` 即可，不影响 GitHub -> Cloudflare 的 Linux 构建链路。
+## 环境与数据说明
 
----
+- 应用运行时默认依赖 Cloudflare D1 绑定 `DB`。
+- `npm run dev` / `npm run dev:fast` 使用 Wrangler 的本地 D1 模拟库，数据通常位于 `.wrangler/state/v3/d1/`。
+- `src/db/node.ts` 中保留了 `better-sqlite3` 入口，供显式的 Node-only 场景使用；页面和 API 不应该走这个入口。
+- `JWT_SECRET` 在生产环境必须配置；本地未配置时会回退到默认开发密钥。
+- `shuttle-arena.db` 是 Node 侧兜底数据库文件，不是日常 App Router + Edge 开发的主路径。
 
-## 部署到 Cloudflare Pages
+## 环境变量 / 绑定
 
-完整部署教程见 [docs/deploy-guide.md](docs/deploy-guide.md)。
-
-**快速流程：**
-
-```bash
-# 1. 登录 Cloudflare
-npx wrangler login
-
-# 2. 创建 D1 数据库，将 database_id 填入 wrangler.toml
-npx wrangler d1 create shuttle-arena-db
-
-# 3. 初始化数据库表
-npx wrangler d1 execute shuttle-arena-db --remote --file=schema.sql
-
-# 4. 部署
-npm run deploy
-```
-
-部署后在 Cloudflare Dashboard 配置：
-- Environment variables: `JWT_SECRET=<随机密钥>`
-- D1 binding: Variable `DB` → `shuttle-arena-db`
-
-GitHub 推送后的 Cloudflare 自动构建运行在 Linux 环境，运行时会直接使用绑定到 `DB` 的线上 D1。
-
----
-
-## 项目结构
-
-```
-src/
-├── app/
-│   ├── api/          # API Routes (Edge Runtime)
-│   │   ├── auth/     # 登录、注册、登出
-│   │   ├── tournaments/  # 赛事 CRUD、小组、赛程、摇号
-│   │   ├── matches/  # 比赛详情
-│   │   └── users/    # 用户管理
-│   ├── admin/        # 管理后台页面
-│   ├── match/        # 比赛详情、计分页
-│   └── ...           # 公开页面（首页、排名、赛程）
-├── components/       # UI 组件
-├── db/
-│   ├── index.ts      # 数据库切换层（D1 / SQLite）
-│   ├── schema.ts     # Drizzle ORM 表定义
-│   └── seed.ts       # 本地开发种子数据
-└── lib/
-    ├── auth.ts       # JWT 鉴权
-    └── constants.ts  # 默认队伍、比赛模板
-```
-
----
+| 名称 | 类型 | 是否必需 | 说明 |
+| --- | --- | --- | --- |
+| `JWT_SECRET` | 环境变量 | 生产必需 | JWT 签名密钥，本地可省略 |
+| `DB` | Cloudflare D1 绑定 | 部署必需 | 应用运行时数据库绑定名，必须叫 `DB` |
+| `DEMO_DEPLOY_BRANCH` | 环境变量 | 可选 | `scripts/deploy-demo.mjs` 使用的 demo 发布分支覆盖值 |
 
 ## npm scripts
 
 | 命令 | 说明 |
-|------|------|
-| `npm run dev` | 本地开发（自动初始化本地 D1，并以 Cloudflare 本地绑定启动） |
-| `npm run dev:fast` | 本地开发（跳过初始化，直接启动本地 D1 绑定） |
-| `npm run build` | 本地生产构建（Webpack） |
-| `npm run build:cf` | 编译为 Cloudflare Workers 格式 |
-| `npm run deploy` | 构建 + 部署到 Cloudflare Pages |
-| `npm run deploy:demo` | 构建并手动发布到公开 Demo（`shuttle-arena-demo`） |
-| `npm run d1:init` | 初始化线上 D1 数据库表结构（`--remote`） |
-| `npm run d1:init:demo` | 初始化 Demo 的 D1 数据库表结构（`--remote`） |
-| `npm run d1:seed:demo` | 重置并写入 Demo 示例数据 |
-| `npm run d1:init:local` | 初始化本地模拟 D1 |
+| --- | --- |
+| `npm run dev` | 本地开发，自动初始化本地 D1 并启动 Next 开发服务器 |
+| `npm run dev:fast` | 跳过初始化，直接启动本地开发服务器 |
+| `npm run lint` | 运行 ESLint |
+| `npm run build` | 执行普通 Next.js 构建，用于基础编译检查 |
+| `npm run start` | 启动普通 Next.js 产物；不适合作为 Cloudflare D1 运行时验收方式 |
+| `npm run build:cf` | 构建 Cloudflare Pages 所需产物到 `.vercel/output/static` |
+| `npm run preview:cf` | 用 Wrangler 本地预览 Cloudflare Pages 构建产物 |
+| `npm run deploy` | 构建并部署到 Cloudflare Pages |
+| `npm run deploy:demo` | 构建并发布到 demo 项目 `shuttle-arena-demo` |
+| `npm run d1:init` | 初始化线上 D1 数据库结构 |
+| `npm run d1:init:demo` | 初始化 demo 的线上 D1 数据库结构 |
+| `npm run d1:init:local` | 初始化本地 D1 数据库结构 |
+| `npm run d1:seed:demo` | 重置并写入 demo 示例数据 |
+| `npm run d1:seed:local` | 确保本地 `admin/admin123` 账号存在 |
 
----
+## 主要页面与后台模块
 
-## 本地数据库说明
+前台页面：
 
-- 页面/API 的本地开发默认连接 `.wrangler/state/v3/d1/` 里的本地 D1 数据库
-- `npm run d1:init:local` 负责建表，`npm run d1:seed:local` 负责确保 `admin/admin123` 存在
-- `shuttle-arena.db` 仍保留给非 Edge 的 Node 场景兜底，但日常联调请以本地 D1 为准
+- `/`：赛事列表首页，展示进行中和历史赛事。
+- `/guide`：赛事介绍页，可承载场地、奖品、赞助和系统说明。
+- `/schedule`：赛程矩阵/列表视图，登录后会高亮“我的比赛”。
+- `/standings`：队伍、组合、个人、位置统计；支持裁判记录榜。
+- `/match/[id]`：比赛详情与比分时间线。
+- `/match/[id]/scoring`：移动端实时记分入口。
+- `/my-matches`：运动员个人场次总览。
+- `/account`：个人账号维护。
 
----
+管理后台：
 
-## 本地产物说明
+- `/admin/settings`：赛事基础设置。
+- `/admin/rules`：每组人数、计分模式和比赛模板。
+- `/admin/teams`：队伍名称和图标。
+- `/admin/players`：运动员姓名、账号绑定、候补管理。
+- `/admin/lottery`：报名位置分配与摇号执行。
+- `/admin/schedule`：赛程模拟、质量报告、正式发布。
+- `/admin/swap`：候补换人。
+- `/admin/scoring`：后台录分和批量录分。
+- `/admin/users`：账号创建、删除、重置密码。
 
-- `.vercel/` 是本地执行 `npm run build:cf` 或 `npm run deploy` 时自动生成的构建产物目录
-- 它不是业务源码，不需要手动维护，也不需要提交到 GitHub
-- 如果你删除了 `.vercel/`，下次重新构建时会自动生成
-- GitHub -> Cloudflare Pages 自动部署时，Cloudflare 会在 CI 里自行生成对应产物
+## 部署到 Cloudflare Pages
 
----
+完整说明见 [docs/deploy-guide.md](./docs/deploy-guide.md)。
 
-## Demo 环境维护
-
-公开 Demo 当前是一个独立的 Cloudflare Pages 项目：`shuttle-arena-demo`，并使用独立的 D1 数据库：`shuttle-arena-demo-db`。
-
-仓库内已经提供自动同步 workflow：[deploy-demo.yml](/Users/bojiangzhang/MyProject/badminton-tournament-v2/.github/workflows/deploy-demo.yml)。完成下面这个一次性配置后，每次 `git push` 到 `master`，正式站会继续走 Cloudflare 的 Git 自动部署，Demo 则会由 GitHub Actions 自动执行：
+快速流程：
 
 ```bash
-npm run d1:init:demo
-npm run d1:seed:demo
-npm run deploy:demo
+npx wrangler login
+npx wrangler d1 create shuttle-arena-db
 ```
 
-一次性配置 GitHub repository secret：
+把输出的 `database_id` 写入 [`wrangler.toml`](./wrangler.toml) 后，执行：
+
+```bash
+npm run d1:init
+npm run deploy
+```
+
+部署后在 Cloudflare Dashboard 中补齐：
+
+- 环境变量：`JWT_SECRET=<随机密钥>`
+- D1 绑定：`DB -> shuttle-arena-db`
+
+完成绑定后再重新部署一次。
+
+## Demo 发布
+
+仓库内提供了 demo 自动刷新 workflow：[.github/workflows/deploy-demo.yml](./.github/workflows/deploy-demo.yml)。
+
+当前行为：
+
+- 每次 push 到 `master` 会触发 demo 发布。
+- 发布前会执行 `npm run d1:init:demo` 和 `npm run d1:seed:demo`，把 demo 数据重置为示例内容。
+
+需要在 GitHub 仓库中配置的 secret：
 
 - `CLOUDFLARE_API_TOKEN`
 
-这个 token 需要至少包含：
-
-- `Account -> Cloudflare Pages: Edit`
-- `Account -> D1: Edit`
-
-配置完成后，仓库内的 workflow 会在 GitHub Actions 里直接使用这个 token，自动执行 demo 的 D1 初始化、种子重置和 Pages 发布。
-
-如果你只是更新了页面、接口逻辑或样式，发布 Demo：
-
-```bash
-npm run deploy:demo
-```
-
-如果你想把 Demo 数据恢复成一套干净的示例数据：
-
-```bash
-npm run d1:seed:demo
-```
-
-如果你改了数据库结构，再先执行一次 Demo 的 schema 初始化：
+如需手动刷新 demo：
 
 ```bash
 npm run d1:init:demo
@@ -201,4 +195,43 @@ npm run d1:seed:demo
 npm run deploy:demo
 ```
 
-> 说明：Cloudflare 官方文档说明，Direct Upload 项目不能直接切换成 Git integration。这里采用的是“保留现有 demo 项目 + GitHub Actions 自动直传”的方式，所以你仍然只需要 `git push`，但 demo 的自动更新是由 GitHub Actions 完成的，而不是 Cloudflare Pages 自己的 Git integration。
+## 项目结构
+
+```text
+src/
+├── app/
+│   ├── api/
+│   │   ├── account/                  # 账号信息修改
+│   │   ├── auth/                     # 登录 / 注册 / 登出 / 当前用户
+│   │   ├── matches/                  # 比赛详情、换人
+│   │   ├── tournaments/              # 赛事 CRUD、分组、模板、摇号、赛程、统计
+│   │   └── users/                    # 后台账号管理
+│   ├── admin/                        # 后台页面
+│   ├── match/                        # 比赛详情、移动端记分
+│   └── ...                           # 首页、赛程、统计、我的比赛、赛事介绍
+├── components/                       # UI / 页面组件
+├── db/
+│   ├── index.ts                      # Edge-safe D1 入口
+│   ├── node.ts                       # Node-only SQLite 入口
+│   ├── schema.ts                     # Drizzle schema
+│   └── seed.ts                       # 本地种子辅助
+└── lib/
+    ├── auth.ts                       # JWT 鉴权
+    ├── constants.ts                  # 默认模板、比赛类型、限制常量
+    ├── engine.ts                     # 赛程模拟与质量评估
+    └── tournament-context.tsx        # 当前赛事上下文
+```
+
+其他重要文件：
+
+- [`schema.sql`](./schema.sql)：D1 初始化脚本
+- [`migrations/`](./migrations)：补充迁移脚本
+- [`scripts/seed-local-d1.sql`](./scripts/seed-local-d1.sql)：本地 admin 种子
+- [`scripts/seed-demo.sql`](./scripts/seed-demo.sql)：demo 示例数据
+- [`wrangler.toml`](./wrangler.toml)：Cloudflare Pages / D1 配置
+
+## 备注
+
+- 本项目当前依赖 `@cloudflare/next-on-pages` 与 Next.js 16 的兼容方案，`.npmrc`、`build:cf` 以及相关脚本都属于这套链路的一部分。
+- 原生 Windows 上本地执行 `npm run build:cf` 可能仍会受上游兼容性影响；如果需要做 Cloudflare 风格预览，优先使用 WSL。
+- `.vercel/` 是本地构建生成的工作目录，不是业务源码，不需要手动维护。
