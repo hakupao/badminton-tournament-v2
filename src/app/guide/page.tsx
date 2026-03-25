@@ -621,18 +621,18 @@ export default function GuidePage() {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2.5 px-4 py-3 squircle-card bg-gray-50 border border-gray-100">
-            <span className="text-base">🎖️</span>
-            <div className="text-sm text-gray-600">
-              <span className="font-medium text-gray-700">第 4 — 6 名</span>
-              <span className="text-gray-400 ml-2">Victor 袜子 + YONEX 手胶</span>
+          <div className="flex items-start gap-2.5 px-4 py-3 squircle-card bg-gray-50 border border-gray-100">
+            <span className="text-base mt-0.5">🎖️</span>
+            <div>
+              <div className="text-sm font-medium text-gray-700">第 4 — 6 名</div>
+              <div className="text-xs text-gray-600 mt-0.5">Victor 袜子 + YONEX 手胶</div>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 px-4 py-3 squircle-card bg-gray-50 border border-gray-100">
-            <span className="text-base">🎁</span>
-            <div className="text-sm text-gray-600">
-              <span className="font-medium text-gray-700">参与奖</span>
-              <span className="text-gray-400 ml-2">紙おしぼり アロマプレミアム</span>
+          <div className="flex items-start gap-2.5 px-4 py-3 squircle-card bg-gray-50 border border-gray-100">
+            <span className="text-base mt-0.5">🎁</span>
+            <div>
+              <div className="text-sm font-medium text-gray-700">参与奖</div>
+              <div className="text-xs text-gray-600 mt-0.5">紙おしぼり アロマプレミアム</div>
             </div>
           </div>
         </div>
@@ -689,8 +689,8 @@ export default function GuidePage() {
 
           {/* Bottom bar */}
           <div className="px-5 py-2.5 sm:px-6 border-t border-gray-100/60 bg-[#f7f7f5]">
-            <p className="text-[10px] text-gray-300 tracking-[0.02em]">
-              感谢对赛事的大力支持
+            <p className="text-[10px] text-gray-500 tracking-[0.02em]">
+              感谢对羽毛球赛事的大力支持与热爱
             </p>
           </div>
         </div>
