@@ -70,7 +70,7 @@ export default function MatchDetailPage() {
   const isFinished = match.status === "finished";
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Back button */}
       <Button variant="ghost" size="sm" className="gap-1 text-gray-500 -mb-3" onClick={() => router.back()}>
         <ArrowLeft className="w-4 h-4" /> 返回
@@ -78,7 +78,7 @@ export default function MatchDetailPage() {
 
       {/* Match Header */}
       <Card className="border-green-100 shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-green-500 to-teal-500 p-6 text-white">
+        <div className="bg-gradient-to-r from-green-500 to-teal-500 p-6 md:p-8 text-white">
           <div className="flex items-center justify-between mb-4">
             <Badge variant="outline" className="border-white/40 text-white bg-white/10">
               第 {match.roundNumber} 轮 · 场地 {match.courtNumber}
@@ -88,11 +88,11 @@ export default function MatchDetailPage() {
             </Badge>
           </div>
 
-          <div className="flex items-center justify-center gap-6">
+          <div className="flex items-center justify-center gap-6 md:gap-10">
             {/* Home */}
             <div className="text-center flex-1">
-              <div className="text-4xl mb-2">{match.homeGroup.icon}</div>
-              <div className="font-bold">{match.homeGroup.name}</div>
+              <div className="text-4xl md:text-5xl mb-2">{match.homeGroup.icon}</div>
+              <div className="font-bold md:text-lg">{match.homeGroup.name}</div>
               <div className="text-sm text-white/70 mt-1">
                 {match.homePlayers.map((p) => formatPlayerName(p, match.homeGroup.icon)).join(" + ")}
               </div>
@@ -106,7 +106,7 @@ export default function MatchDetailPage() {
               {isFinished && match.games.length > 0 ? (
                 <div className="space-y-1">
                   {match.games.map((g) => (
-                    <div key={g.gameNumber} className="text-2xl font-bold">
+                    <div key={g.gameNumber} className="text-2xl md:text-3xl font-bold">
                       <span className={match.winner === "home" ? "text-yellow-300" : ""}>{g.homeScore}</span>
                       <span className="text-white/50 mx-2">:</span>
                       <span className={match.winner === "away" ? "text-yellow-300" : ""}>{g.awayScore}</span>
@@ -120,8 +120,8 @@ export default function MatchDetailPage() {
 
             {/* Away */}
             <div className="text-center flex-1">
-              <div className="text-4xl mb-2">{match.awayGroup.icon}</div>
-              <div className="font-bold">{match.awayGroup.name}</div>
+              <div className="text-4xl md:text-5xl mb-2">{match.awayGroup.icon}</div>
+              <div className="font-bold md:text-lg">{match.awayGroup.name}</div>
               <div className="text-sm text-white/70 mt-1">
                 {match.awayPlayers.map((p) => formatPlayerName(p, match.awayGroup.icon)).join(" + ")}
               </div>
@@ -139,50 +139,56 @@ export default function MatchDetailPage() {
         </div>
       </Card>
 
-      {/* Referees */}
-      {match.referees && match.referees.length > 0 && (
-        <Card className="border-gray-100 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base text-gray-800 flex items-center gap-2">
-              <Eye className="w-4 h-4 text-gray-500" />
-              裁判 & 边裁
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {match.referees.map((ref, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {ref.role === "referee" ? "裁判" : "边裁"}
-                  </Badge>
-                  <span>{ref.groupIcon} {ref.playerName || `${ref.position}号位`}</span>
+      {/* Two-column detail area: sidebar (referees + actions) | timeline */}
+      {/* Falls back to single column on mobile */}
+      <div className="grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-5 items-start">
+        <div className="space-y-5">
+          {/* Referees */}
+          {match.referees && match.referees.length > 0 && (
+            <Card className="border-gray-100 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-gray-800 flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-gray-500" />
+                  裁判 & 边裁
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {match.referees.map((ref, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {ref.role === "referee" ? "裁判" : "边裁"}
+                      </Badge>
+                      <span>{ref.groupIcon} {ref.playerName || `${ref.position}号位`}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Actions */}
+          {(!isFinished || isAdmin) && (
+            <div className="flex gap-3">
+              <Link href={`/match/${match.id}/scoring`} prefetch={false} className="flex-1">
+                <Button className={`w-full gap-2 ${isFinished ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"}`} size="lg">
+                  {isFinished ? <Edit3 className="w-4 h-4" /> : <PenLine className="w-4 h-4" />}
+                  {isFinished ? "编辑比分" : "进入记分"}
+                </Button>
+              </Link>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Score Timeline - BWF standard score sheet format */}
-      {match.scoreEvents && match.scoreEvents.length > 0 && (
-        <ScoreTimelineCard
-          homeGroup={match.homeGroup}
-          awayGroup={match.awayGroup}
-          events={match.scoreEvents}
-        />
-      )}
-
-      {/* Actions */}
-      {(!isFinished || isAdmin) && (
-        <div className="flex gap-3">
-          <Link href={`/match/${match.id}/scoring`} prefetch={false} className="flex-1">
-            <Button className={`w-full gap-2 ${isFinished ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"}`} size="lg">
-              {isFinished ? <Edit3 className="w-4 h-4" /> : <PenLine className="w-4 h-4" />}
-              {isFinished ? "编辑比分" : "进入记分"}
-            </Button>
-          </Link>
+          )}
         </div>
-      )}
+
+        {/* Score Timeline - BWF standard score sheet format */}
+        {match.scoreEvents && match.scoreEvents.length > 0 && (
+          <ScoreTimelineCard
+            homeGroup={match.homeGroup}
+            awayGroup={match.awayGroup}
+            events={match.scoreEvents}
+          />
+        )}
+      </div>
     </div>
   );
 }

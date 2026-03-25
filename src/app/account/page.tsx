@@ -128,7 +128,7 @@ export default function AccountPage() {
   const isAdmin = user.role === "admin";
 
   return (
-    <div className="mx-auto max-w-xl space-y-5 py-4">
+    <div className="mx-auto max-w-2xl space-y-5 py-4">
       <section className="relative overflow-hidden squircle-panel bg-gradient-to-br from-emerald-600 via-green-500 to-teal-500 px-5 py-5 text-white shadow-md shadow-green-200/30">
         <div className="absolute inset-0 opacity-[0.06]">
           <div className="absolute left-0 right-0 top-1/2 h-[2px] bg-white" />

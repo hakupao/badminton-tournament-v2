@@ -314,7 +314,7 @@ export default function MyMatchesPage() {
   const losses = finishedMatches.filter((m) => getResult(m) === "loss").length;
 
   return (
-    <div className="space-y-5 max-w-3xl mx-auto">
+    <div className="space-y-5 max-w-4xl mx-auto">
       {/* Player Header */}
       <Card className="border-green-100 shadow-sm overflow-hidden">
         <div className="bg-gradient-to-r from-green-500 to-teal-500 px-5 py-4 text-white">
@@ -380,11 +380,13 @@ export default function MyMatchesPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="upcoming" className="mt-4 space-y-1.25">
+        <TabsContent value="upcoming" className="mt-4">
           {pendingMatches.length > 0 ? (
-            pendingMatches
+            <div className="grid md:grid-cols-2 gap-2.5">
+            {pendingMatches
               .sort((a, b) => a.roundNumber - b.roundNumber)
-              .map(renderMatchCard)
+              .map(renderMatchCard)}
+            </div>
           ) : (
             <Card className="border-gray-100">
               <CardContent className="py-8 text-center text-gray-400">
@@ -394,9 +396,11 @@ export default function MyMatchesPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="active" className="mt-4 space-y-1.25">
+        <TabsContent value="active" className="mt-4">
           {activeMatches.length > 0 ? (
-            activeMatches.map(renderMatchCard)
+            <div className="grid md:grid-cols-2 gap-2.5">
+            {activeMatches.map(renderMatchCard)}
+            </div>
           ) : (
             <Card className="border-gray-100">
               <CardContent className="py-8 text-center text-gray-400">
@@ -406,11 +410,13 @@ export default function MyMatchesPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="finished" className="mt-4 space-y-1.25">
+        <TabsContent value="finished" className="mt-4">
           {finishedMatches.length > 0 ? (
-            finishedMatches
+            <div className="grid md:grid-cols-2 gap-2.5">
+            {finishedMatches
               .sort((a, b) => b.roundNumber - a.roundNumber)
-              .map(renderMatchCard)
+              .map(renderMatchCard)}
+            </div>
           ) : (
             <Card className="border-gray-100">
               <CardContent className="py-8 text-center text-gray-400">
