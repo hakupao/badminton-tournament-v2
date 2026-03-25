@@ -46,11 +46,6 @@ const MATCH_TYPE_LABELS: Record<string, string> = {
   XD: "混双",
 };
 
-const MATCH_TYPE_COLORS: Record<string, string> = {
-  MD: "bg-blue-50 border-blue-200",
-  WD: "bg-pink-50 border-pink-200",
-  XD: "bg-purple-50 border-purple-200",
-};
 
 const STATUS_MAP = {
   pending: { label: "待开始", color: "text-gray-500", icon: Clock },
@@ -951,37 +946,41 @@ export default function AdminSchedulePage() {
                                       const statusInfo = STATUS_MAP[match.status as keyof typeof STATUS_MAP] || STATUS_MAP.pending;
                                       const isFinished = match.status === "finished";
                                       const colorClass = isFinished
-                                        ? "bg-gray-50 border-gray-200 opacity-70"
-                                        : (MATCH_TYPE_COLORS[match.matchType] || "");
+                                        ? "bg-white/90 opacity-72"
+                                        : match.matchType === "MD"
+                                          ? "bg-blue-50/90"
+                                          : match.matchType === "WD"
+                                            ? "bg-pink-50/90"
+                                            : match.matchType === "XD"
+                                              ? "bg-purple-50/90"
+                                              : "bg-white/90";
 
                                       return (
                                         <td key={`desktop-match-${match.id}`} className="p-2">
                                           <Link href={`/match/${match.id}`} prefetch={false}>
-                                            <div className={`squircle-lg border p-3 ${colorClass} hover:opacity-80 transition-opacity cursor-pointer`}>
-                                              <div className="flex items-center justify-between mb-1.5">
-                                                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${isFinished ? "text-gray-400 border-gray-300" : ""}`}>
-                                                  {MATCH_TYPE_LABELS[match.matchType]}
-                                                </Badge>
-                                                <span className={`text-[10px] ${statusInfo.color}`}>
-                                                  {statusInfo.label}
+                                            <div className={`squircle-lg border border-transparent px-3 py-2.5 ${colorClass} hover:shadow-sm transition-all cursor-pointer`}>
+                                              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2.5">
+                                                <span className="min-w-0 self-start pt-0.5 text-[10px] font-medium leading-none text-gray-500 whitespace-nowrap truncate">
+                                                  {MATCH_TYPE_LABELS[match.matchType]} · 场地{match.courtNumber}
                                                 </span>
+                                                <div className="flex min-h-8 self-start items-start justify-center gap-3 font-medium leading-none whitespace-nowrap">
+                                                  <span className="text-[18px] leading-none">{homeGroup?.icon || "?"}</span>
+                                                  {isFinished && match.games && match.games.length > 0 ? (
+                                                    <span className="font-bold text-gray-700 text-[17px] tracking-tight leading-none">
+                                                      {match.games.map((game) => `${game.homeScore}:${game.awayScore}`).join(" / ")}
+                                                    </span>
+                                                  ) : (
+                                                    <span className="text-gray-400 text-[12px] font-medium tracking-[0.16em] leading-none">VS</span>
+                                                  )}
+                                                  <span className="text-[18px] leading-none">{awayGroup?.icon || "?"}</span>
+                                                </div>
+                                                <span className={`justify-self-end self-start pt-0.5 text-[10px] font-medium leading-none whitespace-nowrap ${statusInfo.color}`}>{statusInfo.label}</span>
                                               </div>
-                                              <div className="text-center font-medium mb-1">
-                                                <span>{homeGroup?.icon || "?"}</span>
-                                                {isFinished && match.games && match.games.length > 0 ? (
-                                                  <span className="mx-2 text-sm font-bold text-gray-600">
-                                                    {match.games.map((game) => `${game.homeScore}:${game.awayScore}`).join(" / ")}
-                                                  </span>
-                                                ) : (
-                                                  <span className="text-gray-400 mx-2">vs</span>
-                                                )}
-                                                <span>{awayGroup?.icon || "?"}</span>
-                                              </div>
-                                              <div className="flex justify-between gap-1 text-center">
-                                                <span className="text-[10px] text-gray-500 flex-1">
+                                              <div className="mt-1.5 grid grid-cols-2 gap-1.5 text-center">
+                                                <span className="text-[10px] text-gray-500 min-w-0 squircle-xs bg-white/36 px-2 py-1.5 leading-[1.45]">
                                                   {formatPlayer(match.homePlayer1Id)} + {formatPlayer(match.homePlayer2Id)}
                                                 </span>
-                                                <span className="text-[10px] text-gray-500 flex-1">
+                                                <span className="text-[10px] text-gray-500 min-w-0 squircle-xs bg-white/36 px-2 py-1.5 leading-[1.45]">
                                                   {formatPlayer(match.awayPlayer1Id)} + {formatPlayer(match.awayPlayer2Id)}
                                                 </span>
                                               </div>
