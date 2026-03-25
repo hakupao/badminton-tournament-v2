@@ -46,6 +46,7 @@ export const players = sqliteTable("players", {
   tournamentId: integer("tournament_id").notNull().references(() => tournaments.id),
   groupId: integer("group_id").notNull().references(() => groups.id),
   positionNumber: integer("position_number").notNull(), // 1,2,3=男 4,5=女
+  slotIndex: integer("slot_index").notNull().default(1), // 1=主选手 2=候补选手（同位置双人轮换）
   gender: text("gender", { enum: ["M", "F"] }).notNull(),
   name: text("name"), // 真名，抽签后填入
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),

@@ -6,7 +6,7 @@ import { useTournament } from "@/lib/tournament-context";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Trophy, Users, User, Award, Handshake } from "lucide-react";
+import { Trophy, Users, User, Award, Handshake, MapPin } from "lucide-react";
 
 interface GroupStanding {
   groupId: number;
@@ -57,6 +57,24 @@ interface CombinationStat {
   netPoints: number;
 }
 
+interface PositionStat {
+  groupId: number;
+  groupName: string;
+  groupIcon: string;
+  positionNumber: number;
+  gender: string;
+  players: { id: number; name: string | null; slotIndex: number }[];
+  wins: number;
+  losses: number;
+  draws: number;
+  matchesPlayed: number;
+  netGames: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  netPoints: number;
+  winRate: number;
+}
+
 interface RefereeStat {
   playerId: number;
   playerName: string | null;
@@ -68,11 +86,12 @@ interface RefereeStat {
 interface StatsData {
   groupStandings: GroupStanding[];
   playerStats: PlayerStat[];
+  positionStats: PositionStat[];
   combinationStats: CombinationStat[];
   refereeLeaderboard: RefereeStat[];
 }
 
-type StandingsTab = "group" | "combo" | "player" | "referee";
+type StandingsTab = "group" | "combo" | "player" | "position" | "referee";
 const REFEREE_LONG_PRESS_MS = 1000;
 const EASTER_PARTICLES = [
   { symbol: "🎉", tx: "-280px", ty: "-160px", rotate: "-52deg", scale: "1.4", delay: "80ms" },
@@ -411,26 +430,39 @@ function StandingsContent() {
       )}
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as StandingsTab)} className="w-full">
-        <TabsList className={`w-full grid bg-green-50/80 h-10 ${showRefereeTab ? "grid-cols-4" : "grid-cols-3"}`}>
-          <TabsTrigger value="group" className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm gap-1">
-            <Users className="w-3.5 h-3.5" />
-            团体
-          </TabsTrigger>
-          <TabsTrigger value="combo" className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm gap-1">
-            <Handshake className="w-3.5 h-3.5" />
-            组合
-          </TabsTrigger>
-          <TabsTrigger value="player" className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm gap-1">
-            <User className="w-3.5 h-3.5" />
-            个人
-          </TabsTrigger>
-          {showRefereeTab && (
-            <TabsTrigger value="referee" className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm gap-1">
-              <Award className="w-3.5 h-3.5" />
-              裁判
-            </TabsTrigger>
-          )}
-        </TabsList>
+        {(() => {
+          const hasSharedPositions = (stats.positionStats || []).some(p => p.players.length > 1);
+          const baseCols = hasSharedPositions ? 4 : 3;
+          const totalCols = baseCols + (showRefereeTab ? 1 : 0);
+          return (
+            <TabsList className={`w-full grid bg-green-50/80 h-10`} style={{ gridTemplateColumns: `repeat(${totalCols}, minmax(0, 1fr))` }}>
+              <TabsTrigger value="group" className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm gap-1">
+                <Users className="w-3.5 h-3.5" />
+                团体
+              </TabsTrigger>
+              <TabsTrigger value="combo" className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm gap-1">
+                <Handshake className="w-3.5 h-3.5" />
+                组合
+              </TabsTrigger>
+              <TabsTrigger value="player" className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm gap-1">
+                <User className="w-3.5 h-3.5" />
+                个人
+              </TabsTrigger>
+              {hasSharedPositions && (
+                <TabsTrigger value="position" className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm gap-1">
+                  <MapPin className="w-3.5 h-3.5" />
+                  位置
+                </TabsTrigger>
+              )}
+              {showRefereeTab && (
+                <TabsTrigger value="referee" className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm gap-1">
+                  <Award className="w-3.5 h-3.5" />
+                  裁判
+                </TabsTrigger>
+              )}
+            </TabsList>
+          );
+        })()}
 
         {/* Group Standings */}
         <TabsContent value="group" className="mt-4">
@@ -597,6 +629,78 @@ function StandingsContent() {
                       <tr>
                         <td colSpan={8} className="p-8 text-center text-gray-400">
                           暂无个人数据
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Position Stats (merged for shared positions) */}
+        <TabsContent value="position" className="mt-4">
+          <Card className="border-green-100/80 shadow-sm overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[980px] text-sm">
+                  <thead>
+                    <tr className="border-b border-green-100 bg-green-50/60">
+                      <th className="p-3 text-left font-semibold text-green-800">#</th>
+                      <th className="p-3 text-left font-semibold text-green-800">位置</th>
+                      <th className="p-3 text-left font-semibold text-green-800">选手</th>
+                      <th className="p-3 text-center font-semibold text-green-800">胜场</th>
+                      <th className="p-3 text-center font-semibold text-green-800">负场</th>
+                      <th className="p-3 text-center font-semibold text-green-800">净胜场</th>
+                      <th className="p-3 text-center font-semibold text-green-800">得分</th>
+                      <th className="p-3 text-center font-semibold text-green-800">失分</th>
+                      <th className="p-3 text-center font-semibold text-green-800">净胜球</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(stats.positionStats || [])
+                      .filter(p => p.players.length > 1)
+                      .map((p, idx) => (
+                        <tr key={`${p.groupId}-${p.positionNumber}`} className="border-b border-gray-100/80 hover:bg-green-50/40 transition-colors">
+                          <td className="p-3"><RankCell index={idx} /></td>
+                          <td className="p-3">
+                            <span className="text-lg mr-1">{p.groupIcon}</span>
+                            <span className="font-medium text-gray-800">{p.positionNumber}号位</span>
+                            <Badge variant="outline" className={`ml-1.5 text-[10px] px-1 py-0 ${p.gender === "M" ? "border-blue-300 text-blue-600 bg-blue-50/60" : "border-pink-300 text-pink-600 bg-pink-50/60"}`}>
+                              {p.gender === "M" ? "男" : "女"}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex flex-col gap-0.5">
+                              {p.players.map(pl => (
+                                <span key={pl.id} className={`text-xs ${pl.slotIndex === 1 ? "text-gray-800" : "text-amber-700"}`}>
+                                  {pl.name || (pl.slotIndex === 1 ? "主" : "候补")}
+                                  {pl.slotIndex === 2 && <span className="text-[10px] text-amber-500 ml-0.5">(候补)</span>}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="p-3 text-center text-green-600 font-medium">{p.wins}</td>
+                          <td className="p-3 text-center text-red-500">{p.losses}</td>
+                          <td className="p-3 text-center">
+                            <span className={p.netGames > 0 ? "text-green-600 font-medium" : p.netGames < 0 ? "text-red-500" : "text-gray-500"}>
+                              {formatSignedStat(p.netGames)}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center text-gray-700">{p.pointsFor}</td>
+                          <td className="p-3 text-center text-gray-700">{p.pointsAgainst}</td>
+                          <td className="p-3 text-center">
+                            <span className={p.netPoints > 0 ? "text-green-600 font-medium" : p.netPoints < 0 ? "text-red-500" : "text-gray-500"}>
+                              {formatSignedStat(p.netPoints)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    {(!stats.positionStats || stats.positionStats.filter(p => p.players.length > 1).length === 0) && (
+                      <tr>
+                        <td colSpan={9} className="p-8 text-center text-gray-400">
+                          暂无共享位置数据
                         </td>
                       </tr>
                     )}

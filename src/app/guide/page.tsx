@@ -407,6 +407,86 @@ export default function GuidePage() {
                       </span>
                     ))}
                   </div>
+
+                  <p className="mt-3">具体对阵安排如下：</p>
+                  <div className="mt-1.5 space-y-1">
+                    {[
+                      { type: "男双", color: "bg-blue-100 text-blue-700 border-blue-200", players: "男1 · 男2" },
+                      { type: "男双", color: "bg-blue-100 text-blue-700 border-blue-200", players: "男2 · 男3" },
+                      { type: "混双", color: "bg-purple-100 text-purple-700 border-purple-200", players: "男1 · 女1" },
+                      { type: "混双", color: "bg-purple-100 text-purple-700 border-purple-200", players: "男3 · 女2" },
+                      { type: "女双", color: "bg-pink-100 text-pink-700 border-pink-200", players: "女1 · 女2" },
+                    ].map((match, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-1.5 py-0.5 squircle-pill text-[10px] font-bold border ${match.color} w-10 justify-center`}>
+                          {match.type}
+                        </span>
+                        <span className="text-xs text-gray-600 font-medium">{match.players}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="mt-3">
+                    每位选手每轮出场{" "}
+                    <span className="font-semibold text-gray-700">2 场</span>
+                    ，全队 5 人均有上场机会，确保参与感与公平性。
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right: 计分规则 + 分组与抽签 */}
+          <Card className="border-gray-100 shadow-sm">
+            <CardContent className="py-4 px-5 space-y-4">
+              <div>
+                <div className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-500" />
+                  计分规则
+                </div>
+                <div className="space-y-3 text-xs text-gray-500 leading-relaxed">
+                  <div className="p-3 squircle-lg bg-amber-50/60 border border-amber-100">
+                    <div className="text-xs font-semibold text-amber-800 mb-1">
+                      单场计分
+                    </div>
+                    <p className="text-amber-700/80">
+                      每场比赛采用{" "}
+                      <span className="font-bold text-amber-800">
+                        一局 21 分制
+                      </span>
+                      ，先到 21 分获胜，
+                      <span className="font-bold text-amber-800">不追分</span>。
+                    </p>
+                  </div>
+
+                  <div className="p-3 squircle-lg bg-gray-50 border border-gray-100">
+                    <div className="text-xs font-semibold text-gray-700 mb-2">
+                      团体积分
+                    </div>
+                    <p className="text-gray-500 mb-2">
+                      大比分（5 局中的胜场数）多的一方为团体赛胜者：
+                    </p>
+                    <div className="flex gap-2">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 squircle-control text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                        胜 → +3 分
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 squircle-control text-xs font-bold bg-red-50 text-red-600 border border-red-200">
+                        负 → +0 分
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 squircle-lg bg-gray-50 border border-gray-100">
+                    <div className="text-xs font-semibold text-gray-700 mb-1">
+                      同分排序
+                    </div>
+                    <p className="text-gray-500">
+                      积分相同时依次比较：
+                      <span className="font-semibold text-gray-700">
+                        净胜场 → 净胜分
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -433,61 +513,52 @@ export default function GuidePage() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Right: 计分规则 */}
-          <Card className="border-gray-100 shadow-sm">
-            <CardContent className="py-4 px-5">
-              <div className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                <Star className="w-4 h-4 text-amber-500" />
-                计分规则
-              </div>
-              <div className="space-y-3 text-xs text-gray-500 leading-relaxed">
-                <div className="p-3 squircle-lg bg-amber-50/60 border border-amber-100">
-                  <div className="text-xs font-semibold text-amber-800 mb-1">
-                    单场计分
-                  </div>
-                  <p className="text-amber-700/80">
-                    每场比赛采用{" "}
-                    <span className="font-bold text-amber-800">
-                      一局 21 分制
-                    </span>
-                    ，先到 21 分获胜，
-                    <span className="font-bold text-amber-800">不追分</span>。
-                  </p>
-                </div>
-
-                <div className="p-3 squircle-lg bg-gray-50 border border-gray-100">
-                  <div className="text-xs font-semibold text-gray-700 mb-2">
-                    团体积分
-                  </div>
-                  <p className="text-gray-500 mb-2">
-                    大比分（5 局中的胜场数）多的一方为团体赛胜者：
-                  </p>
-                  <div className="flex gap-2">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 squircle-control text-xs font-bold bg-green-100 text-green-700 border border-green-200">
-                      胜 → +3 分
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 squircle-control text-xs font-bold bg-red-50 text-red-600 border border-red-200">
-                      负 → +0 分
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3 squircle-lg bg-gray-50 border border-gray-100">
-                  <div className="text-xs font-semibold text-gray-700 mb-1">
-                    同分排序
-                  </div>
-                  <p className="text-gray-500">
-                    积分相同时依次比较：
-                    <span className="font-semibold text-gray-700">
-                      净胜场 → 净胜分
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* 位置说明 — Full width below */}
+        <Card className="border-gray-100 shadow-sm mt-4">
+          <CardContent className="py-4 px-5">
+            <div className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-green-500" />
+              位置说明
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed mb-3">
+              每支队伍的 5 名选手按位置编号，不同位置决定了在每轮中的搭档和比赛类型：
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              <div className="p-3 squircle-lg bg-blue-50/50 border border-blue-100/80">
+                <div className="text-[11px] font-semibold text-blue-800 mb-1.5">男选手位置</div>
+                <div className="space-y-1.5 text-[11px] text-blue-700/80">
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-blue-800 w-7 flex-shrink-0">男1</span>
+                    <span>参加 1 场男双（搭档男2）和 1 场混双（搭档女1）。兼顾男双与混双，适合攻守均衡的选手。</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-blue-800 w-7 flex-shrink-0">男2</span>
+                    <span>参加 2 场男双（分别搭档男1和男3），是男双的核心位置，出场最多，适合男双经验丰富的选手。</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-blue-800 w-7 flex-shrink-0">男3</span>
+                    <span>参加 1 场男双（搭档男2）和 1 场混双（搭档女2）。与男1类似，同时承担男双和混双任务。</span>
+                  </div>
+                </div>
+              </div>
+              <div className="p-3 squircle-lg bg-pink-50/50 border border-pink-100/80">
+                <div className="text-[11px] font-semibold text-pink-800 mb-1.5">女选手位置</div>
+                <div className="space-y-1.5 text-[11px] text-pink-700/80">
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-pink-800 w-7 flex-shrink-0">女1</span>
+                    <span>参加 1 场混双（搭档男1）和 1 场女双（搭档女2）。在混双中与男1配合，适合后场能力突出的选手。</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-pink-800 w-7 flex-shrink-0">女2</span>
+                    <span>参加 1 场混双（搭档男3）和 1 场女双（搭档女1）。在混双中与男3配合，适合前场意识强的选手。</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </section>
 
       {/* ═══ Section 2: 奖品设置 ═══ */}

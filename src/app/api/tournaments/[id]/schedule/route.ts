@@ -283,12 +283,12 @@ export async function POST(
       return scheduleMatches(generatedMatches, tournament.courtsCount);
     })();
 
-    // Helper: find player by groupIndex + positionNumber
+    // Helper: find primary player (slotIndex=1) by groupIndex + positionNumber
     const findPlayer = (groupIndex: number, positionNumber: number) => {
       const group = tournamentGroups[groupIndex];
       if (!group) return null;
       return tournamentPlayers.find(
-        (p) => p.groupId === group.id && p.positionNumber === positionNumber
+        (p) => p.groupId === group.id && p.positionNumber === positionNumber && (p.slotIndex ?? 1) === 1
       ) || null;
     };
 

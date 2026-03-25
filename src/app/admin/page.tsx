@@ -16,6 +16,7 @@ import {
   Play,
   Square,
   Shuffle,
+  ArrowLeftRight,
   UserCog,
   Palette,
 } from "lucide-react";
@@ -147,6 +148,7 @@ export default function AdminPage() {
     { icon: CalendarDays, title: "赛程安排", href: "/admin/schedule", color: "text-amber-600", accent: "border-amber-200 hover:border-amber-400 hover:bg-amber-50/50" },
     { icon: Users, title: "运动员", href: "/admin/players", color: "text-sky-600", accent: "border-sky-200 hover:border-sky-400 hover:bg-sky-50/50" },
     { icon: Shuffle, title: "摇号分组", href: "/admin/lottery", color: "text-indigo-600", accent: "border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50/50" },
+    { icon: ArrowLeftRight, title: "换人管理", href: "/admin/swap", color: "text-orange-600", accent: "border-orange-200 hover:border-orange-400 hover:bg-orange-50/50" },
     { icon: PenLine, title: "比分录入", href: "/admin/scoring", color: "text-rose-600", accent: "border-rose-200 hover:border-rose-400 hover:bg-rose-50/50" },
     { icon: UserCog, title: "账号管理", href: "/admin/users", color: "text-cyan-600", accent: "border-cyan-200 hover:border-cyan-400 hover:bg-cyan-50/50" },
   ] : [];

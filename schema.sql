@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS players (
   tournament_id INTEGER NOT NULL REFERENCES tournaments(id),
   group_id INTEGER NOT NULL REFERENCES groups(id),
   position_number INTEGER NOT NULL,
+  slot_index INTEGER NOT NULL DEFAULT 1,
   gender TEXT NOT NULL CHECK(gender IN ('M', 'F')),
   name TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))

@@ -17,7 +17,7 @@ export function Footer() {
 
           {/* Right: tagline + links */}
           <div className="flex flex-col items-end gap-1.5">
-            <span className="text-gray-400">为热爱羽毛球的朋友们而做</span>
+            <span className="text-gray-400">让每一场比赛，都值得被记住</span>
             <div className="flex items-center gap-3">
               <a
                 href="https://bojiang.org"

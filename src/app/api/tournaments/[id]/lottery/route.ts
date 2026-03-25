@@ -106,9 +106,9 @@ export async function POST(
         const participant = shuffled[gi];
         const group = tournamentGroups[gi];
 
-        // Find the player slot for this group + position
+        // Find the primary player slot (slotIndex=1) for this group + position
         const playerSlot = tournamentPlayers.find(
-          (p) => p.groupId === group.id && p.positionNumber === pos
+          (p) => p.groupId === group.id && p.positionNumber === pos && (p.slotIndex ?? 1) === 1
         );
 
         if (!playerSlot) continue;

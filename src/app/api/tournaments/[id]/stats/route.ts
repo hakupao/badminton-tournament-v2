@@ -67,6 +67,24 @@ interface CombinationStat {
   netPoints: number;
 }
 
+interface PositionStat {
+  groupId: number;
+  groupName: string;
+  groupIcon: string;
+  positionNumber: number;
+  gender: string;
+  players: { id: number; name: string | null; slotIndex: number }[];
+  wins: number;
+  losses: number;
+  draws: number;
+  matchesPlayed: number;
+  netGames: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  netPoints: number;
+  winRate: number;
+}
+
 interface MatchTypeStat {
   matchType: string;
   totalMatches: number;
@@ -300,6 +318,60 @@ export async function GET(
       b.winRate - a.winRate
     );
 
+    // ========== Position Stats (merged for shared positions) ==========
+    const positionMap = new Map<string, PositionStat>();
+
+    for (const p of allPlayers) {
+      const key = `${p.groupId}-${p.positionNumber}`;
+      if (!positionMap.has(key)) {
+        const group = groupMap.get(p.groupId);
+        positionMap.set(key, {
+          groupId: p.groupId,
+          groupName: group?.name || "",
+          groupIcon: group?.icon || "",
+          positionNumber: p.positionNumber,
+          gender: p.gender,
+          players: [],
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          matchesPlayed: 0,
+          netGames: 0,
+          pointsFor: 0,
+          pointsAgainst: 0,
+          netPoints: 0,
+          winRate: 0,
+        });
+      }
+      const pos = positionMap.get(key)!;
+      pos.players.push({ id: p.id, name: p.name, slotIndex: (p as unknown as { slotIndex?: number }).slotIndex ?? 1 });
+    }
+
+    // Aggregate player stats into position stats
+    for (const ps of playerStats) {
+      const key = `${ps.groupId}-${ps.positionNumber}`;
+      const pos = positionMap.get(key);
+      if (!pos) continue;
+      pos.wins += ps.wins;
+      pos.losses += ps.losses;
+      pos.draws += ps.draws;
+      pos.matchesPlayed += ps.matchesPlayed;
+      pos.pointsFor += ps.pointsFor;
+      pos.pointsAgainst += ps.pointsAgainst;
+    }
+
+    const positionStats = Array.from(positionMap.values())
+      .map((s) => ({
+        ...s,
+        players: s.players.sort((a, b) => a.slotIndex - b.slotIndex),
+        netGames: s.wins - s.losses,
+        netPoints: s.pointsFor - s.pointsAgainst,
+        winRate: s.matchesPlayed > 0 ? Math.round((s.wins / s.matchesPlayed) * 100) / 100 : 0,
+      }))
+      .sort((a, b) =>
+        b.wins - a.wins || b.netGames - a.netGames || b.netPoints - a.netPoints
+      );
+
     // ========== Combination Stats ==========
     const comboMap = new Map<string, CombinationStat>();
 
@@ -463,6 +535,7 @@ export async function GET(
     return NextResponse.json({
       groupStandings,
       playerStats,
+      positionStats,
       combinationStats,
       matchTypeStats,
       refereeLeaderboard,
