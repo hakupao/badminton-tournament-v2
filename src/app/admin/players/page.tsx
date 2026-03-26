@@ -207,7 +207,7 @@ function PlayersContent() {
         body: JSON.stringify({ groupId, positionNumber }),
       });
       if (res.ok) {
-        toast.success("已添加候补位置");
+        toast.success("已添加轮换位置");
         fetchData();
       } else {
         const data = await res.json() as { error?: string };
@@ -227,7 +227,7 @@ function PlayersContent() {
         body: JSON.stringify({ playerId }),
       });
       if (res.ok) {
-        toast.success("已删除候补");
+        toast.success("已删除轮换");
         fetchData();
       } else {
         const data = await res.json() as { error?: string };
@@ -366,7 +366,7 @@ function PlayersContent() {
                         }`}
                       />
                       <Input
-                        placeholder={isAlternate ? "候补姓名" : `输入姓名（默认${group.icon}${player.positionNumber}号位）`}
+                        placeholder={isAlternate ? "轮换姓名" : `输入姓名（默认${group.icon}${player.positionNumber}号位）`}
                         value={getDisplayName(player)}
                         onChange={(e) => handleNameChange(player.id, e.target.value)}
                         className="h-8 min-w-0 text-sm border-gray-200 focus:border-green-400 focus:ring-green-400"
@@ -408,7 +408,7 @@ function PlayersContent() {
                       <div className="w-7 flex justify-center">
                         {isAlternate ? (
                           <button
-                            title="删除候补"
+                            title="删除轮换"
                             onClick={() => handleRemoveAlternate(player.id)}
                             className="p-1 text-gray-300 hover:text-red-500 transition-colors"
                           >
@@ -416,7 +416,7 @@ function PlayersContent() {
                           </button>
                         ) : !alternate ? (
                           <button
-                            title="添加候补"
+                            title="添加轮换"
                             onClick={() => handleAddAlternate(group.id, posNum)}
                             className="p-1 text-gray-300 hover:text-amber-600 transition-colors"
                           >

@@ -568,3 +568,18 @@ input:focus, select:focus, textarea:focus {
 
 /* Scroll smooth */
 html { scroll-behavior: smooth; }
+
+/* Team card staggered entrance */
+@keyframes team-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.team-card-enter {
+  animation: team-card-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

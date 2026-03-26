@@ -529,6 +529,7 @@ function StandingsContent() {
                       <th className="p-3 text-left font-semibold text-green-800">组合</th>
                       <th className="p-3 text-center font-semibold text-green-800">胜场</th>
                       <th className="p-3 text-center font-semibold text-green-800">负场</th>
+                      <th className="p-3 text-center font-semibold text-green-700">胜率</th>
                       <th className="p-3 text-center font-semibold text-green-800">净胜场</th>
                       <th className="p-3 text-center font-semibold text-green-800">得分</th>
                       <th className="p-3 text-center font-semibold text-green-800">失分</th>
@@ -553,6 +554,9 @@ function StandingsContent() {
                           </td>
                           <td className="p-3 text-center text-green-600 font-medium">{c.wins}</td>
                           <td className="p-3 text-center text-red-500">{c.losses}</td>
+                          <td className="p-3 text-center font-medium text-green-700">
+                            {c.matchesPlayed > 0 ? `${Math.round((c.wins / c.matchesPlayed) * 100)}%` : "—"}
+                          </td>
                           <td className="p-3 text-center">
                             <span className={c.netGames > 0 ? "text-green-600 font-medium" : c.netGames < 0 ? "text-red-500" : "text-gray-500"}>
                               {formatSignedStat(c.netGames)}
@@ -569,7 +573,7 @@ function StandingsContent() {
                       ))}
                     {(!stats.combinationStats || stats.combinationStats.length === 0) && (
                       <tr>
-                        <td colSpan={8} className="p-8 text-center text-gray-400">
+                        <td colSpan={9} className="p-8 text-center text-gray-400">
                           暂无组合数据
                         </td>
                       </tr>
@@ -593,6 +597,7 @@ function StandingsContent() {
                       <th className="p-3 text-left font-semibold text-green-800">选手</th>
                       <th className="p-3 text-center font-semibold text-green-800">胜场</th>
                       <th className="p-3 text-center font-semibold text-green-800">负场</th>
+                      <th className="p-3 text-center font-semibold text-green-700">胜率</th>
                       <th className="p-3 text-center font-semibold text-green-800">净胜场</th>
                       <th className="p-3 text-center font-semibold text-green-800">得分</th>
                       <th className="p-3 text-center font-semibold text-green-800">失分</th>
@@ -611,6 +616,9 @@ function StandingsContent() {
                         </td>
                         <td className="p-3 text-center text-green-600 font-medium">{p.wins}</td>
                         <td className="p-3 text-center text-red-500">{p.losses}</td>
+                        <td className="p-3 text-center font-medium text-green-700">
+                          {p.winRate > 0 || p.wins > 0 ? `${Math.round(p.winRate * 100)}%` : "—"}
+                        </td>
                         <td className="p-3 text-center">
                           <span className={p.netGames > 0 ? "text-green-600 font-medium" : p.netGames < 0 ? "text-red-500" : "text-gray-500"}>
                             {formatSignedStat(p.netGames)}
@@ -627,7 +635,7 @@ function StandingsContent() {
                     ))}
                     {stats.playerStats.length === 0 && (
                       <tr>
-                        <td colSpan={8} className="p-8 text-center text-gray-400">
+                        <td colSpan={9} className="p-8 text-center text-gray-400">
                           暂无个人数据
                         </td>
                       </tr>
@@ -652,6 +660,7 @@ function StandingsContent() {
                       <th className="p-3 text-left font-semibold text-green-800">选手</th>
                       <th className="p-3 text-center font-semibold text-green-800">胜场</th>
                       <th className="p-3 text-center font-semibold text-green-800">负场</th>
+                      <th className="p-3 text-center font-semibold text-green-700">胜率</th>
                       <th className="p-3 text-center font-semibold text-green-800">净胜场</th>
                       <th className="p-3 text-center font-semibold text-green-800">得分</th>
                       <th className="p-3 text-center font-semibold text-green-800">失分</th>
@@ -675,14 +684,17 @@ function StandingsContent() {
                             <div className="flex flex-col gap-0.5">
                               {p.players.map(pl => (
                                 <span key={pl.id} className={`text-xs ${pl.slotIndex === 1 ? "text-gray-800" : "text-amber-700"}`}>
-                                  {pl.name || (pl.slotIndex === 1 ? "主" : "候补")}
-                                  {pl.slotIndex === 2 && <span className="text-[10px] text-amber-500 ml-0.5">(候补)</span>}
+                                  {pl.name || (pl.slotIndex === 1 ? "主" : "轮换")}
+                                  {pl.slotIndex === 2 && <span className="text-[10px] text-amber-500 ml-0.5">(轮换)</span>}
                                 </span>
                               ))}
                             </div>
                           </td>
                           <td className="p-3 text-center text-green-600 font-medium">{p.wins}</td>
                           <td className="p-3 text-center text-red-500">{p.losses}</td>
+                          <td className="p-3 text-center font-medium text-green-700">
+                            {p.winRate > 0 || p.wins > 0 ? `${Math.round(p.winRate * 100)}%` : "—"}
+                          </td>
                           <td className="p-3 text-center">
                             <span className={p.netGames > 0 ? "text-green-600 font-medium" : p.netGames < 0 ? "text-red-500" : "text-gray-500"}>
                               {formatSignedStat(p.netGames)}
@@ -699,7 +711,7 @@ function StandingsContent() {
                       ))}
                     {(!stats.positionStats || stats.positionStats.filter(p => p.players.length > 1).length === 0) && (
                       <tr>
-                        <td colSpan={9} className="p-8 text-center text-gray-400">
+                        <td colSpan={10} className="p-8 text-center text-gray-400">
                           暂无共享位置数据
                         </td>
                       </tr>

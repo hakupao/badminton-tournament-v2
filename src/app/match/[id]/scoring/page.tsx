@@ -2,14 +2,14 @@
 
 export const runtime = 'edge';
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { CheckCircle, Send } from "lucide-react";
+import { CheckCircle, RotateCcw, Send, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import {
   normalizeScoreTimelineEvents,
@@ -58,6 +58,42 @@ interface ScoreApiError {
   error?: string;
 }
 
+interface ScoringDraft {
+  games: GameScore[];
+  scoreEvents: ScoreTimelineEvent[];
+  currentGame: number;
+  matchFinished: boolean;
+  refereeId: string;
+  lineJudgeId: string;
+  savedAt: string;
+}
+
+function getDraftKey(matchId: string) {
+  return `scoring-draft-${matchId}`;
+}
+
+function saveDraft(matchId: string, draft: ScoringDraft) {
+  try {
+    localStorage.setItem(getDraftKey(matchId), JSON.stringify(draft));
+  } catch { /* quota exceeded or unavailable — silently ignore */ }
+}
+
+function loadDraft(matchId: string): ScoringDraft | null {
+  try {
+    const raw = localStorage.getItem(getDraftKey(matchId));
+    if (!raw) return null;
+    return JSON.parse(raw) as ScoringDraft;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft(matchId: string) {
+  try {
+    localStorage.removeItem(getDraftKey(matchId));
+  } catch { /* ignore */ }
+}
+
 export default function ScoringPage() {
   const params = useParams();
   const router = useRouter();
@@ -81,6 +117,10 @@ export default function ScoringPage() {
   const [submitting, setSubmitting] = useState(false);
   const [scoreEvents, setScoreEvents] = useState<ScoreTimelineEvent[]>([]);
 
+  // Draft recovery state
+  const [pendingDraft, setPendingDraft] = useState<ScoringDraft | null>(null);
+  const draftReady = useRef(false); // gate: don't persist until initial load is done
+
   // Determine scoring rules
   const targetScore = match?.targetScore || 21;
   const bestOf = match?.bestOf || 1;
@@ -103,8 +143,49 @@ export default function ScoringPage() {
     return maxScore >= targetScore;
   };
 
+  // Restore draft
+  const restoreDraft = useCallback((draft: ScoringDraft) => {
+    setGames(draft.games);
+    setScoreEvents(normalizeScoreTimelineEvents(draft.scoreEvents));
+    setCurrentGame(draft.currentGame);
+    setMatchFinished(draft.matchFinished);
+    setRefereeId(draft.refereeId);
+    setLineJudgeId(draft.lineJudgeId);
+    setPendingDraft(null);
+    draftReady.current = true;
+    toast.success("已恢复上次记分进度");
+  }, []);
+
+  const discardDraft = useCallback(() => {
+    clearDraft(matchId);
+    setPendingDraft(null);
+    draftReady.current = true;
+  }, [matchId]);
+
+  // Auto-save draft to localStorage (athlete mode only)
   useEffect(() => {
-    fetch(`/api/matches/${matchId}`)
+    if (!draftReady.current || isAdmin || !match) return;
+    // Don't save drafts for already-finished matches
+    if (match.status === "finished") return;
+    // Don't save empty state
+    if (games.every((g) => g.homeScore === 0 && g.awayScore === 0)) {
+      clearDraft(matchId);
+      return;
+    }
+    saveDraft(matchId, {
+      games,
+      scoreEvents,
+      currentGame,
+      matchFinished,
+      refereeId,
+      lineJudgeId,
+      savedAt: new Date().toISOString(),
+    });
+  }, [games, scoreEvents, currentGame, matchFinished, refereeId, lineJudgeId, isAdmin, match, matchId]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`/api/matches/${matchId}`, { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error("Not found");
         return r.json() as Promise<MatchData>;
@@ -131,7 +212,15 @@ export default function ScoringPage() {
           setGames(athleteGames);
           setMatchFinished(data.status === "finished");
           setCurrentGame(Math.max(data.games.length - 1, 0));
+          draftReady.current = true;
         } else {
+          // No server data — check for a saved draft
+          const draft = loadDraft(matchId);
+          if (draft && draft.games.some((g) => g.homeScore > 0 || g.awayScore > 0)) {
+            setPendingDraft(draft);
+          } else {
+            draftReady.current = true;
+          }
           setGames([{ homeScore: 0, awayScore: 0, winner: null }]);
           setMatchFinished(false);
           setCurrentGame(0);
@@ -139,7 +228,10 @@ export default function ScoringPage() {
 
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        if (err.name !== "AbortError") setLoading(false);
+      });
+    return () => controller.abort();
   }, [matchId]);
 
   // === Athlete mode functions ===
@@ -296,6 +388,7 @@ export default function ScoringPage() {
       });
 
       if (res.ok) {
+        clearDraft(matchId);
         toast.success("比分已保存！");
         router.push(`/match/${match.id}`);
       } else {
@@ -335,6 +428,47 @@ export default function ScoringPage() {
           <span>{match.awayGroup.icon} {match.awayGroup.name}</span>
         </div>
       </div>
+
+      {/* Draft Recovery Banner */}
+      {pendingDraft && (
+        <Card className="border-amber-200 bg-amber-50 shadow-md">
+          <CardContent className="py-4 space-y-3">
+            <div className="text-sm font-medium text-amber-800">
+              检测到未完成的记分数据
+            </div>
+            <div className="text-xs text-amber-600">
+              {pendingDraft.games.filter(g => g.homeScore > 0 || g.awayScore > 0).map((g, i) => (
+                <span key={i}>
+                  {i > 0 && " / "}
+                  第{i + 1}局 {g.homeScore}:{g.awayScore}
+                </span>
+              ))}
+              <span className="ml-2">
+                · 保存于 {new Date(pendingDraft.savedAt).toLocaleString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={() => restoreDraft(pendingDraft)}
+              >
+                <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                恢复记分
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                onClick={discardDraft}
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                丢弃
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Referee Buttons */}
       <Card className="border-gray-100 shadow-sm">

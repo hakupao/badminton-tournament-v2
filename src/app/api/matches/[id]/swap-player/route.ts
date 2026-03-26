@@ -96,7 +96,7 @@ export async function PATCH(
       currentPlayer.positionNumber !== newPlayer.positionNumber
     ) {
       return NextResponse.json(
-        { error: "只能在同一位置的主选手和候补之间切换" },
+        { error: "只能在同一位置的主选手和轮换之间切换" },
         { status: 400 }
       );
     }

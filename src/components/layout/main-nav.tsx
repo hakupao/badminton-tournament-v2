@@ -6,12 +6,13 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useTournament } from "@/lib/tournament-context";
-import { Home, CalendarDays, Trophy, Settings, LogIn, LogOut, Shield, Menu, X, ChevronDown, User } from "lucide-react";
+import { Home, CalendarDays, Trophy, Settings, LogIn, LogOut, Shield, Menu, X, ChevronDown, User, Users } from "lucide-react";
 import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
 import { SiteLogo } from "@/components/brand/site-logo";
 
 const publicLinks = [
   { href: "/", label: "首页", icon: Home },
+  { href: "/teams", label: "队伍", icon: Users },
   { href: "/schedule", label: "赛程", icon: CalendarDays },
   { href: "/standings", label: "排名", icon: Trophy },
 ];

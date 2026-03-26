@@ -66,7 +66,7 @@ export async function POST(
 
     if (existingAlternate) {
       return NextResponse.json(
-        { error: "该位置已有候补选手" },
+        { error: "该位置已有轮换选手" },
         { status: 400 }
       );
     }
@@ -149,7 +149,7 @@ export async function DELETE(
 
     if (player.slotIndex !== 2) {
       return NextResponse.json(
-        { error: "只能删除候补选手（slotIndex=2）" },
+        { error: "只能删除轮换选手（slotIndex=2）" },
         { status: 400 }
       );
     }
@@ -170,7 +170,7 @@ export async function DELETE(
 
     if (isReferenced) {
       return NextResponse.json(
-        { error: "该候补选手已被排入赛程，请先在换人管理中替换回主选手" },
+        { error: "该轮换选手已被排入赛程，请先在换人管理中替换回主选手" },
         { status: 400 }
       );
     }

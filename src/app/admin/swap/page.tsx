@@ -209,7 +209,7 @@ export default function AdminSwapPage() {
         <AdminPageHeader title="换人管理" icon={ArrowLeftRight} iconClassName="w-4.5 h-4.5 text-orange-600" />
         <Card className="border-dashed border-gray-200">
           <CardContent className="py-10 text-center text-gray-400 text-sm">
-            暂无双人位置，请先在「运动员」页面为位置添加候补选手
+            暂无双人位置，请先在「运动员」页面为位置添加轮换选手
           </CardContent>
         </Card>
       </div>
@@ -238,7 +238,7 @@ export default function AdminSwapPage() {
         <span className="text-[10px] text-gray-400 tabular-nums shrink-0">({appearances}场)</span>
         {hasAlternate && isPending && (
           <button
-            title={`换为 ${alternate!.name || "候补"} (${altAppearances}场)`}
+            title={`换为 ${alternate!.name || "轮换"} (${altAppearances}场)`}
             onClick={() => handleSwap(match.id, slot.key, alternate!.id)}
             disabled={swapping === match.id}
             className="ml-auto shrink-0 p-0.5 rounded text-orange-400 hover:text-orange-600 hover:bg-orange-50 transition-colors disabled:opacity-50"
@@ -293,7 +293,7 @@ export default function AdminSwapPage() {
                   <span className="font-medium">{primary.name || "主"}</span>
                   <span className="text-gray-400">({playerAppearances.get(primary.id) || 0}场)</span>
                   <span className="text-gray-300">/</span>
-                  <span className="font-medium text-amber-700">{alt.name || "候补"}</span>
+                  <span className="font-medium text-amber-700">{alt.name || "轮换"}</span>
                   <span className="text-gray-400">({playerAppearances.get(alt.id) || 0}场)</span>
                 </div>
               );
