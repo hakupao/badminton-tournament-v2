@@ -25,6 +25,7 @@ interface UpdateTournamentRequestBody {
   courtsCount?: number;
   roundDurationMinutes?: number;
   scoringMode?: ScoringMode;
+  deuceEnabled?: boolean;
   eventDate?: string | null;
   startTime?: string;
   endTime?: string;
@@ -189,6 +190,7 @@ export async function PUT(
       courtsCount,
       roundDurationMinutes,
       scoringMode,
+      deuceEnabled,
       eventDate,
       startTime,
       endTime,
@@ -214,6 +216,7 @@ export async function PUT(
     if (courtsCount !== undefined) updateData.courtsCount = courtsCount;
     if (roundDurationMinutes !== undefined) updateData.roundDurationMinutes = roundDurationMinutes;
     if (scoringMode !== undefined) updateData.scoringMode = scoringMode;
+    if (deuceEnabled !== undefined) updateData.deuceEnabled = deuceEnabled;
     if (eventDate !== undefined) updateData.eventDate = eventDate;
     if (startTime !== undefined) updateData.startTime = startTime;
     if (endTime !== undefined) updateData.endTime = endTime;

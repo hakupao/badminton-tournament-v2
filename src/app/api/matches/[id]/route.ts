@@ -156,6 +156,7 @@ export async function GET(
       scoringMode,
       targetScore: scoringInfo.points,
       bestOf: scoringInfo.games,
+      deuceEnabled: tournament?.deuceEnabled ?? true,
       allPlayers: allPlayersForSelect,
       scoreEvents: matchScoreEvents,
     });

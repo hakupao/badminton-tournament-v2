@@ -34,6 +34,7 @@ interface MatchData {
   scoringMode: string;
   targetScore: number;
   bestOf: number;
+  deuceEnabled?: boolean;
   homeGroup: { icon: string; name: string };
   awayGroup: { icon: string; name: string };
   homePlayers: Array<{ id: number; name: string | null; position: number; boundUsername?: string | null }>;
@@ -124,13 +125,21 @@ export default function ScoringPage() {
   // Determine scoring rules
   const targetScore = match?.targetScore || 21;
   const bestOf = match?.bestOf || 1;
+  const deuceEnabled = match?.deuceEnabled ?? true;
   const gamesToWin = Math.ceil(bestOf / 2);
 
   const isGameWon = (homeScore: number, awayScore: number) => {
     if (homeScore < targetScore && awayScore < targetScore) return false;
 
-    const lead = Math.abs(homeScore - awayScore);
     const maxScore = Math.max(homeScore, awayScore);
+
+    // 不追分：达到目标分数即胜
+    if (!deuceEnabled) {
+      return maxScore >= targetScore;
+    }
+
+    // 追分：需要领先 2 分，或达到封顶分数
+    const lead = Math.abs(homeScore - awayScore);
 
     if (targetScore === 21) {
       return lead >= 2 || maxScore >= 30;
@@ -140,7 +149,7 @@ export default function ScoringPage() {
       return lead >= 2 || maxScore >= 20;
     }
 
-    return maxScore >= targetScore;
+    return lead >= 2;
   };
 
   // Restore draft

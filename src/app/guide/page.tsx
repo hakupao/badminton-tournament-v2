@@ -29,6 +29,12 @@ import {
   Copy,
   Check,
   BadgeJapaneseYen,
+  Scale,
+  Smartphone,
+  ClipboardList,
+  RotateCcw,
+  Send,
+  UserCog,
 } from "lucide-react";
 import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
 
@@ -210,7 +216,7 @@ export default function GuidePage() {
               赛事介绍
             </h1>
             <p className="text-xs text-gray-400">
-              赛制 · 规则 · 奖品 · 系统使用说明
+              赛制 · 规则 · 裁判 · 奖品 · 系统使用说明
             </p>
           </div>
         </div>
@@ -554,6 +560,83 @@ export default function GuidePage() {
                     <span className="font-bold text-pink-800 w-7 flex-shrink-0">女2</span>
                     <span>参加 1 场混双（搭档男3）和 1 场女双（搭档女1）。在混双中与男3配合，适合前场意识强的选手。</span>
                   </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 裁判与记分 — Full width below */}
+        <Card className="border-gray-100 shadow-sm mt-4">
+          <CardContent className="py-4 px-5">
+            <div className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+              <Scale className="w-4 h-4 text-green-500" />
+              裁判与记分
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed mb-3">
+              每场比赛由选手自行担任裁判并完成记分，具体安排如下：
+            </p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
+              {/* 裁判安排 */}
+              <div className="p-3 squircle-lg bg-indigo-50/50 border border-indigo-100/80">
+                <div className="text-[11px] font-semibold text-indigo-800 mb-1.5 flex items-center gap-1.5">
+                  <UserCog className="w-3 h-3" />
+                  裁判安排
+                </div>
+                <div className="space-y-1.5 text-[11px] text-indigo-700/80">
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-indigo-800 flex-shrink-0">主裁</span>
+                    <span>由上一场<span className="font-semibold text-indigo-800">负方</span>选手担任，负责判罚和计分</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-indigo-800 flex-shrink-0">边裁</span>
+                    <span>由上一场<span className="font-semibold text-indigo-800">胜方</span>选手担任，协助判断边线球</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 记分方式 */}
+              <div className="p-3 squircle-lg bg-teal-50/50 border border-teal-100/80">
+                <div className="text-[11px] font-semibold text-teal-800 mb-1.5 flex items-center gap-1.5">
+                  <ClipboardList className="w-3 h-3" />
+                  记分方式
+                </div>
+                <div className="space-y-1.5 text-[11px] text-teal-700/80">
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-teal-800 flex-shrink-0">纸质</span>
+                    <span>使用纸质记分牌现场记录</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-teal-800 flex-shrink-0">手机</span>
+                    <span>使用本系统在线记分，实时同步</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 在线记分流程 */}
+            <div className="p-3 squircle-lg bg-gray-50 border border-gray-100">
+              <div className="text-[11px] font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                <Smartphone className="w-3 h-3 text-green-600" />
+                手机在线记分流程
+              </div>
+              <div className="space-y-2 text-[11px] text-gray-500">
+                <div className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-4 h-4 rounded-full bg-green-100 text-green-700 text-[10px] font-bold flex items-center justify-center mt-0.5">1</span>
+                  <span>打开对应比赛的记分页面，点击<span className="font-semibold text-gray-700">「我是主裁」</span>或<span className="font-semibold text-gray-700">「我是边裁」</span>登记身份（可选）</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-4 h-4 rounded-full bg-green-100 text-green-700 text-[10px] font-bold flex items-center justify-center mt-0.5">2</span>
+                  <span>比赛中，<span className="font-semibold text-gray-700">点击得分方的 +1 按钮</span>即可记录得分；如有误判，可点击撤销</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-4 h-4 rounded-full bg-green-100 text-green-700 text-[10px] font-bold flex items-center justify-center mt-0.5">3</span>
+                  <span>中途退出后重新进入，系统会提示<span className="font-semibold text-gray-700">恢复之前的比分</span>，无需担心丢失</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-4 h-4 rounded-full bg-green-100 text-green-700 text-[10px] font-bold flex items-center justify-center mt-0.5">4</span>
+                  <span>比赛结束后点击<span className="font-semibold text-gray-700">「提交」</span>，然后将结果告知赛事管理员核对确认即可</span>
                 </div>
               </div>
             </div>

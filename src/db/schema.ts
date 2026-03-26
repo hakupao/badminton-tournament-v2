@@ -24,6 +24,7 @@ export const tournaments = sqliteTable("tournaments", {
   eventDate: text("event_date"),
   startTime: text("start_time").default("09:00"),
   endTime: text("end_time").default("19:00"),
+  deuceEnabled: integer("deuce_enabled", { mode: "boolean" }).notNull().default(true),
   malesPerGroup: integer("males_per_group").notNull().default(3),
   femalesPerGroup: integer("females_per_group").notNull().default(2),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),

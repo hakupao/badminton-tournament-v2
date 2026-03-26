@@ -67,6 +67,7 @@ interface Tournament {
   courtsCount: number;
   roundDurationMinutes: number;
   scoringMode: string;
+  deuceEnabled?: boolean;
   startTime: string;
   endTime: string;
   malesPerGroup: number;
@@ -164,6 +165,7 @@ interface FormState {
   courtsCount: string;
   roundDurationMinutes: string;
   scoringMode: string;
+  deuceEnabled: boolean;
   maxConsecutivePlayingLimit: string;
   maxConsecutiveRestingLimit: string;
 }
@@ -195,6 +197,7 @@ export default function AdminSchedulePage() {
     courtsCount: "3",
     roundDurationMinutes: "20",
     scoringMode: "single_21",
+    deuceEnabled: true,
     maxConsecutivePlayingLimit: String(DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT),
     maxConsecutiveRestingLimit: String(DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT),
   });
@@ -244,6 +247,7 @@ export default function AdminSchedulePage() {
           courtsCount: String(nextTournament.courtsCount),
           roundDurationMinutes: String(nextTournament.roundDurationMinutes),
           scoringMode: nextTournament.scoringMode,
+          deuceEnabled: nextTournament.deuceEnabled ?? true,
         }));
       }
 
@@ -299,6 +303,7 @@ export default function AdminSchedulePage() {
           courtsCount: parsedCourtsCount,
           roundDurationMinutes: parsedRoundDurationMinutes,
           scoringMode: form.scoringMode,
+          deuceEnabled: form.deuceEnabled,
         }),
       });
 
@@ -507,6 +512,25 @@ export default function AdminSchedulePage() {
                         {option.label}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-600 font-medium">追分规则</Label>
+                <Select
+                  value={form.deuceEnabled ? "on" : "off"}
+                  onValueChange={(value) => {
+                    setForm((prev) => ({ ...prev, deuceEnabled: value === "on" }));
+                    if (simulation) setSimulationDirty(true);
+                  }}
+                >
+                  <SelectTrigger className="border-amber-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="on">开启（需领先 2 分）</SelectItem>
+                    <SelectItem value="off">关闭（达到分数即胜）</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
