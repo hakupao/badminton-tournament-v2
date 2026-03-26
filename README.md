@@ -4,6 +4,9 @@
 
 在线 Demo: https://shuttle-arena-demo.pages.dev
 
+- 用户名：`demo`
+- 密码：`demo123456`
+
 > Demo 使用独立的 Cloudflare D1 数据库，并会通过 GitHub Actions 定期重置为示例数据。
 
 ## 当前能力
