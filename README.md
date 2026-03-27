@@ -25,6 +25,22 @@
 
 ---
 
+## 页面预览
+
+| 首页 | 赛程矩阵 |
+|:---:|:---:|
+| ![首页](docs/screenshots/home.png) | ![赛程](docs/screenshots/schedule.png) |
+
+| 比赛详情 | 排名统计 |
+|:---:|:---:|
+| ![比赛详情](docs/screenshots/match-detail.png) | ![排名](docs/screenshots/standings.png) |
+
+| 管理后台 | 移动端记分 |
+|:---:|:---:|
+| ![管理后台](docs/screenshots/admin.png) | <img src="docs/screenshots/mobile-scoring.png" width="300" /> |
+
+---
+
 ## 为什么做这个项目
 
 作为一个羽毛球爱好者，我发现组织团体赛时最头疼的不是打球本身，而是赛前的各种编排工作：
