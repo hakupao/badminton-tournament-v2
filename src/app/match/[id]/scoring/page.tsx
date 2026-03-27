@@ -440,40 +440,42 @@ export default function ScoringPage() {
 
       {/* Draft Recovery Banner */}
       {pendingDraft && (
-        <Card className="border-amber-200 bg-amber-50 shadow-md">
-          <CardContent className="py-4 space-y-3">
-            <div className="text-sm font-medium text-amber-800">
-              检测到未完成的记分数据
-            </div>
-            <div className="text-xs text-amber-600">
-              {pendingDraft.games.filter(g => g.homeScore > 0 || g.awayScore > 0).map((g, i) => (
-                <span key={i}>
-                  {i > 0 && " / "}
-                  第{i + 1}局 {g.homeScore}:{g.awayScore}
-                </span>
-              ))}
-              <span className="ml-2">
-                · 保存于 {new Date(pendingDraft.savedAt).toLocaleString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                className="bg-amber-600 hover:bg-amber-700 text-white"
-                onClick={() => restoreDraft(pendingDraft)}
-              >
-                <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                恢复记分
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-amber-300 text-amber-700 hover:bg-amber-100"
-                onClick={discardDraft}
-              >
-                <Trash2 className="w-3.5 h-3.5 mr-1" />
-                丢弃
-              </Button>
+        <Card className="border-amber-200/60 bg-gradient-to-r from-amber-50 to-orange-50 shadow-sm">
+          <CardContent className="py-3 px-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-amber-100 shrink-0">
+                <RotateCcw className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-amber-800">未完成的记分</div>
+                <div className="text-xs text-amber-600/80 truncate">
+                  {pendingDraft.games.filter(g => g.homeScore > 0 || g.awayScore > 0).map((g, i) => (
+                    <span key={i}>
+                      {i > 0 && " / "}
+                      第{i + 1}局 {g.homeScore}:{g.awayScore}
+                    </span>
+                  ))}
+                  {" · "}
+                  {new Date(pendingDraft.savedAt).toLocaleString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+                </div>
+              </div>
+              <div className="flex gap-1.5 shrink-0">
+                <Button
+                  size="sm"
+                  className="bg-amber-600 hover:bg-amber-700 text-white h-8 px-3 text-xs"
+                  onClick={() => restoreDraft(pendingDraft)}
+                >
+                  恢复
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-amber-600/70 hover:text-amber-700 hover:bg-amber-100/60 h-8 w-8 p-0"
+                  onClick={discardDraft}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

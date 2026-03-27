@@ -365,7 +365,7 @@ export default function LotteryPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 w-6 p-0 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
                               onClick={() => removeParticipant(p.userId)}
                             >
                               <Trash2 className="w-3 h-3" />
