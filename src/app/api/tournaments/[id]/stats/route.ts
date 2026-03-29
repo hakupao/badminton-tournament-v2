@@ -236,6 +236,9 @@ export async function GET(
         const awayStanding = standingMap.get(m.awayGroupId);
         if (!homeStanding || !awayStanding) continue;
 
+        homeStanding.matchesPlayed++;
+        awayStanding.matchesPlayed++;
+
         // Accumulate score points from individual games
         const matchGamesList = gamesByMatch.get(m.id) || [];
         for (const g of matchGamesList) {
@@ -245,11 +248,18 @@ export async function GET(
           awayStanding.pointsAgainst += g.homeScore;
         }
 
-        // Count match wins
+        // Count per-match wins/losses/draws (individual match record)
         if (m.winner === "home") {
+          homeStanding.wins++;
+          awayStanding.losses++;
           matchWins.set(m.homeGroupId, (matchWins.get(m.homeGroupId) || 0) + 1);
         } else if (m.winner === "away") {
+          awayStanding.wins++;
+          homeStanding.losses++;
           matchWins.set(m.awayGroupId, (matchWins.get(m.awayGroupId) || 0) + 1);
+        } else {
+          homeStanding.draws++;
+          awayStanding.draws++;
         }
       }
 
@@ -262,25 +272,17 @@ export async function GET(
       const aMatchWins = matchWins.get(groupAId) || 0;
       const bMatchWins = matchWins.get(groupBId) || 0;
 
-      standingA.matchesPlayed++;
-      standingB.matchesPlayed++;
       standingA.gamesWon += aMatchWins;
       standingA.gamesLost += bMatchWins;
       standingB.gamesWon += bMatchWins;
       standingB.gamesLost += aMatchWins;
 
+      // Points are awarded per encounter (BO5), not per match
       if (aMatchWins > bMatchWins) {
-        standingA.wins++;
         standingA.points += 3;
-        standingB.losses++;
       } else if (bMatchWins > aMatchWins) {
-        standingB.wins++;
         standingB.points += 3;
-        standingA.losses++;
       } else {
-        // Draw (equal match wins)
-        standingA.draws++;
-        standingB.draws++;
         standingA.points += 1;
         standingB.points += 1;
       }
