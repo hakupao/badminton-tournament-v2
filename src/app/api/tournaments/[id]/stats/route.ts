@@ -188,57 +188,89 @@ export async function GET(
 
     const standingMap = new Map(groupStandings.map((s) => [s.groupId, s]));
 
+    // Group matches into encounters (same roundNumber + same team pair)
+    // An encounter is one "对阵": two teams play multiple matches in a round,
+    // the team winning more matches wins the encounter and gets 3 points.
+    const encounterMap = new Map<string, typeof finishedMatches>();
     for (const m of finishedMatches) {
-      const homeStanding = standingMap.get(m.homeGroupId);
-      const awayStanding = standingMap.get(m.awayGroupId);
-      if (!homeStanding || !awayStanding) continue;
+      const [minId, maxId] = m.homeGroupId < m.awayGroupId
+        ? [m.homeGroupId, m.awayGroupId]
+        : [m.awayGroupId, m.homeGroupId];
+      const key = `${m.roundNumber}-${minId}-${maxId}`;
+      let arr = encounterMap.get(key);
+      if (!arr) {
+        arr = [];
+        encounterMap.set(key, arr);
+      }
+      arr.push(m);
+    }
 
-      homeStanding.matchesPlayed++;
-      awayStanding.matchesPlayed++;
+    for (const encounterMatches of encounterMap.values()) {
+      // Accumulate score points and match wins per group
+      const matchWins = new Map<number, number>();
+      const groupIds = new Set<number>();
 
-      // Count games won/lost per match
-      const matchGamesList = gamesByMatch.get(m.id) || [];
-      let homeGamesWon = 0;
-      let awayGamesWon = 0;
+      for (const m of encounterMatches) {
+        groupIds.add(m.homeGroupId);
+        groupIds.add(m.awayGroupId);
 
-      for (const g of matchGamesList) {
-        homeStanding.pointsFor += g.homeScore;
-        homeStanding.pointsAgainst += g.awayScore;
-        awayStanding.pointsFor += g.awayScore;
-        awayStanding.pointsAgainst += g.homeScore;
+        const homeStanding = standingMap.get(m.homeGroupId);
+        const awayStanding = standingMap.get(m.awayGroupId);
+        if (!homeStanding || !awayStanding) continue;
 
-        if (g.winner === "home") {
-          homeGamesWon++;
-        } else if (g.winner === "away") {
-          awayGamesWon++;
+        // Accumulate score points from individual games
+        const matchGamesList = gamesByMatch.get(m.id) || [];
+        for (const g of matchGamesList) {
+          homeStanding.pointsFor += g.homeScore;
+          homeStanding.pointsAgainst += g.awayScore;
+          awayStanding.pointsFor += g.awayScore;
+          awayStanding.pointsAgainst += g.homeScore;
+        }
+
+        // Count match wins
+        if (m.winner === "home") {
+          matchWins.set(m.homeGroupId, (matchWins.get(m.homeGroupId) || 0) + 1);
+        } else if (m.winner === "away") {
+          matchWins.set(m.awayGroupId, (matchWins.get(m.awayGroupId) || 0) + 1);
         }
       }
 
-      homeStanding.gamesWon += homeGamesWon;
-      homeStanding.gamesLost += awayGamesWon;
-      awayStanding.gamesWon += awayGamesWon;
-      awayStanding.gamesLost += homeGamesWon;
+      // Determine encounter result
+      const [groupAId, groupBId] = [...groupIds];
+      const standingA = standingMap.get(groupAId);
+      const standingB = standingMap.get(groupBId);
+      if (!standingA || !standingB) continue;
 
-      if (m.winner === "home") {
-        homeStanding.wins++;
-        homeStanding.points += 3;
-        awayStanding.losses++;
-      } else if (m.winner === "away") {
-        awayStanding.wins++;
-        awayStanding.points += 3;
-        homeStanding.losses++;
+      const aMatchWins = matchWins.get(groupAId) || 0;
+      const bMatchWins = matchWins.get(groupBId) || 0;
+
+      standingA.matchesPlayed++;
+      standingB.matchesPlayed++;
+      standingA.gamesWon += aMatchWins;
+      standingA.gamesLost += bMatchWins;
+      standingB.gamesWon += bMatchWins;
+      standingB.gamesLost += aMatchWins;
+
+      if (aMatchWins > bMatchWins) {
+        standingA.wins++;
+        standingA.points += 3;
+        standingB.losses++;
+      } else if (bMatchWins > aMatchWins) {
+        standingB.wins++;
+        standingB.points += 3;
+        standingA.losses++;
       } else {
-        // Draw
-        homeStanding.draws++;
-        awayStanding.draws++;
-        homeStanding.points += 1;
-        awayStanding.points += 1;
+        // Draw (equal match wins)
+        standingA.draws++;
+        standingB.draws++;
+        standingA.points += 1;
+        standingB.points += 1;
       }
     }
 
     // Calculate net values
     for (const s of groupStandings) {
-      s.netGames = s.wins - s.losses;
+      s.netGames = s.gamesWon - s.gamesLost;
       s.netPoints = s.pointsFor - s.pointsAgainst;
     }
 
