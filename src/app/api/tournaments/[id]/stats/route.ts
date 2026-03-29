@@ -188,24 +188,42 @@ export async function GET(
 
     const standingMap = new Map(groupStandings.map((s) => [s.groupId, s]));
 
-    // Group matches into encounters (same roundNumber + same team pair)
-    // An encounter is one "对阵": two teams play multiple matches in a round,
+    // Group matches into encounters (same team pair + consecutive roundNumbers).
+    // An encounter is one "对阵": two teams play multiple matches (e.g. BO5),
     // the team winning more matches wins the encounter and gets 3 points.
-    const encounterMap = new Map<string, typeof finishedMatches>();
+    // In scheduling, the same pair's matches get consecutive roundNumbers
+    // (e.g. 1,2,3,4,5), with gaps between different cycles.
+    const pairMatchesMap = new Map<string, typeof finishedMatches>();
     for (const m of finishedMatches) {
       const [minId, maxId] = m.homeGroupId < m.awayGroupId
         ? [m.homeGroupId, m.awayGroupId]
         : [m.awayGroupId, m.homeGroupId];
-      const key = `${m.roundNumber}-${minId}-${maxId}`;
-      let arr = encounterMap.get(key);
+      const key = `${minId}-${maxId}`;
+      let arr = pairMatchesMap.get(key);
       if (!arr) {
         arr = [];
-        encounterMap.set(key, arr);
+        pairMatchesMap.set(key, arr);
       }
       arr.push(m);
     }
 
-    for (const encounterMatches of encounterMap.values()) {
+    // Split each pair's matches into encounters by detecting round gaps
+    const allEncounters: (typeof finishedMatches)[] = [];
+    for (const pairMatches of pairMatchesMap.values()) {
+      pairMatches.sort((a, b) => a.roundNumber - b.roundNumber);
+      let encounter = [pairMatches[0]];
+      for (let i = 1; i < pairMatches.length; i++) {
+        if (pairMatches[i].roundNumber - pairMatches[i - 1].roundNumber <= 1) {
+          encounter.push(pairMatches[i]);
+        } else {
+          allEncounters.push(encounter);
+          encounter = [pairMatches[i]];
+        }
+      }
+      allEncounters.push(encounter);
+    }
+
+    for (const encounterMatches of allEncounters) {
       // Accumulate score points and match wins per group
       const matchWins = new Map<number, number>();
       const groupIds = new Set<number>();
