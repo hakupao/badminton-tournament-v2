@@ -280,7 +280,7 @@ export async function POST(
       };
 
       const generatedMatches = generateMatches(simParams);
-      return scheduleMatches(generatedMatches, tournament.courtsCount);
+      return scheduleMatches(generatedMatches, tournament.courtsCount, tournamentGroups.length);
     })();
 
     // Helper: find primary player (slotIndex=1) by groupIndex + positionNumber

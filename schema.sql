@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
   event_date TEXT,
   start_time TEXT DEFAULT '09:00',
   end_time TEXT DEFAULT '19:00',
+  deuce_enabled INTEGER NOT NULL DEFAULT 1,
   males_per_group INTEGER NOT NULL DEFAULT 3,
   females_per_group INTEGER NOT NULL DEFAULT 2,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),

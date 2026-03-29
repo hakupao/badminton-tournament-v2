@@ -108,30 +108,6 @@ function getMatchPlayers(match: GeneratedMatch): string[] {
   ];
 }
 
-/**
- * Simple seeded pseudo-random number generator (mulberry32)
- */
-function seededRandom(seed: number): () => number {
-  let s = seed | 0;
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/**
- * Shuffle an array in place using a provided random function
- */
-function shuffleArray<T>(arr: T[], rng: () => number): T[] {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
 function getPlayingLimit(params?: Pick<SimulationParams, "maxConsecutivePlayingLimit">) {
   return Math.max(
     1,
@@ -146,43 +122,135 @@ function getRestingLimit(params?: Pick<SimulationParams, "maxConsecutiveRestingL
   );
 }
 
-function evaluateScheduleQuality(
-  schedule: ScheduledMatch[],
-  maxConsecutivePlayingLimit: number,
-  maxConsecutiveRestingLimit: number
-): number {
-  const totalRounds = Math.max(...schedule.map((s) => s.roundNumber), 0);
-  if (totalRounds === 0) return 0;
+/**
+ * Round-robin circle method: 生成循环赛配对
+ * 每个循环包含 floor(N/2) 组对战，每队恰好出场一次。
+ * N 个队伍产生 N-1 个循环（奇数队时自动加 bye）。
+ */
+function generateRoundRobinCycles(groupCount: number): Array<Array<[number, number]>> {
+  const teams = Array.from({ length: groupCount }, (_, i) => i);
 
-  // Build per-player round presence
-  const playerRoundsMap: Map<string, boolean[]> = new Map();
+  // 奇数队伍补一个 bye(-1)
+  if (groupCount % 2 !== 0) teams.push(-1);
 
-  for (const match of schedule) {
-    const players = getMatchPlayers(match);
-    for (const p of players) {
-      if (!playerRoundsMap.has(p)) {
-        playerRoundsMap.set(p, new Array(totalRounds).fill(false));
-      }
-      playerRoundsMap.get(p)![match.roundNumber - 1] = true;
+  const n = teams.length;
+  const cycles: Array<Array<[number, number]>> = [];
+
+  for (let round = 0; round < n - 1; round++) {
+    const pairs: Array<[number, number]> = [];
+
+    for (let i = 0; i < n / 2; i++) {
+      const a = teams[i];
+      const b = teams[n - 1 - i];
+
+      if (a === -1 || b === -1) continue;
+
+      // 统一：小序号在前（与 generateMatches 的 key 一致）
+      pairs.push(a < b ? [a, b] : [b, a]);
+    }
+
+    cycles.push(pairs);
+
+    // 旋转：固定 teams[0]，其余顺时针旋转
+    const last = teams[n - 1];
+    for (let i = n - 1; i > 1; i--) {
+      teams[i] = teams[i - 1];
+    }
+    teams[1] = last;
+  }
+
+  return cycles;
+}
+
+/**
+ * 生成数组的全排列（仅用于场地数量级别的小数组，通常 2-5）
+ */
+function getPermutations(arr: number[]): number[][] {
+  if (arr.length <= 1) return [[...arr]];
+  const results: number[][] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+    for (const perm of getPermutations(rest)) {
+      results.push([arr[i], ...perm]);
+    }
+  }
+  return results;
+}
+
+/**
+ * 为一个 batch 的对战组分配场地，尽量避免队伍与上一个循环在同一场地。
+ */
+function assignCourtsForBatch(
+  batch: Array<[number, number]>,
+  courtsCount: number,
+  lastCourtForTeam: Map<number, number>
+): Array<{ pair: [number, number]; court: number }> {
+  const availableCourts = Array.from(
+    { length: Math.min(batch.length, courtsCount) },
+    (_, i) => i + 1
+  );
+
+  const perms = getPermutations(availableCourts);
+  let bestPerm = availableCourts;
+  let bestScore = Infinity;
+
+  for (const perm of perms) {
+    let score = 0;
+    for (let i = 0; i < batch.length; i++) {
+      const [home, away] = batch[i];
+      const court = perm[i];
+      if (lastCourtForTeam.get(home) === court) score++;
+      if (lastCourtForTeam.get(away) === court) score++;
+    }
+    if (score < bestScore) {
+      bestScore = score;
+      bestPerm = perm;
+      if (score === 0) break; // 完美，无重复
     }
   }
 
-  let penalty = 0;
-  for (const [, rounds] of playerRoundsMap) {
-    const maxPlay = maxConsecutive(rounds);
-    const maxRest = maxConsecutive(rounds.map((r) => !r));
+  return batch.map((pair, i) => ({
+    pair,
+    court: bestPerm[i],
+  }));
+}
 
-    if (maxPlay > maxConsecutivePlayingLimit) {
-      penalty += (maxPlay - maxConsecutivePlayingLimit) * 100;
-    }
-    if (maxPlay === maxConsecutivePlayingLimit) {
-      penalty += 5;
-    }
-    if (maxRest > maxConsecutiveRestingLimit) {
-      penalty += (maxRest - maxConsecutiveRestingLimit) * 50;
-    }
-    if (maxRest === maxConsecutiveRestingLimit) {
-      penalty += 10;
+/**
+ * 评估一组模板比赛顺序的连续上场惩罚分
+ */
+function evaluateTemplateOrder(
+  orderedMatches: GeneratedMatch[],
+  startRound: number,
+  maxConsecutivePlayingLimit: number,
+  playerLastPlayedRound: Map<string, number>,
+  playerConsecutivePlaying: Map<string, number>,
+): number {
+  let penalty = 0;
+
+  // 复制状态用于模拟
+  const simLastPlayed = new Map(playerLastPlayedRound);
+  const simConsecutive = new Map(playerConsecutivePlaying);
+
+  for (let t = 0; t < orderedMatches.length; t++) {
+    const round = startRound + t;
+    const players = getMatchPlayers(orderedMatches[t]);
+
+    for (const p of players) {
+      const lastRound = simLastPlayed.get(p) ?? 0;
+      const gap = round - lastRound;
+
+      if (gap === 1) {
+        const consec = (simConsecutive.get(p) ?? 0) + 1;
+        simConsecutive.set(p, consec);
+        if (consec > maxConsecutivePlayingLimit) {
+          penalty += 100;
+        } else if (consec === maxConsecutivePlayingLimit) {
+          penalty += 5;
+        }
+      } else {
+        simConsecutive.set(p, 1);
+      }
+      simLastPlayed.set(p, round);
     }
   }
 
@@ -190,274 +258,225 @@ function evaluateScheduleQuality(
 }
 
 /**
- * Greedy scheduling with enhanced penalties for consecutive playing/resting
+ * 穷举法：找到惩罚最小的模板排列（模板数 ≤ 8 时使用）
  */
-function greedySchedule(
-  allMatches: GeneratedMatch[],
-  courtsCount: number,
+function exhaustiveTemplateOrder(
+  pairMatches: GeneratedMatch[],
+  startRound: number,
   maxConsecutivePlayingLimit: number,
-  maxConsecutiveRestingLimit: number
-): ScheduledMatch[] {
-  const scheduled: ScheduledMatch[] = [];
-  const remaining = [...allMatches];
+  playerLastPlayedRound: Map<string, number>,
+  playerConsecutivePlaying: Map<string, number>,
+): GeneratedMatch[] {
+  const indices = pairMatches.map((_, i) => i);
+  const perms = getPermutations(indices);
 
-  // 记录每个选手上一次上场的轮次
-  const lastPlayedRound: Map<string, number> = new Map();
-  // 记录每个选手连续上场的次数（到当前为止）
-  const consecutivePlaying: Map<string, number> = new Map();
+  let bestPerm = indices;
+  let bestPenalty = Infinity;
 
-  let roundNumber = 1;
-
-  while (remaining.length > 0) {
-    const roundMatches: GeneratedMatch[] = [];
-    const roundPlayers = new Set<string>();
-
-    // 对剩余比赛评分，优先选择"休息最久的人"参与的比赛
-    const scored = remaining.map((match, index) => {
-      const players = getMatchPlayers(match);
-
-      // 检查是否有冲突（同一轮已有该选手）
-      const hasConflict = players.some((p) => roundPlayers.has(p));
-      if (hasConflict) return { index, score: -Infinity };
-
-      // 计算得分：选手休息越久，得分越高
-      let score = 0;
-      for (const p of players) {
-        const lastRound = lastPlayedRound.get(p) ?? 0;
-        const restGap = roundNumber - lastRound;
-
-        if (restGap >= maxConsecutiveRestingLimit + 1) score += 30;
-        else if (restGap >= maxConsecutiveRestingLimit) score += 15;
-        else score += restGap;
-
-        // 惩罚：上一轮刚打过的选手（连续上场）
-        if (restGap === 1) {
-          score -= 20;
-          const consec = consecutivePlaying.get(p) ?? 0;
-          if (consec >= maxConsecutivePlayingLimit) {
-            score -= 200;
-          } else if (
-            maxConsecutivePlayingLimit > 1 &&
-            consec === maxConsecutivePlayingLimit - 1
-          ) {
-            score -= 50;
-          }
-        }
-      }
-      return { index, score };
-    });
-
-    // 按得分排序，优先选高分
-    scored.sort((a, b) => b.score - a.score);
-
-    for (const { index, score } of scored) {
-      if (score === -Infinity) continue;
-      if (roundMatches.length >= courtsCount) break;
-
-      const match = remaining[index];
-      const players = getMatchPlayers(match);
-
-      // 再次检查冲突（因为可能在本轮中已加入了新比赛）
-      if (players.some((p) => roundPlayers.has(p))) continue;
-
-      roundMatches.push(match);
-      players.forEach((p) => roundPlayers.add(p));
-    }
-
-    // 如果本轮一场都没安排上，说明有问题，强制选一场
-    if (roundMatches.length === 0 && remaining.length > 0) {
-      roundMatches.push(remaining[0]);
-      const players = getMatchPlayers(remaining[0]);
-      players.forEach((p) => roundPlayers.add(p));
-    }
-
-    // 将本轮比赛从剩余列表移除，并分配场地
-    for (let courtIdx = 0; courtIdx < roundMatches.length; courtIdx++) {
-      const match = roundMatches[courtIdx];
-      const matchIndex = remaining.indexOf(match);
-      remaining.splice(matchIndex, 1);
-
-      const scheduledMatch: ScheduledMatch = {
-        ...match,
-        roundNumber,
-        courtNumber: courtIdx + 1,
-      };
-      scheduled.push(scheduledMatch);
-
-      // 更新选手记录
-      const players = getMatchPlayers(match);
-      for (const p of players) {
-        const lastRound = lastPlayedRound.get(p) ?? 0;
-        if (lastRound === roundNumber - 1) {
-          consecutivePlaying.set(p, (consecutivePlaying.get(p) ?? 0) + 1);
-        } else {
-          consecutivePlaying.set(p, 1);
-        }
-        lastPlayedRound.set(p, roundNumber);
-      }
-    }
-
-    roundNumber++;
-  }
-
-  return scheduled;
-}
-
-/**
- * Local search optimization: try swapping matches between rounds to reduce
- * consecutive playing/resting.
- */
-function localSearchOptimize(
-  schedule: ScheduledMatch[],
-  maxConsecutivePlayingLimit: number,
-  maxConsecutiveRestingLimit: number,
-  maxIterations: number = 500
-): ScheduledMatch[] {
-  let best = [...schedule];
-  let bestScore = evaluateScheduleQuality(
-    best,
-    maxConsecutivePlayingLimit,
-    maxConsecutiveRestingLimit
-  );
-
-  if (bestScore === 0) return best;
-
-  const totalRounds = Math.max(...schedule.map((s) => s.roundNumber), 0);
-
-  // Group matches by round
-  function groupByRound(sched: ScheduledMatch[]): Map<number, ScheduledMatch[]> {
-    const map = new Map<number, ScheduledMatch[]>();
-    for (const m of sched) {
-      if (!map.has(m.roundNumber)) map.set(m.roundNumber, []);
-      map.get(m.roundNumber)!.push(m);
-    }
-    return map;
-  }
-
-  for (let iter = 0; iter < maxIterations; iter++) {
-    if (bestScore === 0) break;
-
-    // Pick two random rounds to try swapping a match between them
-    const r1 = Math.floor(Math.random() * totalRounds) + 1;
-    const r2 = Math.floor(Math.random() * totalRounds) + 1;
-    if (r1 === r2) continue;
-
-    const roundMap = groupByRound(best);
-    const round1 = roundMap.get(r1) ?? [];
-    const round2 = roundMap.get(r2) ?? [];
-
-    if (round1.length === 0 || round2.length === 0) continue;
-
-    // Pick random matches from each round
-    const idx1 = Math.floor(Math.random() * round1.length);
-    const idx2 = Math.floor(Math.random() * round2.length);
-
-    const match1 = round1[idx1];
-    const match2 = round2[idx2];
-
-    // Check that swapping won't cause player conflicts within each round
-    const players1 = getMatchPlayers(match1);
-    const players2 = getMatchPlayers(match2);
-
-    // Players in round1 excluding match1, plus match2's players
-    const otherPlayersR1 = new Set<string>();
-    for (const m of round1) {
-      if (m === match1) continue;
-      getMatchPlayers(m).forEach((p) => otherPlayersR1.add(p));
-    }
-    if (players2.some((p) => otherPlayersR1.has(p))) continue;
-
-    // Players in round2 excluding match2, plus match1's players
-    const otherPlayersR2 = new Set<string>();
-    for (const m of round2) {
-      if (m === match2) continue;
-      getMatchPlayers(m).forEach((p) => otherPlayersR2.add(p));
-    }
-    if (players1.some((p) => otherPlayersR2.has(p))) continue;
-
-    // Also check court capacity
-    // round1 loses match1, gains match2 -> same size, ok
-    // round2 loses match2, gains match1 -> same size, ok
-
-    // Try the swap
-    const candidate = best.map((m) => {
-      if (m === match1) {
-        return { ...m, roundNumber: r2, courtNumber: match2.courtNumber };
-      }
-      if (m === match2) {
-        return { ...m, roundNumber: r1, courtNumber: match1.courtNumber };
-      }
-      return m;
-    });
-
-    const candidateScore = evaluateScheduleQuality(
-      candidate,
-      maxConsecutivePlayingLimit,
-      maxConsecutiveRestingLimit
+  for (const perm of perms) {
+    const ordered = perm.map(i => pairMatches[i]);
+    const penalty = evaluateTemplateOrder(
+      ordered, startRound, maxConsecutivePlayingLimit,
+      playerLastPlayedRound, playerConsecutivePlaying
     );
-    if (candidateScore < bestScore) {
-      best = candidate;
-      bestScore = candidateScore;
+    if (penalty < bestPenalty) {
+      bestPenalty = penalty;
+      bestPerm = perm;
+      if (penalty === 0) break;
     }
   }
 
-  return best;
+  return bestPerm.map(i => pairMatches[i]);
 }
 
 /**
- * 赛程编排：将所有比赛分配到轮次和场地
- * 多次随机贪心 + 局部搜索优化
+ * 贪心法：逐轮选择惩罚最小的模板比赛（模板数 > 8 时使用）
+ */
+function greedyTemplateOrder(
+  pairMatches: GeneratedMatch[],
+  startRound: number,
+  maxConsecutivePlayingLimit: number,
+  playerLastPlayedRound: Map<string, number>,
+  playerConsecutivePlaying: Map<string, number>,
+): GeneratedMatch[] {
+  const remaining = [...pairMatches];
+  const result: GeneratedMatch[] = [];
+
+  const simLastPlayed = new Map(playerLastPlayedRound);
+  const simConsecutive = new Map(playerConsecutivePlaying);
+
+  for (let t = 0; t < pairMatches.length; t++) {
+    const round = startRound + t;
+    let bestIdx = 0;
+    let bestScore = -Infinity;
+
+    for (let i = 0; i < remaining.length; i++) {
+      const players = getMatchPlayers(remaining[i]);
+      let score = 0;
+
+      for (const p of players) {
+        const lastRound = simLastPlayed.get(p) ?? 0;
+        const gap = round - lastRound;
+
+        if (gap === 1) {
+          const consec = (simConsecutive.get(p) ?? 0) + 1;
+          if (consec > maxConsecutivePlayingLimit) score -= 200;
+          else if (consec === maxConsecutivePlayingLimit) score -= 50;
+          else score -= 20;
+        } else {
+          score += gap;
+        }
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestIdx = i;
+      }
+    }
+
+    const chosen = remaining[bestIdx];
+    result.push(chosen);
+    remaining.splice(bestIdx, 1);
+
+    const players = getMatchPlayers(chosen);
+    for (const p of players) {
+      const lastRound = simLastPlayed.get(p) ?? 0;
+      if (lastRound === round - 1) {
+        simConsecutive.set(p, (simConsecutive.get(p) ?? 0) + 1);
+      } else {
+        simConsecutive.set(p, 1);
+      }
+      simLastPlayed.set(p, round);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * 为一组对战的模板比赛选择最优顺序，减少选手连续上场
+ */
+function optimizeTemplateOrder(
+  pairMatches: GeneratedMatch[],
+  startRound: number,
+  maxConsecutivePlayingLimit: number,
+  playerLastPlayedRound: Map<string, number>,
+  playerConsecutivePlaying: Map<string, number>,
+): GeneratedMatch[] {
+  if (pairMatches.length <= 1) return pairMatches;
+
+  if (pairMatches.length <= 8) {
+    return exhaustiveTemplateOrder(
+      pairMatches, startRound, maxConsecutivePlayingLimit,
+      playerLastPlayedRound, playerConsecutivePlaying
+    );
+  }
+  return greedyTemplateOrder(
+    pairMatches, startRound, maxConsecutivePlayingLimit,
+    playerLastPlayedRound, playerConsecutivePlaying
+  );
+}
+
+/**
+ * 赛程编排：循环制场地绑定 + 模板顺序贪心优化
+ * - 同一对战的所有比赛绑定在同一个场地，连续打完
+ * - 每个循环结束后重新分配场地，尽量避免队伍连续在同一场地
+ * - 在场地绑定的约束下，优化模板比赛顺序以减少选手连续上场
  */
 export function scheduleMatches(
   allMatches: GeneratedMatch[],
   courtsCount: number,
+  groupCount: number,
   maxConsecutivePlayingLimit: number = DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT,
-  maxConsecutiveRestingLimit: number = DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT
 ): ScheduledMatch[] {
-  const NUM_ATTEMPTS = 8;
-
-  let bestSchedule: ScheduledMatch[] | null = null;
-  let bestScore = Infinity;
-
-  for (let attempt = 0; attempt < NUM_ATTEMPTS; attempt++) {
-    // Shuffle input order with different seeds
-    const shuffled = [...allMatches];
-    if (attempt > 0) {
-      const rng = seededRandom(attempt * 7919 + 42);
-      shuffleArray(shuffled, rng);
-    }
-
-    // Greedy pass
-    let candidate = greedySchedule(
-      shuffled,
-      courtsCount,
-      maxConsecutivePlayingLimit,
-      maxConsecutiveRestingLimit
-    );
-
-    // Local search optimization pass
-    candidate = localSearchOptimize(
-      candidate,
-      maxConsecutivePlayingLimit,
-      maxConsecutiveRestingLimit,
-      500
-    );
-
-    const score = evaluateScheduleQuality(
-      candidate,
-      maxConsecutivePlayingLimit,
-      maxConsecutiveRestingLimit
-    );
-    if (score < bestScore) {
-      bestScore = score;
-      bestSchedule = candidate;
-    }
-
-    // Perfect score, no need to try more
-    if (bestScore === 0) break;
+  // Step 1: 按对战组分组 (homeGroupIndex-awayGroupIndex)
+  const matchupMap = new Map<string, GeneratedMatch[]>();
+  for (const match of allMatches) {
+    const key = `${match.homeGroupIndex}-${match.awayGroupIndex}`;
+    if (!matchupMap.has(key)) matchupMap.set(key, []);
+    matchupMap.get(key)!.push(match);
   }
 
-  return bestSchedule!;
+  // Step 2: 生成 round-robin 循环配对
+  const cycles = generateRoundRobinCycles(groupCount);
+
+  const scheduled: ScheduledMatch[] = [];
+  const lastCourtForTeam = new Map<number, number>();
+  // 选手状态跟踪（跨循环传递，用于贪心优化）
+  const playerLastPlayedRound = new Map<string, number>();
+  const playerConsecutivePlaying = new Map<string, number>();
+  let roundNumber = 1;
+
+  for (const cycle of cycles) {
+    // 如果一个循环的对战组数 > 场地数，拆分成多个 batch
+    for (let batchStart = 0; batchStart < cycle.length; batchStart += courtsCount) {
+      const batch = cycle.slice(batchStart, batchStart + courtsCount);
+
+      // 分配场地（带轮转偏好）
+      const courtAssignment = assignCourtsForBatch(batch, courtsCount, lastCourtForTeam);
+
+      // 本 batch 各对战组的最大模板场次数
+      const maxTemplates = Math.max(
+        ...batch.map(pair => {
+          const key = `${pair[0]}-${pair[1]}`;
+          return matchupMap.get(key)?.length ?? 0;
+        })
+      );
+
+      // 为每对对战组优化模板顺序，然后安排到对应场地
+      const batchScheduled: ScheduledMatch[] = [];
+
+      for (const { pair, court } of courtAssignment) {
+        const key = `${pair[0]}-${pair[1]}`;
+        const pairMatches = matchupMap.get(key);
+        if (!pairMatches || pairMatches.length === 0) continue;
+
+        // 找到最优模板顺序
+        const orderedMatches = optimizeTemplateOrder(
+          pairMatches, roundNumber, maxConsecutivePlayingLimit,
+          playerLastPlayedRound, playerConsecutivePlaying
+        );
+
+        for (let t = 0; t < orderedMatches.length; t++) {
+          batchScheduled.push({
+            ...orderedMatches[t],
+            roundNumber: roundNumber + t,
+            courtNumber: court,
+          });
+        }
+      }
+
+      scheduled.push(...batchScheduled);
+
+      // 更新选手状态（同 batch 各对战组不共享选手，顺序无关）
+      for (let t = 0; t < maxTemplates; t++) {
+        const round = roundNumber + t;
+        for (const sm of batchScheduled) {
+          if (sm.roundNumber !== round) continue;
+          const players = getMatchPlayers(sm);
+          for (const p of players) {
+            const lastRound = playerLastPlayedRound.get(p) ?? 0;
+            if (lastRound === round - 1) {
+              playerConsecutivePlaying.set(p, (playerConsecutivePlaying.get(p) ?? 0) + 1);
+            } else {
+              playerConsecutivePlaying.set(p, 1);
+            }
+            playerLastPlayedRound.set(p, round);
+          }
+        }
+      }
+
+      roundNumber += maxTemplates;
+
+      // 更新各队最后使用的场地
+      for (const { pair, court } of courtAssignment) {
+        lastCourtForTeam.set(pair[0], court);
+        lastCourtForTeam.set(pair[1], court);
+      }
+    }
+  }
+
+  return scheduled;
 }
 
 // ========== 质量评估 ==========
@@ -544,12 +563,12 @@ export function runSimulation(params: SimulationParams): SimulationResult {
   // 1. 生成所有比赛
   const allMatches = generateMatches(params);
 
-  // 2. 赛程编排
+  // 2. 赛程编排（循环制场地绑定 + 模板顺序贪心优化）
   const schedule = scheduleMatches(
     allMatches,
     params.courtsCount,
+    params.groupCount,
     maxConsecutivePlayingLimit,
-    maxConsecutiveRestingLimit
   );
 
   // 3. 质量评估
