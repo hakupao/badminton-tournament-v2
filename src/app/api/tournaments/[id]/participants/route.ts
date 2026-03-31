@@ -133,9 +133,37 @@ export async function POST(
         );
       }
 
+      if (gender !== "M" && gender !== "F") {
+        return NextResponse.json(
+          { error: "性别必须为 M 或 F" },
+          { status: 400 }
+        );
+      }
+
       if (assignedPosition < 1 || assignedPosition > totalPerGroup) {
         return NextResponse.json(
           { error: `位置号必须在 1-${totalPerGroup} 之间` },
+          { status: 400 }
+        );
+      }
+
+      const expectedGender = assignedPosition <= tournament.malesPerGroup ? "M" : "F";
+      if (gender !== expectedGender) {
+        return NextResponse.json(
+          { error: `位置 ${assignedPosition} 需要 ${expectedGender === "M" ? "男" : "女"}子选手` },
+          { status: 400 }
+        );
+      }
+
+      const user = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, userId))
+        .get();
+
+      if (!user) {
+        return NextResponse.json(
+          { error: `用户 ${userId} 不存在` },
           { status: 400 }
         );
       }

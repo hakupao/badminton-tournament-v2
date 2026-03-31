@@ -16,6 +16,7 @@
     "d1:init": "npx wrangler d1 execute shuttle-arena-db --remote --file=schema.sql",
     "d1:init:demo": "npx wrangler d1 execute shuttle-arena-demo-db --remote --file=schema.sql",
     "d1:init:local": "npx wrangler d1 execute shuttle-arena-db --local --file=schema.sql",
+    "db:seed:sqlite": "tsx src/db/seed.ts",
     "d1:seed:demo": "npx wrangler d1 execute shuttle-arena-demo-db --remote --file=scripts/seed-demo.sql",
     "d1:seed:local": "npx wrangler d1 execute shuttle-arena-db --local --file=scripts/seed-local-d1.sql"
   },
@@ -42,7 +43,6 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260313.1",
     "@tailwindcss/postcss": "^4",
-    "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -51,6 +51,7 @@
     "drizzle-kit": "^0.31.9",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "postcss": "^8.5.6",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5",

@@ -7,6 +7,10 @@ import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
 
+function isIntegerInRange(value: number, min: number, max: number) {
+  return Number.isInteger(value) && value >= min && value <= max;
+}
+
 interface CreateTournamentBody {
   name?: string;
   courtsCount?: number;
@@ -79,7 +83,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (groupCount < 2 || groupCount > 20) {
+    if (!isIntegerInRange(courtsCount, 1, 20)) {
+      return NextResponse.json(
+        { error: "场地数必须在 1 到 20 之间" },
+        { status: 400 }
+      );
+    }
+
+    if (!isIntegerInRange(roundDurationMinutes, 5, 120)) {
+      return NextResponse.json(
+        { error: "每轮时长必须在 5 到 120 分钟之间" },
+        { status: 400 }
+      );
+    }
+
+    if (!isIntegerInRange(malesPerGroup, 1, 10) || !isIntegerInRange(femalesPerGroup, 1, 10)) {
+      return NextResponse.json(
+        { error: "每组男女人数必须在 1 到 10 之间" },
+        { status: 400 }
+      );
+    }
+
+    if (!isIntegerInRange(groupCount, 2, 20)) {
       return NextResponse.json(
         { error: "小组数必须在 2 到 20 之间" },
         { status: 400 }
@@ -87,7 +112,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create tournament
-    await db
+    const insertResult = await db
       .insert(tournaments)
       .values({
         name: name.trim(),
@@ -102,9 +127,20 @@ export async function POST(request: NextRequest) {
       })
       .run();
 
-    // Query back to get the real ID (D1 compatible - .returning().get() unreliable on D1)
-    const recentTournaments = await db.select().from(tournaments).all();
-    const tournament = recentTournaments.sort((a, b) => b.id - a.id)[0];
+    const tournamentId = Number(insertResult.meta.last_row_id);
+    if (!Number.isInteger(tournamentId) || tournamentId <= 0) {
+      throw new Error("Failed to resolve inserted tournament id");
+    }
+
+    const tournament = await db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, tournamentId))
+      .get();
+
+    if (!tournament) {
+      throw new Error("Created tournament not found");
+    }
 
     const defaultTemplate = buildDefaultTemplate(malesPerGroup, femalesPerGroup);
 
@@ -134,7 +170,7 @@ export async function POST(request: NextRequest) {
         .run();
     }
 
-    // Create groups using ANIMAL_TEAMS
+    // Create groups using default team icons
     for (let i = 0; i < groupCount; i++) {
       const team = getDefaultTeam(i);
       await db

@@ -20,6 +20,10 @@ import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
 
+function isIntegerInRange(value: number, min: number, max: number) {
+  return Number.isInteger(value) && value >= min && value <= max;
+}
+
 interface UpdateTournamentRequestBody {
   name?: string;
   courtsCount?: number;
@@ -210,9 +214,42 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid scoring mode" }, { status: 400 });
     }
 
+    if (name !== undefined && (typeof name !== "string" || name.trim().length === 0)) {
+      return NextResponse.json({ error: "Tournament name is required" }, { status: 400 });
+    }
+
+    if (courtsCount !== undefined && !isIntegerInRange(courtsCount, 1, 20)) {
+      return NextResponse.json({ error: "场地数必须在 1 到 20 之间" }, { status: 400 });
+    }
+
+    if (roundDurationMinutes !== undefined && !isIntegerInRange(roundDurationMinutes, 5, 120)) {
+      return NextResponse.json({ error: "每轮时长必须在 5 到 120 分钟之间" }, { status: 400 });
+    }
+
+    if (malesPerGroup !== undefined && !isIntegerInRange(malesPerGroup, 1, 10)) {
+      return NextResponse.json({ error: "每组男生人数必须在 1 到 10 之间" }, { status: 400 });
+    }
+
+    if (femalesPerGroup !== undefined && !isIntegerInRange(femalesPerGroup, 1, 10)) {
+      return NextResponse.json({ error: "每组女生人数必须在 1 到 10 之间" }, { status: 400 });
+    }
+
+    if (groupCount !== undefined && !isIntegerInRange(groupCount, 2, 20)) {
+      return NextResponse.json({ error: "小组数必须在 2 到 20 之间" }, { status: 400 });
+    }
+
+    if (
+      status !== undefined &&
+      status !== "draft" &&
+      status !== "active" &&
+      status !== "finished"
+    ) {
+      return NextResponse.json({ error: "Invalid tournament status" }, { status: 400 });
+    }
+
     // Build update object with only provided fields
     const updateData: Record<string, unknown> = {};
-    if (name !== undefined) updateData.name = name;
+    if (name !== undefined) updateData.name = name.trim();
     if (courtsCount !== undefined) updateData.courtsCount = courtsCount;
     if (roundDurationMinutes !== undefined) updateData.roundDurationMinutes = roundDurationMinutes;
     if (scoringMode !== undefined) updateData.scoringMode = scoringMode;

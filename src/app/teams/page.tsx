@@ -191,25 +191,39 @@ function TeamCard({
 function TeamsContent() {
   const { currentId, loading: tournamentLoading } = useTournament();
   const [data, setData] = useState<TournamentData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (tournamentLoading) return;
-    if (!currentId) {
-      setLoading(false);
+    if (tournamentLoading || !currentId) {
       return;
     }
-    setLoading(true);
-    fetch(`/api/tournaments/${currentId}`)
-      .then((r) => r.json() as Promise<TournamentData>)
+
+    const controller = new AbortController();
+
+    fetch(`/api/tournaments/${currentId}`, { signal: controller.signal })
+      .then((r) => {
+        if (!r.ok) {
+          throw new Error("Failed to load tournament teams");
+        }
+
+        return r.json() as Promise<TournamentData>;
+      })
       .then((d) => {
         setData(d);
-        setLoading(false);
+        setLoadedTournamentId(currentId);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setData(null);
+        setLoadedTournamentId(currentId);
+      });
+
+    return () => controller.abort();
   }, [currentId, tournamentLoading]);
 
-  if (loading || tournamentLoading) {
+  const loading = tournamentLoading || (currentId !== null && loadedTournamentId !== currentId);
+
+  if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2.5">

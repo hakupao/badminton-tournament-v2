@@ -3,15 +3,10 @@
  *
  * All API routes in this project run on the Edge runtime, both in local dev
  * (`npm run dev` with Cloudflare bindings) and on Cloudflare Pages.
- *
- * The Node.js better-sqlite3 fallback is still preserved in `src/db/node.ts`
- * for explicit Node-only tooling, but Edge routes must not import that file.
  */
 import { getRequestContext } from "@cloudflare/next-on-pages";
 import { drizzle as drizzleD1 } from "drizzle-orm/d1";
 import * as schema from "./schema";
-
-export { schema };
 
 type CloudflareEnvWithDb = CloudflareEnv & { DB: D1Database };
 type DbInstance = ReturnType<typeof createD1Db>;

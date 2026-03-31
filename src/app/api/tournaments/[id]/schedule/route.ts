@@ -243,6 +243,69 @@ export async function POST(
       }
     }
 
+    if (providedSchedule) {
+      const totalPositions = tournament.malesPerGroup + tournament.femalesPerGroup;
+
+      for (const match of providedSchedule) {
+        if (
+          !Number.isInteger(match.roundNumber) ||
+          match.roundNumber < 1 ||
+          !Number.isInteger(match.courtNumber) ||
+          match.courtNumber < 1 ||
+          match.courtNumber > tournament.courtsCount
+        ) {
+          return NextResponse.json(
+            { error: "赛程中的轮次和场地号必须为有效正整数" },
+            { status: 400 }
+          );
+        }
+
+        if (
+          match.homeGroupIndex < 0 ||
+          match.homeGroupIndex >= tournamentGroups.length ||
+          match.awayGroupIndex < 0 ||
+          match.awayGroupIndex >= tournamentGroups.length ||
+          match.homeGroupIndex === match.awayGroupIndex
+        ) {
+          return NextResponse.json(
+            { error: "赛程中的队伍索引无效" },
+            { status: 400 }
+          );
+        }
+
+        if (
+          match.homePos1 < 1 ||
+          match.homePos1 > totalPositions ||
+          match.homePos2 < 1 ||
+          match.homePos2 > totalPositions ||
+          match.awayPos1 < 1 ||
+          match.awayPos1 > totalPositions ||
+          match.awayPos2 < 1 ||
+          match.awayPos2 > totalPositions
+        ) {
+          return NextResponse.json(
+            { error: "赛程中的位置编号超出当前编制范围" },
+            { status: 400 }
+          );
+        }
+
+        const templateMatch = templates[match.templateIndex];
+        if (
+          !templateMatch ||
+          templateMatch.matchType !== match.matchType ||
+          templateMatch.homePos1 !== match.homePos1 ||
+          templateMatch.homePos2 !== match.homePos2 ||
+          templateMatch.awayPos1 !== match.awayPos1 ||
+          templateMatch.awayPos2 !== match.awayPos2
+        ) {
+          return NextResponse.json(
+            { error: "赛程草稿与当前比赛模板不一致，请重新模拟后再发布" },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     // Delete existing matches and dependent records for this tournament
     const existingMatches = await db
       .select()

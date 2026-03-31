@@ -55,4 +55,4 @@ next-env.d.ts
 
 # playwright-test
 .playwright-mcp
-
+.playwright-cli/

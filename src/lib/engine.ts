@@ -24,7 +24,7 @@ export interface SimulationParams {
   templateMatches: Pick<TemplateMatch, "matchType" | "homePos1" | "homePos2" | "awayPos1" | "awayPos2">[];
 }
 
-export interface GeneratedMatch {
+interface GeneratedMatch {
   homeGroupIndex: number;
   awayGroupIndex: number;
   matchType: "MD" | "WD" | "XD";
@@ -35,12 +35,12 @@ export interface GeneratedMatch {
   templateIndex: number;
 }
 
-export interface ScheduledMatch extends GeneratedMatch {
+interface ScheduledMatch extends GeneratedMatch {
   roundNumber: number;
   courtNumber: number;
 }
 
-export interface PlayerScheduleInfo {
+interface PlayerScheduleInfo {
   groupIndex: number;
   position: number;
   gender: "M" | "F";
@@ -52,7 +52,7 @@ export interface PlayerScheduleInfo {
   rounds: boolean[]; // true = 该轮上场
 }
 
-export interface SimulationResult {
+interface SimulationResult {
   totalMatches: number;
   totalRounds: number;
   estimatedDurationMinutes: number;
@@ -501,7 +501,7 @@ function maxConsecutive(arr: boolean[]): number {
 /**
  * 生成排布质量报告
  */
-export function analyzeSchedule(
+function analyzeSchedule(
   schedule: ScheduledMatch[],
   params: SimulationParams,
   roundDurationMinutes?: number

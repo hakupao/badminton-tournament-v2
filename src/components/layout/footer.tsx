@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="mt-auto border-t border-gray-100 bg-white/60 backdrop-blur-sm">
       <div className="container mx-auto max-w-7xl px-4 py-5 md:py-6">
-        <div className="flex items-start justify-between text-xs text-gray-400 max-w-none sm:max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto sm:mx-auto md:mx-auto lg:mx-auto">
+        <div className="flex items-start justify-between text-xs text-gray-400 max-w-none sm:max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto">
           {/* Left: brand */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1.5">

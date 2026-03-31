@@ -9,7 +9,7 @@ export function sanitizeIntegerInput(value: string) {
   return value.replace(/[^\d]/g, "")
 }
 
-export function clampNumber(value: number, min?: number, max?: number) {
+function clampNumber(value: number, min?: number, max?: number) {
   let next = value
   if (min !== undefined) next = Math.max(min, next)
   if (max !== undefined) next = Math.min(max, next)

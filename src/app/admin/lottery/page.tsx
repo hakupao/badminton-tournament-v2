@@ -40,6 +40,17 @@ interface ActionResponse {
   assignments?: LotteryResult[];
 }
 
+interface ParticipantsResponse {
+  participants?: Participant[];
+  malesPerGroup?: number;
+  femalesPerGroup?: number;
+  groupCount?: number;
+}
+
+interface UsersResponse {
+  users?: RegisteredUser[];
+}
+
 export default function LotteryPage() {
   const { currentId, loading: tournamentLoading } = useTournament();
   const tournamentId = currentId ? String(currentId) : "";
@@ -71,10 +82,16 @@ export default function LotteryPage() {
         fetch(`/api/tournaments/${tournamentId}/participants`),
         fetch("/api/users"),
       ]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const partData: any = await partRes.json();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const usersData: any = await usersRes.json();
+
+      if (!partRes.ok || !usersRes.ok) {
+        throw new Error("Failed to load lottery data");
+      }
+
+      const [partData, usersData] = await Promise.all([
+        partRes.json() as Promise<ParticipantsResponse>,
+        usersRes.json() as Promise<UsersResponse>,
+      ]);
+
       setParticipants(partData.participants || []);
       setMalesPerGroup(partData.malesPerGroup || 3);
       setFemalesPerGroup(partData.femalesPerGroup || 2);

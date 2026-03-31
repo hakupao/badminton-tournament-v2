@@ -1,5 +1,5 @@
-export const USERNAME_MIN_LENGTH = 2;
-export const PASSWORD_MIN_LENGTH = 4;
+const USERNAME_MIN_LENGTH = 2;
+const PASSWORD_MIN_LENGTH = 4;
 
 export function normalizeUsername(value: unknown) {
   return typeof value === "string" ? value.trim() : "";

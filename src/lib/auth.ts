@@ -24,7 +24,7 @@ export async function createToken(userId: number, role: string): Promise<string>
     .sign(JWT_SECRET);
 }
 
-export async function verifyToken(token: string) {
+async function verifyToken(token: string) {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     return payload as { userId: number; role: string };

@@ -1,5 +1,5 @@
 // 默认代号库（创建时使用，之后可在赛事设置中完全自定义）
-export const DEFAULT_TEAM_ICONS = [
+const DEFAULT_TEAM_ICONS = [
   { icon: "🐱", name: "猫队" },
   { icon: "🐶", name: "狗队" },
   { icon: "🐰", name: "兔队" },
@@ -22,9 +22,6 @@ export const DEFAULT_TEAM_ICONS = [
   { icon: "🦅", name: "鹰队" },
 ];
 
-// Backward compatibility alias
-export const ANIMAL_TEAMS = DEFAULT_TEAM_ICONS;
-
 // Helper: get default team for index (falls back to numbered teams beyond the list)
 export function getDefaultTeam(index: number) {
   if (index < DEFAULT_TEAM_ICONS.length) return DEFAULT_TEAM_ICONS[index];
@@ -38,7 +35,7 @@ export const MATCH_TYPE_LABELS = {
   XD: "混双",
 } as const;
 
-export type MatchType = keyof typeof MATCH_TYPE_LABELS;
+type MatchType = keyof typeof MATCH_TYPE_LABELS;
 
 export const DEFAULT_MAX_CONSECUTIVE_PLAYING_LIMIT = 2;
 export const DEFAULT_MAX_CONSECUTIVE_RESTING_LIMIT = 3;
@@ -53,12 +50,12 @@ export const SCORING_MODES = {
 
 export type ScoringMode = keyof typeof SCORING_MODES;
 
-export interface TemplatePositionConfig {
+interface TemplatePositionConfig {
   positionNumber: number;
   gender: "M" | "F";
 }
 
-export interface MirroredTemplateMatchConfig {
+interface MirroredTemplateMatchConfig {
   matchType: MatchType;
   homePos1: number;
   homePos2: number;
@@ -136,6 +133,3 @@ export function buildDefaultTemplate(
     matches,
   };
 }
-
-// 默认比赛模板 (3男2女 = 5人组)
-export const DEFAULT_TEMPLATE = buildDefaultTemplate(3, 2);

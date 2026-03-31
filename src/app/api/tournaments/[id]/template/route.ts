@@ -9,6 +9,7 @@ import {
   refereeRecords,
   scoreEvents,
 } from "@/db/schema";
+import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
 export const runtime = 'edge';
@@ -50,6 +51,15 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json(
+      { error: "Unauthorized: Admin access required" },
+      { status: 403 }
+    );
+  }
+
+  try {
     const db = getDb();
     const { id } = await params;
     const tournamentId = parseInt(id, 10);
@@ -86,7 +96,16 @@ export async function PUT(
       );
     }
 
+    const totalPositions = tournament.malesPerGroup + tournament.femalesPerGroup;
+    if (positions.length !== totalPositions) {
+      return NextResponse.json(
+        { error: `位置数量必须等于当前编制的 ${totalPositions} 个位置` },
+        { status: 400 }
+      );
+    }
+
     const validatedPositions: Array<{ positionNumber: number; gender: "M" | "F" }> = [];
+    const positionGenderMap = new Map<number, "M" | "F">();
     for (const pos of positions) {
       if (
         typeof pos.positionNumber !== "number" ||
@@ -99,10 +118,33 @@ export async function PUT(
         );
       }
 
+      if (pos.positionNumber < 1 || pos.positionNumber > totalPositions) {
+        return NextResponse.json(
+          { error: `位置号必须在 1-${totalPositions} 之间` },
+          { status: 400 }
+        );
+      }
+
+      if (positionGenderMap.has(pos.positionNumber)) {
+        return NextResponse.json(
+          { error: `位置 ${pos.positionNumber} 重复定义` },
+          { status: 400 }
+        );
+      }
+
+      const expectedGender = pos.positionNumber <= tournament.malesPerGroup ? "M" : "F";
+      if (pos.gender !== expectedGender) {
+        return NextResponse.json(
+          { error: `位置 ${pos.positionNumber} 的性别必须为 ${expectedGender}` },
+          { status: 400 }
+        );
+      }
+
       validatedPositions.push({
         positionNumber: pos.positionNumber,
         gender: pos.gender,
       });
+      positionGenderMap.set(pos.positionNumber, pos.gender);
     }
 
     const validatedMatches: Array<{
@@ -140,6 +182,68 @@ export async function PUT(
         awayPos1: m.awayPos1,
         awayPos2: m.awayPos2,
       });
+    }
+
+    for (const match of validatedMatches) {
+      const matchPositions = [
+        match.homePos1,
+        match.homePos2,
+        match.awayPos1,
+        match.awayPos2,
+      ];
+
+      if (matchPositions.some((position) => !positionGenderMap.has(position))) {
+        return NextResponse.json(
+          { error: "模板中的位置引用必须存在于当前位置编制中" },
+          { status: 400 }
+        );
+      }
+
+      if (match.homePos1 === match.homePos2 || match.awayPos1 === match.awayPos2) {
+        return NextResponse.json(
+          { error: "同一侧不能重复使用同一个位置" },
+          { status: 400 }
+        );
+      }
+
+      const homeGenders = [
+        positionGenderMap.get(match.homePos1),
+        positionGenderMap.get(match.homePos2),
+      ];
+      const awayGenders = [
+        positionGenderMap.get(match.awayPos1),
+        positionGenderMap.get(match.awayPos2),
+      ];
+
+      if (
+        match.matchType === "MD" &&
+        [...homeGenders, ...awayGenders].some((gender) => gender !== "M")
+      ) {
+        return NextResponse.json(
+          { error: "男双只能使用男子位置" },
+          { status: 400 }
+        );
+      }
+
+      if (
+        match.matchType === "WD" &&
+        [...homeGenders, ...awayGenders].some((gender) => gender !== "F")
+      ) {
+        return NextResponse.json(
+          { error: "女双只能使用女子位置" },
+          { status: 400 }
+        );
+      }
+
+      if (
+        match.matchType === "XD" &&
+        (new Set(homeGenders).size !== 2 || new Set(awayGenders).size !== 2)
+      ) {
+        return NextResponse.json(
+          { error: "混双每一侧必须各由一男一女组成" },
+          { status: 400 }
+        );
+      }
     }
 
     // Template changes invalidate the generated schedule.

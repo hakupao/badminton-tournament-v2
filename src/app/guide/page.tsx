@@ -32,8 +32,6 @@ import {
   Scale,
   Smartphone,
   ClipboardList,
-  RotateCcw,
-  Send,
   UserCog,
 } from "lucide-react";
 import { ShuttlecockIcon } from "@/components/brand/shuttlecock-icon";
