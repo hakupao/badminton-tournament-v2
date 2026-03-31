@@ -3,8 +3,9 @@
 import { Suspense, useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDays, LayoutGrid, List, Star } from "lucide-react";
+import { CalendarDays, LayoutGrid, List, Search, Star, X } from "lucide-react";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
 import { useTournament } from "@/lib/tournament-context";
 
@@ -95,6 +96,7 @@ function ScheduleContent() {
   const [loadedTournamentId, setLoadedTournamentId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<"matrix" | "list">("matrix");
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const myPlayerId = user?.playerId;
 
@@ -199,6 +201,25 @@ function ScheduleContent() {
 
   const groupMap = new Map(groups.map((g) => [g.id, g]));
   const playerMap = new Map(players.map((p) => [p.id, p]));
+
+  // Build a lookup: playerId → searchable display text
+  const playerSearchText = new Map<number, string>();
+  for (const p of players) {
+    const group = groupMap.get(p.groupId);
+    const parts = [group?.icon, group?.name, `${p.positionNumber}号`, p.name, p.boundUsername].filter(Boolean);
+    playerSearchText.set(p.id, parts.join(" ").toLowerCase());
+  }
+
+  const isSearching = searchQuery.trim().length > 0;
+  const searchLower = searchQuery.trim().toLowerCase();
+
+  const matchContainsPlayer = (match: ScheduleMatch): boolean => {
+    const ids = [match.homePlayer1Id, match.homePlayer2Id, match.awayPlayer1Id, match.awayPlayer2Id];
+    return ids.some((id) => id !== null && (playerSearchText.get(id) || "").includes(searchLower));
+  };
+
+  const filteredMatches = isSearching ? matches.filter(matchContainsPlayer) : matches;
+
   const maxRound = Math.max(...matches.map((m) => m.roundNumber));
   const maxCourt = Math.max(...matches.map((m) => m.courtNumber));
   const mobileMatrixGridTemplate = `3.35rem repeat(${maxCourt}, minmax(0, 1fr))`;
@@ -207,9 +228,15 @@ function ScheduleContent() {
     const p1 = p1Id ? playerMap.get(p1Id) : undefined;
     const p2 = p2Id ? playerMap.get(p2Id) : undefined;
     if (!p1 && !p2) return null;
+
+    const isP1Match = isSearching && p1Id !== null && (playerSearchText.get(p1Id) || "").includes(searchLower);
+    const isP2Match = isSearching && p2Id !== null && (playerSearchText.get(p2Id) || "").includes(searchLower);
+
     return (
       <span className="block text-[10px] text-gray-500 leading-[1.45]">
-        {formatPlayer(p1, groupMap)} + {formatPlayer(p2, groupMap)}
+        <span className={isP1Match ? "text-green-700 font-semibold" : ""}>{formatPlayer(p1, groupMap)}</span>
+        {" + "}
+        <span className={isP2Match ? "text-green-700 font-semibold" : ""}>{formatPlayer(p2, groupMap)}</span>
       </span>
     );
   };
@@ -235,14 +262,48 @@ function ScheduleContent() {
         </Tabs>
       </div>
 
-      {myPlayerId && (
+      {/* Player search */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+        <Input
+          type="text"
+          placeholder="搜索选手姓名..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-8 pr-8 h-9 text-sm bg-white border-green-200 focus-visible:ring-green-300"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      {isSearching && (
+        <div className="text-xs text-muted-foreground">
+          找到 <span className="font-medium text-green-700">{filteredMatches.length}</span> 场相关比赛
+        </div>
+      )}
+
+      {myPlayerId && !isSearching && (
         <div className="flex items-center gap-1.5 text-xs text-yellow-700 bg-yellow-50/80 border border-yellow-200 squircle-sm px-2.5 py-1">
           <Star className="w-3 h-3 fill-yellow-400 text-yellow-500 shrink-0" />
           <span>黄色高亮 = 你的比赛</span>
         </div>
       )}
 
-      {viewMode === "matrix" ? (
+      {isSearching && filteredMatches.length === 0 ? (
+        <Card className="border-dashed border-border/50">
+          <CardContent className="py-10 text-center">
+            <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">未找到与「{searchQuery}」相关的比赛</p>
+          </CardContent>
+        </Card>
+      ) : viewMode === "matrix" && !isSearching ? (
         <>
           {/* Mobile: compact mini-matrix */}
           <div className="md:hidden">
@@ -475,7 +536,8 @@ function ScheduleContent() {
         <div className="space-y-4">
           {Array.from({ length: maxRound }, (_, roundIdx) => {
             const roundNum = roundIdx + 1;
-            const roundMatches = matches.filter((m) => m.roundNumber === roundNum);
+            const roundMatches = filteredMatches.filter((m) => m.roundNumber === roundNum);
+            if (roundMatches.length === 0) return null;
 
             return (
               <div key={roundNum}>
