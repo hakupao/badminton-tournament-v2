@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function proxy(request: NextRequest) {
+// Keep middleware for Cloudflare Pages until proxy supports Edge runtime there.
+export function middleware(request: NextRequest) {
   const method = request.method.toUpperCase();
 
   if (
