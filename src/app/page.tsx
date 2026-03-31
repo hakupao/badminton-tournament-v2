@@ -27,6 +27,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
   draft: { label: "筹备中", color: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-400" },
   active: { label: "进行中", color: "bg-green-50 text-green-700 border-green-200", dot: "bg-green-500 live-pulse" },
   finished: { label: "已结束", color: "bg-gray-100 text-gray-500 border-gray-200", dot: "bg-gray-400" },
+  archived: { label: "已归档", color: "bg-blue-50 text-blue-600 border-blue-200", dot: "bg-blue-400" },
 };
 
 export default function HomePage() {
@@ -45,8 +46,8 @@ export default function HomePage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const activeTournaments = tournaments.filter((t) => t.status !== "finished");
-  const finishedTournaments = tournaments.filter((t) => t.status === "finished");
+  const activeTournaments = tournaments.filter((t) => t.status !== "finished" && t.status !== "archived");
+  const finishedTournaments = tournaments.filter((t) => t.status === "finished" || t.status === "archived");
 
   return (
     <div className="space-y-10">
@@ -208,8 +209,8 @@ export default function HomePage() {
                 <CardContent className="py-4 px-5">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">{t.name}</span>
-                    <Badge variant="outline" className="text-[10px] text-gray-400 border-gray-200 bg-gray-100">
-                      已结束
+                    <Badge variant="outline" className={`text-[10px] border ${t.status === "archived" ? "text-blue-500 border-blue-200 bg-blue-50" : "text-gray-400 border-gray-200 bg-gray-100"}`}>
+                      {t.status === "archived" ? "已归档" : "已结束"}
                     </Badge>
                   </div>
                   <div className="text-xs text-gray-400 mb-3 flex items-center gap-2">

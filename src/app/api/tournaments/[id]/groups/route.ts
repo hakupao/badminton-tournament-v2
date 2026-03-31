@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { groups, players, users } from "@/db/schema";
+import { groups, players, users, tournaments } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
@@ -103,6 +103,11 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
     }
 
+    const tournament = await db.select().from(tournaments).where(eq(tournaments.id, tournamentId)).get();
+    if (tournament?.status === "archived") {
+      return NextResponse.json({ error: "赛事已归档，数据已冻结，不能修改" }, { status: 403 });
+    }
+
     const body = await request.json() as GroupUpdateRequest;
     const { groupUpdates } = body;
 
@@ -179,6 +184,11 @@ export async function POST(
     const tournamentId = parseInt(id, 10);
     if (isNaN(tournamentId)) {
       return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });
+    }
+
+    const tournament = await db.select().from(tournaments).where(eq(tournaments.id, tournamentId)).get();
+    if (tournament?.status === "archived") {
+      return NextResponse.json({ error: "赛事已归档，数据已冻结，不能修改" }, { status: 403 });
     }
 
     const body = await request.json() as PlayerAssignmentRequest;

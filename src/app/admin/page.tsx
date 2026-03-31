@@ -19,6 +19,7 @@ import {
   ArrowLeftRight,
   UserCog,
   Palette,
+  Archive,
 } from "lucide-react";
 import { useTournament } from "@/lib/tournament-context";
 
@@ -46,12 +47,14 @@ const STATUS_COLORS: Record<string, string> = {
   draft: "bg-amber-50 text-amber-600 border-amber-200",
   active: "bg-green-50 text-green-600 border-green-200",
   finished: "bg-gray-100 text-gray-500 border-gray-200",
+  archived: "bg-blue-50 text-blue-600 border-blue-200",
 };
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "筹备中",
   active: "进行中",
   finished: "已结束",
+  archived: "已归档",
 };
 
 export default function AdminPage() {
@@ -223,24 +226,37 @@ export default function AdminPage() {
                     </Button>
                   )}
                   {t.status === "finished" && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-3 text-xs text-blue-600 hover:bg-blue-50"
+                        onClick={(e) => { e.stopPropagation(); if (confirm("归档后数据将被冻结，不可修改或删除。确定归档吗？")) changeTournamentStatus(t.id, "archived"); }}
+                      >
+                        <Archive className="w-3 h-3" />
+                        归档
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-3 text-xs text-amber-600 hover:bg-amber-50"
+                        onClick={(e) => { e.stopPropagation(); changeTournamentStatus(t.id, "draft"); }}
+                      >
+                        重置
+                      </Button>
+                    </>
+                  )}
+
+                  {t.status !== "archived" && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 px-3 text-xs text-amber-600 hover:bg-amber-50"
-                      onClick={(e) => { e.stopPropagation(); changeTournamentStatus(t.id, "draft"); }}
+                      className="h-7 w-7 p-0 text-gray-300 hover:bg-red-50 hover:text-red-500"
+                      onClick={(e) => { e.stopPropagation(); deleteTournament(t.id, t.name); }}
                     >
-                      重置
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   )}
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0 text-gray-300 hover:bg-red-50 hover:text-red-500"
-                    onClick={(e) => { e.stopPropagation(); deleteTournament(t.id, t.name); }}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
                 </div>
               </div>
             </div>

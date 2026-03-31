@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { matches, players } from "@/db/schema";
+import { matches, players, tournaments } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
@@ -61,6 +61,11 @@ export async function PATCH(
 
     if (!match) {
       return NextResponse.json({ error: "Match not found" }, { status: 404 });
+    }
+
+    const tournament = await db.select().from(tournaments).where(eq(tournaments.id, match.tournamentId)).get();
+    if (tournament?.status === "archived") {
+      return NextResponse.json({ error: "赛事已归档，数据已冻结，不能修改" }, { status: 403 });
     }
 
     if (match.status !== "pending") {

@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS tournaments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'active', 'finished')),
+  status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'active', 'finished', 'archived')),
   courts_count INTEGER NOT NULL DEFAULT 3,
   round_duration_minutes INTEGER NOT NULL DEFAULT 20,
   scoring_mode TEXT NOT NULL DEFAULT 'single_21' CHECK(scoring_mode IN ('single_21', 'single_30', 'best_of_3_15', 'best_of_3_21')),

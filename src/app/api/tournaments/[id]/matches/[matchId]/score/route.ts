@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { matches, matchGames, refereeRecords, scoreEvents } from "@/db/schema";
+import { matches, matchGames, refereeRecords, scoreEvents, tournaments } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
@@ -55,6 +55,12 @@ export async function POST(
 
     if (!match || match.tournamentId !== tournamentId) {
       return NextResponse.json({ error: "Match not found" }, { status: 404 });
+    }
+
+    // Block all scoring for archived tournaments
+    const tournament = await db.select().from(tournaments).where(eq(tournaments.id, tournamentId)).get();
+    if (tournament?.status === "archived") {
+      return NextResponse.json({ error: "赛事已归档，数据已冻结，不能修改" }, { status: 403 });
     }
 
     const isAdmin = user?.role === "admin";

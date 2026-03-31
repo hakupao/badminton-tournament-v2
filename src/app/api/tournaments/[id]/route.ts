@@ -36,7 +36,7 @@ interface UpdateTournamentRequestBody {
   malesPerGroup?: number;
   femalesPerGroup?: number;
   groupCount?: number;
-  status?: "draft" | "active" | "finished";
+  status?: "draft" | "active" | "finished" | "archived";
 }
 
 async function deleteTournamentMatches(db: ReturnType<typeof getDb>, tournamentId: number) {
@@ -242,9 +242,15 @@ export async function PUT(
       status !== undefined &&
       status !== "draft" &&
       status !== "active" &&
-      status !== "finished"
+      status !== "finished" &&
+      status !== "archived"
     ) {
       return NextResponse.json({ error: "Invalid tournament status" }, { status: 400 });
+    }
+
+    // Archived tournaments are frozen — only allow status change (to unarchive)
+    if (existing.status === "archived" && status === undefined) {
+      return NextResponse.json({ error: "赛事已归档，数据已冻结，不能修改" }, { status: 403 });
     }
 
     // Build update object with only provided fields
@@ -426,6 +432,10 @@ export async function DELETE(
 
     if (!existing) {
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
+    }
+
+    if (existing.status === "archived") {
+      return NextResponse.json({ error: "赛事已归档，不能删除" }, { status: 403 });
     }
 
     await deleteTournamentDependencies(db, tournamentId);

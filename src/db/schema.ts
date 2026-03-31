@@ -15,7 +15,7 @@ export const users = sqliteTable("users", {
 export const tournaments = sqliteTable("tournaments", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  status: text("status", { enum: ["draft", "active", "finished"] }).notNull().default("draft"),
+  status: text("status", { enum: ["draft", "active", "finished", "archived"] }).notNull().default("draft"),
   courtsCount: integer("courts_count").notNull().default(3),
   roundDurationMinutes: integer("round_duration_minutes").notNull().default(20),
   scoringMode: text("scoring_mode", {

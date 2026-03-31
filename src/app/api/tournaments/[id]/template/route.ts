@@ -77,6 +77,10 @@ export async function PUT(
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
 
+    if (tournament.status === "archived") {
+      return NextResponse.json({ error: "赛事已归档，数据已冻结，不能修改" }, { status: 403 });
+    }
+
     const body = await request.json() as {
       positions?: Array<{ positionNumber?: number; gender?: string }>;
       matches?: Array<{
