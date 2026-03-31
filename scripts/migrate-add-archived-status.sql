@@ -1,15 +1,18 @@
 -- Migration: Add 'archived' to tournaments.status CHECK constraint
+-- For D1, execute this file in one request. Do not run it line-by-line
+-- in the dashboard SQL console, otherwise the deferred foreign key state will not
+-- be preserved for the DROP/RENAME steps.
 --
--- For REMOTE D1 (Cloudflare):
---   npx wrangler d1 execute shuttle-arena-db --remote --command "PRAGMA foreign_keys = OFF"
 --   npx wrangler d1 execute shuttle-arena-db --remote --file=scripts/migrate-add-archived-status.sql
---   npx wrangler d1 execute shuttle-arena-db --remote --command "PRAGMA foreign_keys = ON"
 --
--- For LOCAL development (use sqlite3 directly):
---   sqlite3 .wrangler/state/v3/d1/miniflare-D1DatabaseObject/<DB_FILE>.sqlite < scripts/migrate-add-archived-status.sql
---
--- SQLite does not support ALTER COLUMN to modify CHECK constraints.
--- We must recreate the table with the new constraint and copy data over.
+--   npx wrangler d1 execute shuttle-arena-db --local --file=scripts/migrate-add-archived-status.sql
+
+-- Remote D1 rejects explicit BEGIN/COMMIT here; each execute/import request is
+-- already handled atomically on the server side.
+PRAGMA defer_foreign_keys = on;
+
+-- Clean up leftovers from a partially executed migration attempt.
+DROP TABLE IF EXISTS tournaments_new;
 
 CREATE TABLE tournaments_new (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +30,38 @@ CREATE TABLE tournaments_new (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
-
-INSERT INTO tournaments_new SELECT * FROM tournaments;
+INSERT INTO tournaments_new (
+  id,
+  name,
+  status,
+  courts_count,
+  round_duration_minutes,
+  scoring_mode,
+  event_date,
+  start_time,
+  end_time,
+  deuce_enabled,
+  males_per_group,
+  females_per_group,
+  created_at,
+  updated_at
+)
+SELECT
+  id,
+  name,
+  status,
+  courts_count,
+  round_duration_minutes,
+  scoring_mode,
+  event_date,
+  start_time,
+  end_time,
+  deuce_enabled,
+  males_per_group,
+  females_per_group,
+  created_at,
+  updated_at
+FROM tournaments;
 DROP TABLE tournaments;
 ALTER TABLE tournaments_new RENAME TO tournaments;
+PRAGMA defer_foreign_keys = off;

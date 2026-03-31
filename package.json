@@ -16,6 +16,7 @@
     "d1:init": "npx wrangler d1 execute shuttle-arena-db --remote --file=schema.sql",
     "d1:init:demo": "npx wrangler d1 execute shuttle-arena-demo-db --remote --file=schema.sql",
     "d1:init:local": "npx wrangler d1 execute shuttle-arena-db --local --file=schema.sql",
+    "d1:migrate:archived": "npx wrangler d1 execute shuttle-arena-db --remote --file=scripts/migrate-add-archived-status.sql",
     "db:seed:sqlite": "tsx src/db/seed.ts",
     "d1:seed:demo": "npx wrangler d1 execute shuttle-arena-demo-db --remote --file=scripts/seed-demo.sql",
     "d1:seed:local": "npx wrangler d1 execute shuttle-arena-db --local --file=scripts/seed-local-d1.sql"
