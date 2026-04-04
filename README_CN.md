@@ -2,17 +2,7 @@
 
 # ShuttleArena 羽球竞技场
 
-<svg width="100%" height="120" viewBox="0 0 800 120" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="800" height="120" fill="url(#headerGrad)"/>
-  <text x="400" y="50" font-size="48" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial">🏸 羽球竞技场</text>
-  <text x="400" y="85" font-size="20" fill="#e0f2fe" text-anchor="middle" font-family="Arial">全栈羽毛球赛事管理平台</text>
-</svg>
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=30&duration=3000&pause=1000&color=3B82F6&center=true&vCenter=true&width=800&height=80&lines=ShuttleArena;%E5%85%A8%E6%A0%88%E7%BE%BD%E6%AF%9B%E7%90%83%E8%B5%9B%E4%BA%8B%E7%AE%A1%E7%90%86%E5%B9%B3%E5%8F%B0" alt="ShuttleArena"/>
 
 **[English](README.md) | [中文](README_CN.md)**
 

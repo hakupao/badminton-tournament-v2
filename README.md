@@ -2,17 +2,7 @@
 
 # ShuttleArena 羽球竞技场
 
-<svg width="100%" height="120" viewBox="0 0 800 120" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="800" height="120" fill="url(#headerGrad)"/>
-  <text x="400" y="50" font-size="48" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial">🏸 ShuttleArena</text>
-  <text x="400" y="85" font-size="20" fill="#e0f2fe" text-anchor="middle" font-family="Arial">Full-Stack Badminton Tournament Platform</text>
-</svg>
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=30&duration=3000&pause=1000&color=3B82F6&center=true&vCenter=true&width=800&height=80&lines=ShuttleArena;Full-Stack+Badminton+Tournament+Platform" alt="ShuttleArena"/>
 
 **[English](README.md) | [中文](README_CN.md)**
 
